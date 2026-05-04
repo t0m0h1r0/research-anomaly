@@ -70,14 +70,35 @@ context、decoder は再構成に限定する。
 隣接 frame は参照せず、各 10 秒 frame に同じ重みを適用する channel mixer として解釈する。
 
 各候補は、複雑な model family を順に足すためではなく、どの仮説が必要かを切り分けるために置く。
-AE-0 は、観測境界そのものに再構成信号があるかを見る最小 flattened baseline である。
-AE-1 は flattened Dense 系の容量不足を切り分ける capacity check であり、別の科学仮説ではない。
-AE-2 は recurrent/convolution を使わず、frame-level と sequence-level の二段 Dense 圧縮だけで足りるかを見る。
-AE-3 は、Dense bottleneck は維持したまま GRU による時系列文脈だけを追加する。
-AE-4 は、recurrent workspace を使わず、$K=3$ Conv1D で局所時間 pattern を抽出できるかを見る。
-AE-5 は最も強い仮説検証用であり、pointwise Conv1D による異種 feature mixing、
-GRU 前の TD(Dense) による frame denoising、GRU による文脈化、GRU 後の Dense bottleneck による
-重要成分選択を組み合わせる。ただし、これは既定解ではなく、単純候補が不十分な場合にだけ正当化される。
+表 \ref{tab:ae-eval-viewpoints} に、候補ごとの評価観点を固定する。
+
+\begin{table}[tb]
+  \centering
+  \caption{AE 候補を比較する評価観点}
+  \label{tab:ae-eval-viewpoints}
+  \small
+  \begin{tabularx}{\linewidth}{lY Y}
+    \toprule
+    ID & 検証する仮説 & 解釈上の注意 \\
+    \midrule
+    AE-0/1 &
+    最小限の flattened Dense AE で再構成信号が出るか。frame index と feature index を固定位置の成分として一つの vector にし、Dense だけで情報選択する。 &
+    時間と feature を意味的に同一視するわけではない。時間方向の重み共有、局所性、遷移構造という inductive bias を意図的に持たない control である。AE-1 は容量確認であり別仮説ではない。 \\
+    AE-2 &
+    標準的な Dense bottleneck を保ちながら、TD(Dense) で全 frame に同じ feature transform を共有すれば十分か。 &
+    TD は単なる節約ではなく、各 frame を同じ基準で denoise/code 化する制約である。ただし sequence-level の順序構造は flatten 後の Dense に任せる。 \\
+    AE-3 &
+    Dense bottleneck は維持したまま、GRU による時間文脈が必要か。 &
+    GRU は系列を 1 vector に圧縮するためではなく、各 frame に前後の文脈を付与するために使う。情報を減らす責任は TD(Dense) に残す。 \\
+    AE-4 &
+    Dense-only ではなく、局所時間相関に適した Conv1D($K=3$) で短い pattern を抽出する価値があるか。 &
+    Conv1D は Dense の代替圧縮器ではない。局所 pattern を共有重みで抽出し、圧縮は TD(Dense) bottleneck が担う。長いまたは不規則な文脈は苦手になり得る。 \\
+    AE-5 &
+    pointwise feature mixing、pre-GRU frame denoising、GRU context、post-GRU Dense bottleneck を組み合わせる価値があるか。 &
+    最も強い CNN-GRU 仮説検証であり、単純候補が不十分な場合にだけ正当化する。 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
 
 \begin{table}[tb]
   \centering
