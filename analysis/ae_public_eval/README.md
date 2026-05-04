@@ -52,11 +52,14 @@ Current smoke outputs are stored in `results/smoke/` with verdict
 
 ## Model Notes
 
-The default `numpy_mlp` model is the memory-first baseline required before
-crediting a heavier model. The optional `torch_gru` and `torch_cnn_gru` paths
-implement the proposed temporal AE family when PyTorch is installed on the
-experiment machine. Offline PyTorch results still do not imply MNN readiness;
-MNN conversion, score parity, and 500 KB memory measurement remain later gates.
+The default `numpy_mlp` model is the AE-0 memory-first baseline required before
+crediting a heavier model. The optional `torch_two_level_dense`, `torch_gru`,
+`torch_tcn`, and `torch_cnn_gru` paths implement the proposed AE-2 through AE-5
+family when PyTorch is installed on the experiment machine. In those paths, GRU
+provides temporal context, Conv1D extracts local temporal views, and Dense
+layers provide the bottleneck. Offline PyTorch results still do not imply MNN
+readiness; MNN conversion, score parity, and 500 KB memory measurement remain
+later gates.
 
 The current deployable profile is scalar-only. LBA and transfer-size histograms
 are intentionally not part of this runner's default model input after the latest

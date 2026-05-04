@@ -66,7 +66,7 @@ generalization tests.
   - LBA spread / write-after-read / sequentiality rules;
   - small decision tree or random forest;
   - tiny MLP AE;
-  - GRU-only or temporal-convolution AE if the MLP AE fails.
+  - GRU contextual or temporal-convolution AE if the MLP AE fails.
 - Entropy is powerful but risky for product fit. It improves detection in many
   papers, yet it is expensive, often unavailable in public block traces, and
   weak on already-encrypted volumes or naturally compressed data.
@@ -643,7 +643,7 @@ decoder issues with multiresolution ensemble decoding.
 
 Relevance:
 
-- Supports GRU-only AE as a candidate.
+- Supports GRU contextual AE as a candidate.
 - A full LSTM/VAE/GAN model is likely too heavy for 500 KB per-volume
   detector-data memory.
 - Threshold selection and reconstruction error calibration must be treated

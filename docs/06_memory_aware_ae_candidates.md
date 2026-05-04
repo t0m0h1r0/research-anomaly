@@ -114,24 +114,39 @@ params = K * Cin * Cout + Cout
 MNN-converted files may store metadata and quantization tables, so these
 formulae are only planning estimates.
 
+## Operator Role Policy
+
+The candidate set uses a strict role separation:
+
+- Dense layers are the only intentional information-reducing bottlenecks.
+- GRU layers attach temporal context to each frame and must not be the hidden
+  place where the sequence is collapsed.
+- Conv1D layers expand scalar frame inputs into multiple local temporal views
+  and extract short-range patterns. They are feature analysis layers, not the
+  compression mechanism.
+
+This keeps the architecture story inspectable: feature extraction and temporal
+context happen before the Dense bottleneck; reconstruction happens after it.
+
 ## Candidate Summary
 
 The following estimates use `D = 12` and `N = 12`.
 
-| ID | Candidate | Sketch | Params | FP32 weights | FP16 weights | Int8 weights | Main role |
+| ID | Candidate | Sketch | Params | FP32 bytes | FP16 bytes | Int8 bytes | Main role |
 | --- | --- | --- | ---: | ---: | ---: | ---: | --- |
-| AE-0 | Linear tiny AE | `144 -> 32 -> 8 -> 32 -> 144` | 9,944 | 39 KB | 20 KB | 10 KB | smallest useful flattened baseline |
-| AE-1 | Flat MLP AE | `144 -> 64 -> 16 -> 4 -> 16 -> 64 -> 144` | 20,916 | 82 KB | 41 KB | 21 KB | stronger flattened AE baseline |
-| AE-2 | Shared-frame bottleneck AE | shared `12 -> 24 -> 12`, sequence `144 -> 32 -> 8`, shared decoder | 11,168 | 44 KB | 22 KB | 11 KB | very small deployable candidate |
-| AE-3a | GRU seq2seq AE, H=24 | encoder GRU, decoder GRU, per-frame dense head | 6,636 | 26 KB | 13 KB | 7 KB | first temporal AE candidate |
-| AE-3b | GRU seq2seq AE, H=32 | encoder GRU, decoder GRU, per-frame dense head | 11,148 | 44 KB | 22 KB | 11 KB | stronger temporal AE candidate |
-| AE-4 | Temporal convolution AE | Conv1D temporal encoder/decoder, 24 channels, 8-channel bottleneck | 5,684 | 22 KB | 11 KB | 6 KB | predictable MNN-friendly temporal model |
-| AE-5 | Tiny CNN-GRU AE | temporal Conv1D 16 channels, GRU H=24, per-frame dense decoder | 7,516 | 30 KB | 15 KB | 8 KB | constrained CNN-GRU hypothesis test |
+| AE-0 | Linear tiny AE | `144 -> 32 -> 8 -> 32 -> 144` | 9,944 | 39,776 | 19,888 | 9,944 | smallest useful flattened baseline |
+| AE-1 | Flat MLP AE | `144 -> 64 -> 16 -> 64 -> 144` | 20,768 | 83,072 | 41,536 | 20,768 | stronger flattened capacity check |
+| AE-2 | Two-level dense AE | shared `12 -> 16 -> 8`, sequence `96 -> 24 -> 8`, shared decoder | 5,836 | 23,344 | 11,672 | 5,836 | explicit frame and sequence compression |
+| AE-3a | GRU contextual AE, H=24 | GRU context, per-frame dense `24 -> 8`, GRU decoder | 7,052 | 28,208 | 14,104 | 7,052 | first recurrent context model |
+| AE-3b | GRU contextual AE, H=32 | GRU context, per-frame dense `32 -> 8`, GRU decoder | 11,700 | 46,800 | 23,400 | 11,700 | stronger recurrent context model |
+| AE-4 | Temporal convolution AE | Conv1D temporal feature expansion, per-frame dense `24 -> 8` | 5,684 | 22,736 | 11,368 | 5,684 | predictable MNN-friendly temporal model |
+| AE-5 | Tiny CNN-GRU AE | Conv1D local feature expansion, GRU context, per-frame dense `24 -> 8` | 8,804 | 35,216 | 17,608 | 8,804 | constrained CNN-GRU hypothesis test |
 
-All candidates are far below the 500 KB budget in weights. The actual decision
-therefore depends on retained input-statistics state, score parity,
-low-false-positive detection quality, and the separate MNN transient
-workspace/scheduling check.
+The byte columns are exact raw weight bytes from the parameter count and do not
+include converter metadata or quantization tables. All candidates are far below
+the 500 KB budget in weights. The actual decision therefore depends on retained
+input-statistics state, score parity, low-false-positive detection quality, and
+the separate MNN transient workspace/scheduling check.
 
 ## AE-0: Linear Tiny AE
 
@@ -160,21 +175,49 @@ Parameter detail:
 This is the memory floor and a leakage/split sanity check. If it performs well,
 the signal is likely dominated by coarse sequence-level shifts.
 
-## AE-2: Shared-Frame Bottleneck AE
+## AE-1: Flat MLP AE
+
+Layer flow for `N = 12`, `D = 12`:
+
+```text
+Input X                         [1, 12, 12]
+Flatten                         [1, 144]
+Dense 64 + ReLU                 [1, 64]
+Dense 16 + ReLU                 [1, 16]
+Dense 64 + ReLU                 [1, 64]
+Dense 144 + linear              [1, 144]
+Reshape                         [1, 12, 12]
+```
+
+Parameter detail:
+
+| Layer | Params |
+| --- | ---: |
+| Dense 144 -> 64 | 9,280 |
+| Dense 64 -> 16 | 1,040 |
+| Dense 16 -> 64 | 1,088 |
+| Dense 64 -> 144 | 9,360 |
+| total | 20,768 |
+
+AE-1 is not a different scientific hypothesis from AE-0. It is a capacity check
+for the flattened MLP family: if AE-0 fails only because it is too narrow,
+AE-1 tests that before adding temporal operators.
+
+## AE-2: Two-Level Dense AE
 
 Layer flow for `N = 12`, `D = 12`:
 
 ```text
 Input X                          [1, 12, 12]
-TimeDistributed Dense 24 + ReLU   [1, 12, 24]
-TimeDistributed Dense 12 + ReLU   [1, 12, 12]
-Flatten                           [1, 144]
-Dense 32 + ReLU                   [1, 32]
+TimeDistributed Dense 16 + ReLU   [1, 12, 16]
+TimeDistributed Dense 8 + ReLU    [1, 12, 8]
+Flatten                           [1, 96]
+Dense 24 + ReLU                   [1, 24]
 Dense 8 + ReLU                    [1, 8]
-Dense 32 + ReLU                   [1, 32]
-Dense 144 + ReLU                  [1, 144]
-Reshape                           [1, 12, 12]
-TimeDistributed Dense 24 + ReLU   [1, 12, 24]
+Dense 24 + ReLU                   [1, 24]
+Dense 96 + ReLU                   [1, 96]
+Reshape                           [1, 12, 8]
+TimeDistributed Dense 16 + ReLU   [1, 12, 16]
 TimeDistributed Dense 12 linear   [1, 12, 12]
 ```
 
@@ -182,27 +225,30 @@ Parameter detail:
 
 | Layer | Params |
 | --- | ---: |
-| shared Dense 12 -> 24 | 312 |
-| shared Dense 24 -> 12 | 300 |
-| Dense 144 -> 32 | 4,640 |
-| Dense 32 -> 8 | 264 |
-| Dense 8 -> 32 | 288 |
-| Dense 32 -> 144 | 4,752 |
-| shared Dense 12 -> 24 | 312 |
-| shared Dense 24 -> 12 | 300 |
-| total | 11,168 |
+| shared Dense 12 -> 16 | 208 |
+| shared Dense 16 -> 8 | 136 |
+| Dense 96 -> 24 | 2,328 |
+| Dense 24 -> 8 | 200 |
+| Dense 8 -> 24 | 216 |
+| Dense 24 -> 96 | 2,400 |
+| shared Dense 8 -> 16 | 144 |
+| shared Dense 16 -> 12 | 204 |
+| total | 5,836 |
 
-This candidate keeps per-frame compression explicit while staying operator
-simple. It should be one of the first deployable candidates to test.
+AE-2 has a clear two-stage meaning. The frame-level Dense encoder compresses each
+10-second frame from raw scalar features to an 8-dimensional frame code. The
+sequence bottleneck then compresses the 12-frame pattern. No recurrent operator
+is asked to discard information.
 
-## AE-3: GRU Seq2Seq AE
+## AE-3: GRU Contextual AE
 
 Layer flow for `H = 24`, `N = 12`, `D = 12`:
 
 ```text
 Input X                         [1, 12, 12]
-GRU encoder H=24                [1, 24]
-RepeatVector 12                 [1, 12, 24]
+GRU context H=24                [1, 12, 24]
+TimeDistributed Dense 8 + ReLU  [1, 12, 8]
+TimeDistributed Dense 24 + ReLU [1, 12, 24]
 GRU decoder H=24                [1, 12, 24]
 TimeDistributed Dense 12 linear [1, 12, 12]
 ```
@@ -211,13 +257,17 @@ Parameter detail:
 
 | Layer | H=24 params | H=32 params |
 | --- | ---: | ---: |
-| encoder GRU, I=12 | 2,736 | 4,416 |
+| context GRU, I=12 | 2,736 | 4,416 |
+| bottleneck Dense H -> 8 | 200 | 264 |
+| expansion Dense 8 -> H | 216 | 288 |
 | decoder GRU, I=H | 3,600 | 6,336 |
 | output Dense H -> 12 | 300 | 396 |
-| total | 6,636 | 11,148 |
+| total | 7,052 | 11,700 |
 
-This is the first recurrent candidate. It tests whether order and temporal
-context add value beyond flattened summaries.
+This is the first recurrent candidate. GRU is used only to attach temporal
+context to each frame. The information-reducing step is the explicit
+TimeDistributed Dense bottleneck, so the model's story remains: temporal
+features first, compression second, reconstruction last.
 
 ## AE-4: Temporal Conv1D AE
 
@@ -227,8 +277,8 @@ Layer flow for `N = 12`, `D = 12`:
 Input X                         [1, 12, 12]
 Conv1D K=3, C=24 + ReLU         [1, 12, 24]
 Conv1D K=3, C=24 + ReLU         [1, 12, 24]
-Conv1D K=1, C=8 + ReLU          [1, 12, 8]
-Conv1D K=1, C=24 + ReLU         [1, 12, 24]
+TimeDistributed Dense 8 + ReLU  [1, 12, 8]
+TimeDistributed Dense 24 + ReLU [1, 12, 24]
 Conv1D K=3, C=24 + ReLU         [1, 12, 24]
 Conv1D K=3, C=12 linear         [1, 12, 12]
 ```
@@ -239,14 +289,18 @@ Parameter detail:
 | --- | ---: |
 | Conv1D K=3, 12 -> 24 | 888 |
 | Conv1D K=3, 24 -> 24 | 1,752 |
-| Conv1D K=1, 24 -> 8 | 200 |
-| Conv1D K=1, 8 -> 24 | 216 |
+| bottleneck Dense 24 -> 8 | 200 |
+| expansion Dense 8 -> 24 | 216 |
 | Conv1D K=3, 24 -> 24 | 1,752 |
 | Conv1D K=3, 24 -> 12 | 876 |
 | total | 5,684 |
 
 This model is MNN-friendly and captures local temporal changes without recurrent
-workspace. It is likely the most predictable temporal baseline.
+workspace. The temporal Conv1D layers expand the scalar input into multiple
+local temporal views. They are not treated as the compression step. The
+information-reducing step is the explicit per-frame Dense bottleneck, and the
+remaining Dense/Conv1D layers decode that bottleneck. It is likely the most
+predictable temporal baseline.
 
 ## AE-5: Tiny CNN-GRU AE
 
@@ -258,9 +312,10 @@ Layer flow for `N = 12`, `D = 12`, `H = 24`:
 
 ```text
 Input X                         [1, 12, 12]
-Conv1D K=3, C=16 + ReLU         [1, 12, 16]
-GRU encoder H=24                [1, 24]
-RepeatVector 12                 [1, 12, 24]
+Conv1D K=3, C=24 + ReLU         [1, 12, 24]
+GRU context H=24                [1, 12, 24]
+TimeDistributed Dense 8 + ReLU  [1, 12, 8]
+TimeDistributed Dense 24 + ReLU [1, 12, 24]
 GRU decoder H=24                [1, 12, 24]
 TimeDistributed Dense 12 linear [1, 12, 12]
 ```
@@ -269,22 +324,28 @@ Parameter detail:
 
 | Layer | Params |
 | --- | ---: |
-| Conv1D K=3, 12 -> 16 | 592 |
-| encoder GRU, I=16, H=24 | 3,024 |
+| Conv1D K=3, 12 -> 24 | 888 |
+| context GRU, I=24, H=24 | 3,600 |
+| bottleneck Dense 24 -> 8 | 200 |
+| expansion Dense 8 -> 24 | 216 |
 | decoder GRU, I=24, H=24 | 3,600 |
 | output Dense 24 -> 12 | 300 |
-| total | 7,516 |
+| total | 8,804 |
 
 Constraints:
 
 - one temporal Conv1D layer only,
+- Conv1D expands the scalar frame into 24 local-temporal channels,
 - GRU encoder and decoder are one layer each,
 - hidden size fixed to 24 for the first test,
+- information reduction is done by the TimeDistributed Dense bottleneck, not by
+  collapsing the GRU state to one vector,
 - no Conv2D, transposed convolution, attention, model-side thresholding, or
   distribution softmax,
 - output reconstructs the same `[1, N, 12]` scalar sequence.
 
-This stays within roughly 30 KB FP32 weights. The 500 KB question must still be
+This stays within 35,216 raw FP32 weight bytes, before converter metadata. The
+500 KB question must still be
 answered by measuring the converted weight representation together with the
 retained input statistics/state for one volume. Operator workspace and tensor
 buffers remain a separate transient device-fit measurement.
@@ -294,9 +355,9 @@ buffers remain a separate transient device-fit measurement.
 Recommended order:
 
 1. AE-0 Linear tiny AE.
-2. AE-2 Shared-frame bottleneck AE.
+2. AE-2 Two-level dense AE.
 3. AE-4 Temporal Conv1D AE.
-4. AE-3a GRU seq2seq AE.
+4. AE-3a GRU contextual AE.
 5. AE-5 Tiny CNN-GRU AE.
 6. AE-1 Flat MLP AE and AE-3b stronger GRU as capacity checks.
 

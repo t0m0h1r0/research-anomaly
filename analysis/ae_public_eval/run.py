@@ -146,7 +146,7 @@ def main() -> None:
         model, model_scores, model_summary = _train_numpy_mlp(
             train_norm, cal_norm, test_norm, train_masks, cal_masks, test_masks, score_weights, config, out_dir
         )
-    elif model_type in {"torch_gru", "torch_cnn_gru"}:
+    elif model_type in {"torch_two_level_dense", "torch_gru", "torch_tcn", "torch_cnn_gru"}:
         model, model_scores, model_summary = _train_torch_model(
             model_type, train_norm, cal_norm, test_norm, train_masks, cal_masks, test_masks, score_weights, config
         )
@@ -313,7 +313,8 @@ def _train_numpy_mlp(
     input_dim = int(np.prod(train_norm.shape[1:]))
     ae_config = NumpyMLPAEConfig(
         input_dim=input_dim,
-        latent_dim=int(model_config.get("latent_dim", 16)),
+        latent_dim=int(model_config.get("latent_dim", 8)),
+        hidden_dim=int(model_config.get("hidden_dim", 32)),
         learning_rate=float(model_config.get("learning_rate", 0.001)),
         epochs=int(model_config.get("epochs", 50)),
         batch_size=int(model_config.get("batch_size", 64)),
@@ -354,12 +355,20 @@ def _train_torch_model(
 
     torch, _nn = require_torch()
     model_config = config.get("model", {})
+    torch_model_type = {
+        "torch_two_level_dense": "two_level_dense",
+        "torch_gru": "gru",
+        "torch_tcn": "tcn",
+        "torch_cnn_gru": "cnn_gru",
+    }[model_type]
     torch_config = TorchAEConfig(
-        model_type="gru" if model_type == "torch_gru" else "cnn_gru",
+        model_type=torch_model_type,
         sequence_length=train_norm.shape[1],
         d_features=train_norm.shape[2],
-        latent_dim=int(model_config.get("latent_dim", 16)),
-        conv_channels=int(model_config.get("conv_channels", 16)),
+        latent_dim=int(model_config.get("latent_dim", 8)),
+        frame_embed_dim=int(model_config.get("frame_embed_dim", 16)),
+        frame_latent_dim=int(model_config.get("frame_latent_dim", 8)),
+        conv_channels=int(model_config.get("conv_channels", 24)),
         hidden_dim=int(model_config.get("hidden_dim", model_config.get("gru_hidden_dim", 24))),
     )
     torch.manual_seed(int(config.get("seed", 0)))

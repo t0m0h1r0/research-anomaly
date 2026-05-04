@@ -36,7 +36,7 @@ budget, excluding shared MNN runtime/library memory, and consume only 10-second
 statistics that are cheap to collect. This budget covers model weight
 information plus retained input statistics/state for one volume. If CNN-GRU
 cannot fit that budget after quantization and MNN conversion, the
-research should prefer a smaller AE such as GRU-only, temporal convolution AE,
+research should prefer a smaller AE such as GRU contextual AE, temporal convolution AE,
 or MLP bottleneck AE over preserving the original architecture.
 
 ## Scope
