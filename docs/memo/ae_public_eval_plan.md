@@ -14,7 +14,7 @@ AutoEncoder anomaly scores under the active 10-second statistics contract.
 - RanSAP-style CSV and zip discovery.
 - Canonical event schema: timestamp, operation, LBA, transfer size, optional
   write entropy.
-- Feature tensor: `[N, D=40]` sequences with the slice layout frozen in
+- Feature tensor: `[N, D=12]` scalar-only sequences with the slice layout frozen in
   `docs/07_ae_implementation_spec.md`.
 - Split policy: train on benign runs only, calibrate on held-out benign runs,
   test on held-out benign plus attack runs.

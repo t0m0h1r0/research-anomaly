@@ -14,10 +14,10 @@ from dataclasses import dataclass
 class TorchAEConfig:
     model_type: str = "cnn_gru"
     sequence_length: int = 12
-    d_features: int = 40
+    d_features: int = 12
     latent_dim: int = 16
-    conv_channels: int = 8
-    gru_hidden_dim: int = 16
+    conv_channels: int = 16
+    hidden_dim: int = 24
 
 
 def require_torch():
@@ -53,18 +53,15 @@ class _GruAutoEncoder:
         class GruAutoEncoder(nn.Module):
             def __init__(self) -> None:
                 super().__init__()
-                self.encoder = nn.GRU(frame_dim, config.gru_hidden_dim, batch_first=True)
-                self.to_latent = nn.Linear(config.gru_hidden_dim, config.latent_dim)
-                self.from_latent = nn.Linear(config.latent_dim, config.gru_hidden_dim)
-                self.decoder = nn.GRU(config.gru_hidden_dim, config.gru_hidden_dim, batch_first=True)
-                self.head = nn.Linear(config.gru_hidden_dim, frame_dim)
+                self.encoder = nn.GRU(frame_dim, config.hidden_dim, batch_first=True)
+                self.decoder = nn.GRU(config.hidden_dim, config.hidden_dim, batch_first=True)
+                self.head = nn.Linear(config.hidden_dim, frame_dim)
 
             def forward(self, x):
                 batch = x.shape[0]
                 flat = x.reshape(batch, config.sequence_length, frame_dim)
                 _, hidden = self.encoder(flat)
-                latent = self.to_latent(hidden[-1])
-                seed = self.from_latent(latent).unsqueeze(1).repeat(1, config.sequence_length, 1)
+                seed = hidden[-1].unsqueeze(1).repeat(1, config.sequence_length, 1)
                 decoded, _ = self.decoder(seed)
                 out = self.head(decoded)
                 return out.reshape(batch, config.sequence_length, config.d_features)
@@ -74,32 +71,22 @@ class _GruAutoEncoder:
 
 class _TinyCnnGruAutoEncoder:
     def __new__(cls, nn, config: TorchAEConfig):
-        conv_embed_dim = config.conv_channels * config.d_features
-
         class TinyCnnGruAutoEncoder(nn.Module):
             def __init__(self) -> None:
                 super().__init__()
-                self.window_conv = nn.Sequential(
-                    nn.Conv1d(1, config.conv_channels, kernel_size=3, padding=1),
-                    nn.ReLU(),
-                    nn.Conv1d(config.conv_channels, config.conv_channels, kernel_size=3, padding=1),
+                self.temporal_cnn = nn.Sequential(
+                    nn.Conv1d(config.d_features, config.conv_channels, kernel_size=3, padding=1),
                     nn.ReLU(),
                 )
-                self.window_embed = nn.Linear(conv_embed_dim, config.gru_hidden_dim)
-                self.encoder = nn.GRU(config.gru_hidden_dim, config.gru_hidden_dim, batch_first=True)
-                self.to_latent = nn.Linear(config.gru_hidden_dim, config.latent_dim)
-                self.from_latent = nn.Linear(config.latent_dim, config.gru_hidden_dim)
-                self.decoder = nn.GRU(config.gru_hidden_dim, config.gru_hidden_dim, batch_first=True)
-                self.head = nn.Linear(config.gru_hidden_dim, config.d_features)
+                self.encoder = nn.GRU(config.conv_channels, config.hidden_dim, batch_first=True)
+                self.decoder = nn.GRU(config.hidden_dim, config.hidden_dim, batch_first=True)
+                self.head = nn.Linear(config.hidden_dim, config.d_features)
 
             def forward(self, x):
                 batch = x.shape[0]
-                windows = x.reshape(batch * config.sequence_length, 1, config.d_features)
-                embedded = self.window_conv(windows).reshape(batch, config.sequence_length, conv_embed_dim)
-                embedded = self.window_embed(embedded)
+                embedded = self.temporal_cnn(x.transpose(1, 2)).transpose(1, 2)
                 _, hidden = self.encoder(embedded)
-                latent = self.to_latent(hidden[-1])
-                seed = self.from_latent(latent).unsqueeze(1).repeat(1, config.sequence_length, 1)
+                seed = hidden[-1].unsqueeze(1).repeat(1, config.sequence_length, 1)
                 decoded, _ = self.decoder(seed)
                 out = self.head(decoded)
                 return out.reshape(batch, config.sequence_length, config.d_features)
