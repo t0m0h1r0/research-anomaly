@@ -38,11 +38,11 @@ class FeaturePipelineTest(unittest.TestCase):
 
             self.assertEqual(result.event_count, 5)
             self.assertEqual(result.entropy_event_count, 2)
-            self.assertEqual(sequences.shape[1:], (2, 5, 8))
-            self.assertGreater(float(sequences[..., 4, 4].max()), 0.0)
+            self.assertEqual(sequences.shape[1:], (2, 40))
+            self.assertGreater(float(sequences[..., 1].max()), 0.0)
 
     def test_normalizer_round_trip_shape(self) -> None:
-        x = np.arange(2 * 3 * 5 * 8, dtype=np.float32).reshape(2, 3, 5, 8)
+        x = np.arange(2 * 3 * 40, dtype=np.float32).reshape(2, 3, 40)
         normalizer = RobustNormalizer().fit(x)
         transformed = normalizer.transform(x)
         self.assertEqual(transformed.shape, x.shape)

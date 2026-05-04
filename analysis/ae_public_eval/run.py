@@ -318,9 +318,8 @@ def _train_torch_model(
     model_config = config.get("model", {})
     torch_config = TorchAEConfig(
         model_type="gru" if model_type == "torch_gru" else "cnn_gru",
-        channels=train_norm.shape[2],
-        buckets=train_norm.shape[3],
         sequence_length=train_norm.shape[1],
+        d_features=train_norm.shape[2],
         latent_dim=int(model_config.get("latent_dim", 16)),
         conv_channels=int(model_config.get("conv_channels", 8)),
         gru_hidden_dim=int(model_config.get("gru_hidden_dim", 16)),
@@ -380,8 +379,8 @@ def _baseline_results(
 ) -> dict[str, Any]:
     quantile = float(config.get("threshold_quantile", 0.99))
     raw_scores = {
-        "write_ratio": (_scalar_score(cal_x, 4), _scalar_score(test_x, 4)),
-        "mean_write_entropy": (_scalar_score(cal_x, 7), _scalar_score(test_x, 7)),
+        "write_ratio": (_write_ratio_score(cal_x), _write_ratio_score(test_x)),
+        "mean_write_entropy": (_feature_score(cal_x, 38), _feature_score(test_x, 38)),
     }
     metrics: dict[str, Any] = {}
     test_score_columns: dict[str, np.ndarray] = {}
@@ -405,8 +404,14 @@ def _baseline_results(
     return {"metrics": metrics, "test_scores": test_score_columns}
 
 
-def _scalar_score(x: np.ndarray, scalar_position: int) -> np.ndarray:
-    return np.mean(x[:, :, 4, scalar_position], axis=1)
+def _write_ratio_score(x: np.ndarray) -> np.ndarray:
+    read_count = np.expm1(x[:, :, 0])
+    write_count = np.expm1(x[:, :, 1])
+    return np.mean(write_count / np.maximum(read_count + write_count, 1.0), axis=1)
+
+
+def _feature_score(x: np.ndarray, feature_position: int) -> np.ndarray:
+    return np.mean(x[:, :, feature_position], axis=1)
 
 
 def _write_scores(

@@ -11,23 +11,29 @@ import numpy as np
 from .ransap import IoEvent
 
 
-SCALAR_NAMES = (
+FEATURE_SLICES = {
+    "rw_counts_bytes": slice(0, 4),
+    "read_lba_hist": slice(4, 12),
+    "write_lba_hist": slice(12, 20),
+    "read_len_hist": slice(20, 28),
+    "write_len_hist": slice(28, 36),
+    "sequentiality": slice(36, 38),
+    "optional_compression_or_pad": slice(38, 40),
+}
+
+FEATURE_NAMES = (
     "log_read_count",
     "log_write_count",
     "log_read_bytes",
     "log_write_bytes",
-    "write_ratio",
+    *(f"read_lba_hist_{idx}" for idx in range(8)),
+    *(f"write_lba_hist_{idx}" for idx in range(8)),
+    *(f"read_len_hist_{idx}" for idx in range(8)),
+    *(f"write_len_hist_{idx}" for idx in range(8)),
     "log_seq_read_count",
     "log_seq_write_count",
     "mean_write_entropy",
-)
-
-CHANNEL_NAMES = (
-    "read_lba_hist",
-    "write_lba_hist",
-    "read_len_hist",
-    "write_len_hist",
-    "scalar_summary",
+    "optional_pad",
 )
 
 
@@ -95,8 +101,11 @@ def build_frames(
 ) -> FrameBuildResult:
     """Aggregate sorted or unsorted events into fixed-shape 10-second frames."""
 
+    if config.bucket_count != 8:
+        raise ValueError("the current D=40 AE contract requires bucket_count=8")
+
     if not events:
-        empty = np.zeros((0, len(CHANNEL_NAMES), config.bucket_count), dtype=np.float32)
+        empty = np.zeros((0, 40), dtype=np.float32)
         return FrameBuildResult(empty, np.zeros((0,), dtype=np.float64), 0, 0, 0)
 
     ordered = sorted(events, key=lambda event: event.timestamp)
@@ -105,7 +114,7 @@ def build_frames(
     start = math.floor(ordered[0].timestamp / config.window_seconds) * config.window_seconds
     end = ordered[-1].timestamp
     frame_count = int(math.floor((end - start) / config.window_seconds)) + 1
-    frames = np.zeros((frame_count, len(CHANNEL_NAMES), config.bucket_count), dtype=np.float32)
+    frames = np.zeros((frame_count, 40), dtype=np.float32)
     entropy_sum = np.zeros((frame_count,), dtype=np.float64)
     entropy_count = np.zeros((frame_count,), dtype=np.int64)
     previous_end_by_op: dict[str, int] = {}
@@ -115,42 +124,40 @@ def build_frames(
         idx = min(max(idx, 0), frame_count - 1)
         lba_bucket = _lba_bucket(event.lba, ns_lba, config.bucket_count)
         len_bucket = _length_bucket(event.size, config.length_bucket_min_log2, config.bucket_count)
-        scalar = frames[idx, 4]
+        frame = frames[idx]
         size_blocks = max(1, math.ceil(event.size / config.logical_block_bytes))
         is_seq = previous_end_by_op.get(event.op) == event.lba
         previous_end_by_op[event.op] = event.lba + size_blocks
 
         if event.op == "read":
-            frames[idx, 0, lba_bucket] += 1.0
-            frames[idx, 2, len_bucket] += 1.0
-            scalar[0] += 1.0
-            scalar[2] += float(event.size)
+            frame[FEATURE_SLICES["read_lba_hist"].start + lba_bucket] += 1.0
+            frame[FEATURE_SLICES["read_len_hist"].start + len_bucket] += 1.0
+            frame[0] += 1.0
+            frame[2] += float(event.size)
             if is_seq:
-                scalar[5] += 1.0
+                frame[36] += 1.0
         else:
-            frames[idx, 1, lba_bucket] += 1.0
-            frames[idx, 3, len_bucket] += 1.0
-            scalar[1] += 1.0
-            scalar[3] += float(event.size)
+            frame[FEATURE_SLICES["write_lba_hist"].start + lba_bucket] += 1.0
+            frame[FEATURE_SLICES["write_len_hist"].start + len_bucket] += 1.0
+            frame[1] += 1.0
+            frame[3] += float(event.size)
             if is_seq:
-                scalar[6] += 1.0
+                frame[37] += 1.0
             if config.include_entropy and event.entropy is not None:
                 entropy_sum[idx] += float(event.entropy)
                 entropy_count[idx] += 1
 
     for idx in range(frame_count):
-        for channel in range(4):
-            total = float(frames[idx, channel].sum())
+        for name in ("read_lba_hist", "write_lba_hist", "read_len_hist", "write_len_hist"):
+            feature_slice = FEATURE_SLICES[name]
+            total = float(frames[idx, feature_slice].sum())
             if total > 0.0:
-                frames[idx, channel] /= total
+                frames[idx, feature_slice] /= total
 
-        scalar = frames[idx, 4]
-        read_count = float(scalar[0])
-        write_count = float(scalar[1])
-        scalar[4] = write_count / max(read_count + write_count, 1.0)
-        for pos in (0, 1, 2, 3, 5, 6):
-            scalar[pos] = math.log1p(float(scalar[pos]))
-        scalar[7] = float(entropy_sum[idx] / entropy_count[idx]) if entropy_count[idx] else 0.0
+        for pos in (0, 1, 2, 3, 36, 37):
+            frames[idx, pos] = math.log1p(float(frames[idx, pos]))
+        frames[idx, 38] = float(entropy_sum[idx] / entropy_count[idx]) if entropy_count[idx] else 0.0
+        frames[idx, 39] = 0.0
 
     starts = start + np.arange(frame_count, dtype=np.float64) * config.window_seconds
     return FrameBuildResult(frames, starts, ns_lba, len(ordered), int(entropy_count.sum()))
@@ -158,7 +165,7 @@ def build_frames(
 
 def make_sequences(frames: np.ndarray, sequence_length: int, stride: int) -> np.ndarray:
     if frames.shape[0] < sequence_length:
-        return np.zeros((0, sequence_length, *frames.shape[1:]), dtype=np.float32)
+        return np.zeros((0, sequence_length, frames.shape[1]), dtype=np.float32)
     starts = range(0, frames.shape[0] - sequence_length + 1, max(1, stride))
     return np.stack([frames[start : start + sequence_length] for start in starts]).astype(np.float32)
 
@@ -171,14 +178,13 @@ def feature_schema(config: FeatureConfig) -> dict[str, object]:
     return {
         "input_shape": [
             config.sequence_length,
-            len(CHANNEL_NAMES),
-            config.bucket_count,
+            40,
         ],
         "window_seconds": config.window_seconds,
-        "channel_names": list(CHANNEL_NAMES),
-        "scalar_channel_positions": list(SCALAR_NAMES),
-        "histogram_channels_are_per_frame_normalized": True,
-        "scalar_channel": "log-scaled counts/bytes, write ratio, optional mean write entropy",
+        "feature_names": list(FEATURE_NAMES),
+        "feature_slices": {name: [value.start, value.stop] for name, value in FEATURE_SLICES.items()},
+        "histogram_slices_are_per_frame_normalized": True,
+        "layout": "Spec-aligned [N,D=40]: counts/bytes, four 8-bin histograms, sequentiality, entropy-or-pad.",
         "config": config.to_dict(),
     }
 

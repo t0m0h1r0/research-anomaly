@@ -12,7 +12,7 @@
 | active_brief | `docs/interface/ResearchBrief.md` |
 | source_artifact | none registered yet |
 | next_action | Stage public RanSAP under `data/raw/RanSAP/`, run `analysis/ae_public_eval/config.json`, then audit labels, leakage, entropy ablation, and false positives |
-| updated_at_utc | 2026-05-04T05:11:21Z |
+| updated_at_utc | 2026-05-04T05:13:45Z |
 
 ## §CHECKLIST
 
@@ -24,9 +24,14 @@
 | CHK-RAD-004 | DONE | M | `docs/interface/ResearchBrief.md` | captured scope as active contract | 2026-05-04 |
 | CHK-RAD-005 | DONE | P | `prompts/agents-codex/`, `prompts/agents-claude/` | deployed generated agent files | 2026-05-04 |
 | CHK-RAD-006 | READY | M | `docs/memo/ransomware_anomaly_problem_frame.md` | first recommended planning artifact | 2026-05-04 |
-| CHK-RAD-007 | DONE | R | `src/rad_ae/` | added RanSAP-style readers, 10-second feature extraction, NumPy MLP AE baseline, optional PyTorch GRU/CNN-GRU candidates, and metrics | 2026-05-04 |
-| CHK-RAD-008 | DONE | R | `analysis/ae_public_eval/` | added public RanSAP evaluation package with configs, smoke fixture, manifest-backed smoke run, and README | 2026-05-04 |
-| CHK-RAD-009 | DONE | E | `docs/evidence/ransap_public_data_note.md` | recorded public RanSAP access, schema, citation, and license facts for evaluation use | 2026-05-04 |
+| CHK-RAD-007 | DONE | P | `paper/main.tex`, `paper/Makefile`, `Makefile` | drafted provisional XeLaTeX manuscript and make build path | 2026-05-04 |
+| CHK-RAD-008 | DONE | P | `paper/main.tex`, `docs/02_feature_model_plan.md`, `docs/04_embedded_constraints.md` | clarified model input as N consecutive 10-second statistic frames | 2026-05-04 |
+| CHK-RAD-009 | DONE | T | `docs/06_memory_aware_ae_candidates.md`, `paper/main.tex` | proposed concrete memory-aware AE model examples and rough size estimates | 2026-05-04 |
+| CHK-RAD-010 | DONE | T | `docs/06_memory_aware_ae_candidates.md`, `paper/main.tex` | expanded AE candidate internals with layer flow, shapes, decoder behavior, and parameter breakdowns | 2026-05-04 |
+| CHK-RAD-011 | DONE | R | `docs/07_ae_implementation_spec.md` | added code-ready AE tensor contracts, feature slices, PyTorch skeletons, scoring, and ONNX export spec | 2026-05-04 |
+| CHK-RAD-012 | DONE | R | `src/rad_ae/` | added RanSAP-style readers, 10-second feature extraction, NumPy MLP AE baseline, optional PyTorch GRU/CNN-GRU candidates, and metrics | 2026-05-04 |
+| CHK-RAD-013 | DONE | R | `analysis/ae_public_eval/` | added public RanSAP evaluation package with configs, smoke fixture, manifest-backed smoke run, and README | 2026-05-04 |
+| CHK-RAD-014 | DONE | E | `docs/evidence/ransap_public_data_note.md` | recorded public RanSAP access, schema, citation, and license facts for evaluation use | 2026-05-04 |
 
 ## §ASSUMPTIONS
 

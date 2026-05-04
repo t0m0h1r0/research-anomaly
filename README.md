@@ -28,14 +28,21 @@ missing, and what evidence would be strong enough to continue.
 - [Literature Survey](docs/05_literature_survey.md): prior work on
   storage-level, filesystem-level, dynamic-analysis, and AE-based ransomware
   detection.
+- [Memory-Aware AE Candidates](docs/06_memory_aware_ae_candidates.md): concrete
+  small AutoEncoder examples and rough memory estimates.
+- [AE Implementation Spec](docs/07_ae_implementation_spec.md): code-ready
+  tensor contracts, feature slices, PyTorch skeletons, scoring, and ONNX export
+  constraints.
 
 ## Core Assumptions
 
 - The protected target is block storage exposed through SCSI or NVMe semantics.
 - The detector observes block I/O metadata and, where available, data-derived
   entropy or compression-ratio telemetry.
-- Inputs are time series built from address distribution, I/O length
-  distribution, read/write ratio, and entropy-like features.
+- Inputs are time series made by collecting 10-second statistics and feeding
+  `N` consecutive frames, i.e. `N * 10` seconds of context, to the model.
+  Feature families include address distribution, I/O length distribution,
+  read/write ratio, and optional entropy-like features.
 - Deployed inputs are 10-second statistics. The device should not depend on
   expensive per-I/O or per-block calculations.
 - The embedded model memory budget is 500 KB, excluding the MNN runtime.

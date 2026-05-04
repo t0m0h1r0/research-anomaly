@@ -7,7 +7,8 @@ storage-embedded ransomware anomaly detection.
 
 - Discovers RanSAP-style runs containing `ata_read.csv` and/or `ata_write.csv`.
 - Aggregates I/O events into fixed 10-second frames.
-- Builds sequence tensors with shape `[T, C, B]`.
+- Builds sequence tensors with shape `[N, D=40]` using the feature slices in
+  `docs/07_ae_implementation_spec.md`.
 - Trains only on benign sequences.
 - Calibrates an anomaly threshold on held-out benign sequences.
 - Evaluates held-out benign and attack sequences with:

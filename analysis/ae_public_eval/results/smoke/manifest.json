@@ -51,29 +51,83 @@
   "feature_schema": {
     "input_shape": [
       3,
-      5,
-      8
+      40
     ],
     "window_seconds": 10.0,
-    "channel_names": [
-      "read_lba_hist",
-      "write_lba_hist",
-      "read_len_hist",
-      "write_len_hist",
-      "scalar_summary"
-    ],
-    "scalar_channel_positions": [
+    "feature_names": [
       "log_read_count",
       "log_write_count",
       "log_read_bytes",
       "log_write_bytes",
-      "write_ratio",
+      "read_lba_hist_0",
+      "read_lba_hist_1",
+      "read_lba_hist_2",
+      "read_lba_hist_3",
+      "read_lba_hist_4",
+      "read_lba_hist_5",
+      "read_lba_hist_6",
+      "read_lba_hist_7",
+      "write_lba_hist_0",
+      "write_lba_hist_1",
+      "write_lba_hist_2",
+      "write_lba_hist_3",
+      "write_lba_hist_4",
+      "write_lba_hist_5",
+      "write_lba_hist_6",
+      "write_lba_hist_7",
+      "read_len_hist_0",
+      "read_len_hist_1",
+      "read_len_hist_2",
+      "read_len_hist_3",
+      "read_len_hist_4",
+      "read_len_hist_5",
+      "read_len_hist_6",
+      "read_len_hist_7",
+      "write_len_hist_0",
+      "write_len_hist_1",
+      "write_len_hist_2",
+      "write_len_hist_3",
+      "write_len_hist_4",
+      "write_len_hist_5",
+      "write_len_hist_6",
+      "write_len_hist_7",
       "log_seq_read_count",
       "log_seq_write_count",
-      "mean_write_entropy"
+      "mean_write_entropy",
+      "optional_pad"
     ],
-    "histogram_channels_are_per_frame_normalized": true,
-    "scalar_channel": "log-scaled counts/bytes, write ratio, optional mean write entropy",
+    "feature_slices": {
+      "rw_counts_bytes": [
+        0,
+        4
+      ],
+      "read_lba_hist": [
+        4,
+        12
+      ],
+      "write_lba_hist": [
+        12,
+        20
+      ],
+      "read_len_hist": [
+        20,
+        28
+      ],
+      "write_len_hist": [
+        28,
+        36
+      ],
+      "sequentiality": [
+        36,
+        38
+      ],
+      "optional_compression_or_pad": [
+        38,
+        40
+      ]
+    },
+    "histogram_slices_are_per_frame_normalized": true,
+    "layout": "Spec-aligned [N,D=40]: counts/bytes, four 8-bin histograms, sequentiality, entropy-or-pad.",
     "config": {
       "window_seconds": 10.0,
       "sequence_length": 3,
@@ -91,44 +145,44 @@
     "model": {
       "type": "numpy_mlp",
       "threshold": {
-        "threshold": 12.20598316192627,
+        "threshold": 12.350579261779785,
         "quantile": 0.95,
         "calibration_count": 4
       },
       "score_summary": {
         "train": {
           "count": 4,
-          "mean": 0.016795800998806953,
-          "std": 0.006144177168607712,
-          "min": 0.0069884005934000015,
-          "p50": 0.018673740327358246,
-          "p90": 0.02230340987443924,
-          "p99": 0.022792933508753777,
-          "max": 0.02284732460975647
+          "mean": 0.010583057999610901,
+          "std": 0.0045572868548333645,
+          "min": 0.003875026013702154,
+          "p50": 0.011598041281104088,
+          "p90": 0.014959687367081642,
+          "p99": 0.015230978839099407,
+          "max": 0.015261122025549412
         },
         "calibration": {
           "count": 4,
-          "mean": 11.151304244995117,
-          "std": 0.974926769733429,
-          "min": 10.046274185180664,
-          "p50": 11.157428741455078,
-          "p90": 12.167881965637207,
-          "p99": 12.236464500427246,
-          "max": 12.244085311889648
+          "mean": 11.132240295410156,
+          "std": 1.1286468505859375,
+          "min": 9.904104232788086,
+          "p50": 11.116476058959961,
+          "p90": 12.309259414672852,
+          "p99": 12.383635520935059,
+          "max": 12.391900062561035
         },
         "test": {
           "count": 8,
-          "mean": 82.08267974853516,
-          "std": 77.00611877441406,
-          "min": 4.836350440979004,
-          "p50": 79.33003997802734,
-          "p90": 162.45364379882812,
-          "p99": 166.11819458007812,
-          "max": 166.52536010742188
+          "mean": 81.40912628173828,
+          "std": 76.31587219238281,
+          "min": 4.774270057678223,
+          "p50": 78.71837615966797,
+          "p90": 161.24237060546875,
+          "p99": 164.52215576171875,
+          "max": 164.88658142089844
         }
       },
       "metrics_at_threshold": {
-        "threshold": 12.20598316192627,
+        "threshold": 12.350579261779785,
         "tp": 4,
         "fp": 0,
         "tn": 4,
@@ -299,6 +353,6 @@
     "scores.csv",
     "model.npz"
   ],
-  "created_at_utc": "2026-05-04T05:12:14.586080+00:00",
+  "created_at_utc": "2026-05-04T05:16:02.538236+00:00",
   "verdict": "INCONCLUSIVE"
 }

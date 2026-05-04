@@ -39,13 +39,14 @@ be used to support final embedded claims.
 The initial tensor should match the deployed cadence:
 
 ```text
-run -> ordered events -> 10-second statistics -> T-window sequences -> AE input
+run -> ordered events -> 10-second statistics -> N-window sequences -> AE input
 ```
 
 Recommended starting point:
 
 - base window: 10 seconds,
-- sequence length: 12 windows for a 2-minute context,
+- sequence length: `N` windows, where each model input spans `N * 10` seconds,
+- initial `N`: 12 windows for a 2-minute context,
 - compare 6, 12, and 24 windows if memory allows,
 - stride: 1 window for evaluation; larger stride for training efficiency,
 - per-volume normalization of LBA by namespace size when available.
@@ -60,12 +61,12 @@ Use the user-proposed feature families as the core input:
 - entropy or compression-rate distribution, only when cheap telemetry already
   exists.
 
-Represent each sequence as:
+Represent each sequence as `N` consecutive 10-second frames:
 
 ```text
-X shape = [T, C, B]
+X shape = [N, C, B]
 
-T: number of windows in a sequence
+N: number of 10-second frames in a sequence
 C: feature channels
 B: histogram buckets or scalar-broadcast width
 ```
@@ -147,6 +148,12 @@ Memory-first alternatives to evaluate:
 | GRU-only AE | keeps temporal modeling with fewer activation maps |
 | 1D temporal convolution AE | predictable memory, no recurrent state overhead |
 | tiny CNN-GRU AE | preserves original idea if quantized memory fits |
+
+Concrete memory-aware model sketches and rough parameter estimates are recorded
+in [Memory-Aware AutoEncoder Candidate Models](06_memory_aware_ae_candidates.md).
+Code-ready tensor contracts, PyTorch skeletons, scoring functions, and ONNX/MNN
+export constraints are recorded in
+[Code-Ready AutoEncoder Implementation Spec](07_ae_implementation_spec.md).
 
 The final candidate should prefer fixed input shapes and MNN-supported
 operators. Quantized Int8 weights should be tested early; however, the anomaly

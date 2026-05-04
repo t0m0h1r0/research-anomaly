@@ -89,9 +89,10 @@ frame_10s = {
 }
 ```
 
-With 12 frames, this gives roughly two minutes of context. The exact bucket
-counts should be reduced before model work if the MNN memory harness shows
-pressure.
+The model input is `N` consecutive frames, so the temporal context is
+`N * 10` seconds. An initial `N = 12` gives roughly two minutes of context.
+The exact sequence length and bucket counts should be reduced before model work
+if the MNN memory harness shows pressure.
 
 ## Model Implications
 
@@ -100,10 +101,11 @@ its place against smaller alternatives.
 
 Preferred evaluation order:
 
-1. MLP bottleneck AE over flattened 10-second sequences.
-2. GRU-only AE with a small hidden state.
+1. Linear tiny AE as the smallest flattened baseline.
+2. Shared-frame bottleneck AE as the smallest deployable candidate.
 3. 1D temporal convolution AE with fixed sequence length.
-4. Tiny CNN-GRU AE only if the first three are insufficient.
+4. GRU-only AE with a small hidden state.
+5. Tiny CNN-GRU AE only if the first four are insufficient.
 
 Selection criteria:
 
