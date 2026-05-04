@@ -6,13 +6,13 @@
 
 | Field | Value |
 |-------|-------|
-| phase | REVIEW |
-| branch | codex/researcharchitect-500kb-memory |
-| current_objective | Complete strict AE operator-narrative review and resolve manuscript/docs/code consistency findings |
+| phase | PROMPT_CONFIG |
+| branch | codex/optimize-codex-config |
+| current_objective | Optimize Codex-side prompt configuration while preserving compact generated agents |
 | active_brief | `docs/interface/ResearchBrief.md` |
 | source_artifact | none registered yet |
-| next_action | Commit strict AE narrative review fixes; do not merge main until explicitly instructed |
-| updated_at_utc | 2026-05-04T12:10:00Z |
+| next_action | Tighten Codex base/profile guidance, run prompt audit checks, and do not merge main until explicitly instructed |
+| updated_at_utc | 2026-05-04T12:52:21Z |
 
 ## §CHECKLIST
 
@@ -76,3 +76,4 @@
 | BLK-RAD-001 | codex/researcharchitect-ae-public-eval | `/private/tmp/new-project-3-researcharchitect-ae-eval` | continue AE evaluation implementation after main merge and scalar-only D=12 contract update | ACTIVE | 2026-05-04 |
 | RAD-RA-PR | codex/researcharchitect-paper-review | `/private/tmp/new-project-3-researcharchitect-paper-review` | reviewer-grade manuscript/code audit and root-cause revision | ACTIVE | 2026-05-04 |
 | RAD-RA-500KB | codex/researcharchitect-500kb-memory | `/private/tmp/new-project-3-researcharchitect-500kb-memory` | correct 500 KB detector-data budget rationale and align docs/manuscript gates | ACTIVE | 2026-05-04 |
+| RAD-CODEXCFG | codex/optimize-codex-config | `/private/tmp/research-anomaly-codex-config` | optimize Codex prompt configuration and audit compactness/trust boundaries | ACTIVE | 2026-05-04 |
