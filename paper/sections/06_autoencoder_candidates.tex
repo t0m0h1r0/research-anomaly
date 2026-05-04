@@ -30,11 +30,49 @@ false alarms per volume per day を主指標にする。
 固定 shape の再構成問題として MNN に載せやすいことが主理由である。
 volume あたり 500 KB の detector-data 制約、さらに多数 volume へ同じ検出器を展開する制約では、
 小型候補との比較が必須である。
-本稿では operator の役割を固定する。Dense は frame denoising または情報圧縮、GRU は各 frame への
-時系列文脈付与を担う。Conv1D は圧縮ではなく feature analysis のために使い、
-AE-4 では $K=3$ で局所時間 pattern を抽出し、AE-5 では $K=1$ で同一 frame 内の
-異種 scalar feature を混合する。したがって、GRU や Conv1D に圧縮責任を曖昧に
-負わせず、圧縮は明示的な Dense bottleneck に置く。
+そこで本稿では、まず演算子の意味を固定し、その上で候補モデルを設計する。
+表 \ref{tab:operator-roles} に、本稿内での operator の役割を示す。
+
+\begin{table}[tb]
+  \centering
+  \caption{AE 候補における operator の意味}
+  \label{tab:operator-roles}
+  \begin{tabularx}{\linewidth}{lY Y}
+    \toprule
+    Operator & 本稿で担う意味 & 担わせない役割 \\
+    \midrule
+    Dense / TD(Dense) &
+    情報を選ぶ層である。frame-level denoising、明示的 bottleneck、bottleneck からの再展開を担う。 &
+    時系列文脈そのものの抽出。 \\
+    Conv1D($K=3$) &
+    AE-4 で隣接 10 秒 frame 間の局所時間 pattern を複数チャネルへ展開・抽出する。 &
+    情報圧縮や系列全体の要約。 \\
+    Conv1D($K=1$) &
+    AE-5 で同一 frame 内の intensity、write ratio、address/length、delta など異種 scalar feature を混合する。 &
+    時間方向の畳み込みや LBA/length bucket の仮定。 \\
+    GRU &
+    各 frame に時系列文脈を付与する。常に \texttt{return\_sequences=True} として sequence を保つ。 &
+    最終 hidden state への系列圧縮。 \\
+    Decoder / output head &
+    bottleneck 表現から入力と同じ $[1,N,D]$ scalar sequence を再構成する。 &
+    thresholding、alert 判定、score state の保持。 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+この役割定義により、GRU や Conv1D に圧縮責任を曖昧に負わせない。
+圧縮または denoising は Dense に置き、Conv1D は feature analysis、GRU は temporal
+context、decoder は再構成に限定する。
+
+各候補は、複雑な model family を順に足すためではなく、どの仮説が必要かを切り分けるために置く。
+AE-0 は、観測境界そのものに再構成信号があるかを見る最小 flattened baseline である。
+AE-1 は flattened Dense 系の容量不足を切り分ける capacity check であり、別の科学仮説ではない。
+AE-2 は recurrent/convolution を使わず、frame-level と sequence-level の二段 Dense 圧縮だけで足りるかを見る。
+AE-3 は、Dense bottleneck は維持したまま GRU による時系列文脈だけを追加する。
+AE-4 は、recurrent workspace を使わず、$K=3$ Conv1D で局所時間 pattern を抽出できるかを見る。
+AE-5 は最も強い仮説検証用であり、$K=1$ Conv1D による異種 feature mixing、
+GRU 前の TD(Dense) による frame denoising、GRU による文脈化、GRU 後の Dense bottleneck による
+重要成分選択を組み合わせる。ただし、これは既定解ではなく、単純候補が不十分な場合にだけ正当化される。
 
 \begin{table}[tb]
   \centering
@@ -87,18 +125,12 @@ flattened 入力を仮定した具体的な小型 AE 例を示す。これは重
   }
 \end{table}
 
-初期実装では AE-0、AE-2、AE-4、AE-3a の順で評価する。AE-0 は性能を期待する
-本命ではなく、教師なし再構成がこの観測境界で最低限の信号を持つかを見る
-flattened AE の最低線である。AE-2 と AE-4 は volume あたり 500 KB detector-data 制約下で
-最も実装しやすく、多数 volume へ複製した場合にも総コストを抑えやすい候補である。
-AE-1 は flatten 系の容量不足を切り分ける候補であり、AE-3a は recurrent operator が
-MNN 上で許容できるかを測る候補である。AE-3 と AE-5 では、GRU は時系列特徴を
-各 frame に付与するために使う。AE-4 の Conv1D は局所時間特徴を多チャネルに
-展開して抽出するために使い、AE-5 の $K=1$ Conv1D は同一 frame 内の異種 feature
-を混合するために使う。いずれも、情報を減らす処理は TimeDistributed Dense
-bottleneck に明示的に任せる。
-AE-5 は元の CNN-GRU 仮説の検証用として残すが、単純候補が十分に弱いことを
-確認する前に既定解にしない。
+初期実装では AE-0、AE-2、AE-4、AE-3a の順で評価する。これは、
+flattened baseline、Dense-only 圧縮、recurrent なしの temporal feature extraction、
+recurrent context の順に、追加した operator の必要性を切り分けるためである。
+AE-1、AE-3b、AE-5 は、それぞれ flattened capacity、recurrent capacity、
+CNN-GRU 仮説の追加検証として扱う。AE-5 は単純候補が不十分なことを確認する前に
+既定解にしない。
 
 表 \ref{tab:model-details} は、初期評価対象を TensorFlow/Keras の
 \texttt{model.summary()} に近い形式で固定したものである。TD は
