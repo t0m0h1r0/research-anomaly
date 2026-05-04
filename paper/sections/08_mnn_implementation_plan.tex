@@ -15,7 +15,7 @@ ONNX などを使ってよいが、論文で実装可能性を主張するには
         transient scratch として別に測定する。
   \item volume 数 $V$ を変え、共有 runtime/library、共有可能な weight、volume ごとに
         複製される state を分けて aggregate memory と 10 秒あたり CPU 時間を測定する。
-  \item volume あたり detector data が 500 KB を超える場合、feature 数、系列長 $N$、
+  \item volume あたり detector-data が 500 KB を超える場合、feature 数、系列長 $N$、
         hidden size、architecture を縮小して再評価する。
 \end{enumerate}
 
