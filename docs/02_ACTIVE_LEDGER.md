@@ -7,12 +7,12 @@
 | Field | Value |
 |-------|-------|
 | phase | DEPLOYED |
-| branch | main |
-| current_objective | Start AI-assisted storage-embedded ransomware anomaly detection research with deployed research agents |
+| branch | codex/researcharchitect-ae-public-eval |
+| current_objective | Implement and smoke-verify a public RanSAP-style AE evaluation path |
 | active_brief | `docs/interface/ResearchBrief.md` |
 | source_artifact | none registered yet |
-| next_action | Dispatch ASM-RAD-001 to TaskPlanner for charter reconciliation, anomaly taxonomy, and first research-question framing |
-| updated_at_utc | 2026-05-04T04:21:54Z |
+| next_action | Stage public RanSAP under `data/raw/RanSAP/`, run `analysis/ae_public_eval/config.json`, then audit labels, leakage, entropy ablation, and false positives |
+| updated_at_utc | 2026-05-04T05:13:45Z |
 
 ## §CHECKLIST
 
@@ -29,6 +29,9 @@
 | CHK-RAD-009 | DONE | T | `docs/06_memory_aware_ae_candidates.md`, `paper/main.tex` | proposed concrete memory-aware AE model examples and rough size estimates | 2026-05-04 |
 | CHK-RAD-010 | DONE | T | `docs/06_memory_aware_ae_candidates.md`, `paper/main.tex` | expanded AE candidate internals with layer flow, shapes, decoder behavior, and parameter breakdowns | 2026-05-04 |
 | CHK-RAD-011 | DONE | R | `docs/07_ae_implementation_spec.md` | added code-ready AE tensor contracts, feature slices, PyTorch skeletons, scoring, and ONNX export spec | 2026-05-04 |
+| CHK-RAD-012 | DONE | R | `src/rad_ae/` | added RanSAP-style readers, 10-second feature extraction, NumPy MLP AE baseline, optional PyTorch GRU/CNN-GRU candidates, and metrics | 2026-05-04 |
+| CHK-RAD-013 | DONE | R | `analysis/ae_public_eval/` | added public RanSAP evaluation package with configs, smoke fixture, manifest-backed smoke run, and README | 2026-05-04 |
+| CHK-RAD-014 | DONE | E | `docs/evidence/ransap_public_data_note.md` | recorded public RanSAP access, schema, citation, and license facts for evaluation use | 2026-05-04 |
 
 ## §ASSUMPTIONS
 
@@ -58,3 +61,4 @@
 | ID | Branch | Worktree | Objective | Status | Updated |
 |----|--------|----------|-----------|--------|---------|
 | none | main | n/a | no active branch lock | INACTIVE | 2026-05-04 |
+| BLK-RAD-001 | codex/researcharchitect-ae-public-eval | `/private/tmp/new-project-3-researcharchitect-ae-eval` | implement public-data AE evaluation scaffold; do not merge main until user directs | ACTIVE | 2026-05-04 |
