@@ -9,7 +9,12 @@ I/O behavior compatible with SCSI/NVMe block semantics:
 - logical block address or byte offset,
 - transfer length,
 - completion timestamp or arrival timestamp,
-- optional payload-derived telemetry such as entropy or compression ratio.
+- optional low-cost telemetry such as compression ratio counters, if the storage
+  platform already exposes them.
+
+The deployed detector consumes only 10-second statistics. It should not require
+expensive calculations such as per-block Shannon entropy, payload scanning,
+sorting large address sets, or maintaining per-LBA state.
 
 NVMe separates the NVM command set from the base specification, and the NVM
 command set includes the core read and write commands. Computational-storage
@@ -25,24 +30,24 @@ Sources:
 
 ## Windowing
 
-Use two window modes and compare them early:
+The deployment window is fixed at 10 seconds. Public per-I/O traces should be
+aggregated into the same 10-second schema before model evaluation.
 
-| Mode | Example | Strength | Risk |
-| --- | --- | --- | --- |
-| time window | 1 s, 5 s, 10 s | maps to detection latency | sparse during idle periods |
-| event window | 256, 512, 1024 I/Os | stable tensor density | latency varies with workload rate |
+Exploratory event windows may be useful for research intuition, but they must not
+be used to support final embedded claims.
 
-The initial tensor should keep both modes possible:
+The initial tensor should match the deployed cadence:
 
 ```text
-run -> ordered events -> windows -> T-window sequences -> AE input tensor
+run -> ordered events -> 10-second statistics -> T-window sequences -> AE input
 ```
 
 Recommended starting point:
 
-- base window: 1 second,
-- sequence length: 32 windows,
-- stride: 1 to 4 windows for evaluation; larger stride for training efficiency,
+- base window: 10 seconds,
+- sequence length: 12 windows for a 2-minute context,
+- compare 6, 12, and 24 windows if memory allows,
+- stride: 1 window for evaluation; larger stride for training efficiency,
 - per-volume normalization of LBA by namespace size when available.
 
 ## Feature Tensor
@@ -52,7 +57,8 @@ Use the user-proposed feature families as the core input:
 - address distribution,
 - I/O length distribution,
 - read/write ratio,
-- entropy or compression-rate distribution.
+- entropy or compression-rate distribution, only when cheap telemetry already
+  exists.
 
 Represent each sequence as:
 
@@ -68,13 +74,13 @@ Initial channels:
 
 | Channel | Construction |
 | --- | --- |
-| read LBA histogram | bucket normalized LBA for reads |
-| write LBA histogram | bucket normalized LBA for writes |
-| read length histogram | bucket log2 transfer lengths for reads |
-| write length histogram | bucket log2 transfer lengths for writes |
-| read/write ratio | scalar per window, broadcast or appended after CNN |
-| write entropy histogram | bucket entropy or compression ratio for writes |
-| I/O intensity | event count and byte count, used as auxiliary scalar |
+| read LBA histogram | small fixed bucket count from shifted normalized LBA |
+| write LBA histogram | small fixed bucket count from shifted normalized LBA |
+| read length histogram | log2 or lookup-table transfer length buckets |
+| write length histogram | log2 or lookup-table transfer length buckets |
+| read/write counters | read count, write count, read bytes, write bytes |
+| sequentiality estimate | sequential read/write counts if cheap to track |
+| compression telemetry | optional scalar or buckets only if already available |
 
 Keep I/O intensity separate in analysis because anomaly scores can otherwise
 become "busy workload" detectors.
@@ -84,12 +90,20 @@ become "busy workload" detectors.
 - LBA: normalize by observed or declared namespace size, then histogram.
 - Length: log2 bucket by bytes or logical blocks.
 - Read/write ratio: `writes / max(reads + writes, 1)`.
-- Entropy: bucket by Shannon entropy per block or compression ratio if available.
+- Entropy/compression: use storage-provided compression telemetry if available;
+  otherwise omit from the deployed model.
 - Counts: use log scaling and robust normalization from benign calibration data.
+- Ratios: prefer host-side or offline normalization for evaluation; embedded
+  code can emit raw counters and let the model consume normalized fixed-point
+  values after cheap scaling.
 
 All normalization parameters must be learned from the training split only.
 
 ## CNN-GRU AutoEncoder
+
+The original architecture is now a constrained candidate, not a fixed decision.
+The 500 KB model-memory budget, excluding the MNN runtime, and MNN operator
+support decide whether CNN-GRU survives.
 
 Encoder:
 
@@ -125,6 +139,19 @@ Loss:
 - total loss: weighted sum by feature family,
 - anomaly score: rolling reconstruction error with per-channel breakdown.
 
+Memory-first alternatives to evaluate:
+
+| Candidate | Why it may fit better |
+| --- | --- |
+| MLP bottleneck AE | smallest operator set, easiest MNN conversion |
+| GRU-only AE | keeps temporal modeling with fewer activation maps |
+| 1D temporal convolution AE | predictable memory, no recurrent state overhead |
+| tiny CNN-GRU AE | preserves original idea if quantized memory fits |
+
+The final candidate should prefer fixed input shapes and MNN-supported
+operators. Quantized Int8 weights should be tested early; however, the anomaly
+score must be validated for quantization drift.
+
 ## Thresholding
 
 Start simple:
@@ -153,6 +180,15 @@ For the first research pass, only offline replay is required. Device-local claim
 need a later cost model covering RAM, model size, feature-buffer size, inference
 latency, and write-path isolation.
 
+The final implementation must run through MNN on CPU. Offline training and
+evaluation may use PyTorch, TensorFlow, or ONNX tooling, but the research cannot
+claim deployability until:
+
+- the selected model is converted to MNN,
+- fixed-shape 10-second statistic tensors are accepted by the MNN model,
+- MNN inference scores match offline-framework scores within a defined tolerance,
+- model-owned memory stays under 500 KB on the target or a faithful harness.
+
 ## Explainability Output
 
 Every alert should carry:
@@ -161,8 +197,8 @@ Every alert should carry:
 - per-channel reconstruction error,
 - top contributing windows,
 - approximate affected LBA span,
-- read/write and entropy summaries for the alert interval.
+- read/write summaries and optional compression or entropy-like telemetry for
+  the alert interval.
 
 This prevents the system from becoming a black-box "AE says bad" detector and
 helps distinguish ransomware-like encryption from benign maintenance jobs.
-

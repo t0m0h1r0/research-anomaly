@@ -2,7 +2,7 @@
 
 ## Data Requirements
 
-The minimum event schema for this research is:
+The public-trace input schema for offline aggregation is:
 
 | Field | Purpose | Required |
 | --- | --- | --- |
@@ -14,8 +14,22 @@ The minimum event schema for this research is:
 | workload or attack label | Supervised evaluation only, not model training | yes |
 | device or volume identity | Per-device normalization and split hygiene | yes |
 
-The AutoEncoder should train only on benign windows. Labels are used to evaluate
-thresholds, time to detect, and false-positive behavior.
+The deployed detector does not consume raw events. Raw public traces are first
+aggregated into 10-second statistics, then the AutoEncoder consumes those
+statistics as a time series. Labels are used to evaluate thresholds, time to
+detect, and false-positive behavior; the AutoEncoder trains only on benign
+windows.
+
+The deployed feature schema should be cheap to compute:
+
+| Feature | Embedded collection method | Notes |
+| --- | --- | --- |
+| read/write counts | increment counters per command | no division required in device path |
+| read/write bytes | add transfer length per command | saturating counters acceptable |
+| LBA histograms | bucket by high bits or shift-based range mapping | keep bucket count small |
+| length histograms | log2 or fixed transfer-size buckets | can use lookup table |
+| sequentiality estimate | compare current LBA with previous end LBA | optional, cheap |
+| entropy/compression | use only if existing hardware telemetry is available | do not require per-block Shannon entropy |
 
 ## Public Dataset Candidates
 
@@ -38,6 +52,7 @@ Use it for:
 - entropy-channel ablation,
 - HDD/SSD and volume-size sensitivity,
 - BitLocker condition stress testing.
+- conversion of per-I/O CSVs into deployed 10-second statistics.
 
 Important caveat: RanSAP is close to the target but was collected through a
 hypervisor rather than inside a SCSI/NVMe storage device. The feature semantics
@@ -65,6 +80,10 @@ Use it for:
 Expected caveat: many block traces include metadata only. They usually help with
 timestamp, address, size, and read/write behavior, but not payload entropy or
 compression ratio.
+
+This caveat now matches the deployed constraint: metadata-only 10-second
+statistics are not merely a fallback, but the required final input class unless
+the storage device already exposes cheap compression telemetry.
 
 Source:
 
@@ -142,7 +161,18 @@ Mitigation:
 - make entropy an optional channel in the model interface,
 - run an ablation with entropy removed,
 - derive compression-ratio-like telemetry during controlled replay,
-- treat storage-controller compression statistics as a future device signal.
+- treat storage-controller compression statistics as a future device signal,
+- do not require payload entropy in the final embedded detector unless it is
+  already available from low-cost hardware or firmware counters.
+
+### Gap: Public Traces Are Event-Level But Deployment Uses 10-Second Statistics
+
+Mitigation:
+
+- aggregate public traces into the exact deployed 10-second feature schema,
+- evaluate whether detection latency remains acceptable with 10-second cadence,
+- keep any sub-10-second analysis as exploratory only,
+- avoid training on features that cannot be emitted by the embedded collector.
 
 ### Gap: Ransomware Behavior Data Is Narrow
 
@@ -169,8 +199,8 @@ Mitigation:
 
 Phase 1 should use RanSAP as the primary dataset and produce three results:
 
-1. AE reconstruction-error separation between benign and ransomware windows.
+1. AE reconstruction-error separation between benign and ransomware 10-second
+   statistic windows.
 2. Ablation result with entropy removed.
 3. False-positive probe by mixing in at least one benign block-I/O trace family
    from UMass or SNIA IOTTA.
-

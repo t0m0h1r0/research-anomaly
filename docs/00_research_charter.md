@@ -22,7 +22,7 @@ ransomware windows should exceed a threshold calibrated on benign workloads.
 
 ## Model Hypothesis
 
-A CNN-GRU AutoEncoder is a good first architecture because:
+A CNN-GRU AutoEncoder remains a candidate architecture because:
 
 - CNN layers can learn local correlations inside per-window feature maps, such
   as adjacent address buckets, size buckets, and entropy buckets.
@@ -30,6 +30,12 @@ A CNN-GRU AutoEncoder is a good first architecture because:
   heavy transformer-class model in the storage device.
 - A mirrored decoder gives an interpretable reconstruction-error signal per
   feature channel and per time step.
+
+However, the deployed model must fit a 500 KB model-memory budget, excluding the
+MNN runtime, and consume only 10-second statistics that are cheap to collect. If
+CNN-GRU cannot fit that budget after quantization and MNN conversion, the
+research should prefer a smaller AE such as GRU-only, temporal convolution AE,
+or MLP bottleneck AE over preserving the original architecture.
 
 ## Scope
 
@@ -39,6 +45,8 @@ Included:
 - Offline feature extraction and model evaluation.
 - Public datasets and reproducible synthetic transformations.
 - Device-feasibility estimates for inference cost, memory, and telemetry.
+- A final implementation path using Alibaba MNN for CPU inference.
+- A deployed telemetry model based on 10-second statistics.
 
 Excluded for the initial phase:
 
@@ -47,6 +55,8 @@ Excluded for the initial phase:
 - Signature-based ransomware classification.
 - Production firmware integration.
 - Automatic response actions such as write blocking or snapshot rollback.
+- Features that require expensive payload scanning, per-block cryptographic
+  analysis, or heavy per-I/O computation in the storage device.
 
 ## Threat Model
 
@@ -77,7 +87,9 @@ Continue the research if offline experiments show all of the following:
   rates,
 - detection time is early enough to matter operationally,
 - the signal remains useful when entropy is removed or degraded,
-- inference cost plausibly fits a storage controller or nearby compute element,
+- model memory plausibly fits 500 KB with 10-second statistics and CPU
+  inference,
+- the final model can be converted to MNN with acceptable score parity,
 - false-positive analysis identifies practical allow-listing or calibration
   paths.
 
@@ -89,6 +101,8 @@ Stop or redesign if:
   dominate the anomaly score,
 - public data cannot support entropy/compression evaluation,
 - the architecture requires host-only context to be credible.
+- the MNN model cannot fit the 500 KB model-memory budget or requires
+  unsupported operators.
 
 ## Initial Success Criteria
 
@@ -100,4 +114,5 @@ Stop or redesign if:
   and encrypted-volume conditions where public data permits.
 - Explainability: report reconstruction error by feature channel so operators can
   see whether the anomaly is address, length, read/write, entropy, or temporal.
-
+- Implementability: keep model weights, model-owned tensors, and input/output
+  buffers within 500 KB, excluding the MNN runtime itself.

@@ -11,11 +11,13 @@ Tasks:
 - verify RanSAP CSV schema and license handling,
 - identify at least one benign block-I/O trace source for false-positive tests,
 - define a canonical event schema,
+- define the deployed 10-second statistic schema,
 - implement no model yet; only conversion and exploratory statistics.
 
 Exit criteria:
 
 - event schema covers timestamp, op, LBA, size, and optional entropy,
+- deployed schema covers only cheap 10-second statistics,
 - benign and ransomware runs can be split without leakage,
 - missing entropy in non-RanSAP traces is documented as an ablation condition.
 
@@ -25,7 +27,9 @@ Goal: convert raw traces into stable AE input tensors.
 
 Tasks:
 
-- build time-window and event-window feature extraction,
+- build the production-shaped 10-second statistics extractor,
+- keep any event-window or sub-10-second feature extraction as exploratory
+  scripts outside the final embedded claim,
 - generate per-channel histograms and scalars,
 - store normalization parameters from benign training data only,
 - produce visualization notebooks or reports for sanity checks.
@@ -33,6 +37,7 @@ Tasks:
 Exit criteria:
 
 - feature tensors are reproducible from source traces,
+- tensors match the final fixed-shape embedded input contract,
 - idle periods and sparse windows are handled consistently,
 - no label information leaks into training normalization.
 
@@ -53,24 +58,26 @@ Exit criteria:
 - baseline precision/recall and false-positive curves are available,
 - AE is not credited for merely rediscovering a trivial threshold.
 
-### Phase 3: CNN-GRU AutoEncoder
+### Phase 3: Tiny AutoEncoder Candidates
 
 Goal: test the core hypothesis.
 
 Tasks:
 
-- train AE on benign windows only,
+- train memory-aware AE candidates on benign 10-second statistic windows only,
 - calibrate threshold on held-out benign data,
 - evaluate ransomware windows and full attack timelines,
 - report reconstruction error per feature family,
-- compare time-window and event-window variants.
+- compare MLP AE, GRU-only AE, temporal convolution AE, and tiny CNN-GRU AE.
 
 Exit criteria:
 
 - reconstruction error separates attack from benign at useful false-positive
   rates,
 - detection occurs before most target data is overwritten,
-- channel breakdown is intelligible.
+- channel breakdown is intelligible,
+- at least one candidate has a plausible path to 500 KB model memory, excluding
+  MNN runtime.
 
 ### Phase 4: Ablation And Robustness
 
@@ -84,7 +91,7 @@ Ablations:
 - remove length channel,
 - replace CNN-GRU with GRU-only AE,
 - replace CNN-GRU with CNN-only AE,
-- vary window size and sequence length.
+- vary 10-second sequence length.
 
 Robustness tests:
 
@@ -98,11 +105,13 @@ Exit criteria:
 
 - the detector does not collapse when entropy is unavailable,
 - the value of each feature family is measurable,
-- the chosen architecture is justified by ablation rather than preference.
+- the chosen architecture is justified by ablation rather than preference,
+- detection remains useful at 10-second cadence.
 
-### Phase 5: Device-Fit Study
+### Phase 5: MNN Device-Fit Study
 
-Goal: decide whether "storage embedded" is plausible.
+Goal: decide whether "storage embedded with MNN and 500 KB model memory" is
+plausible.
 
 Tasks:
 
@@ -110,11 +119,16 @@ Tasks:
 - estimate feature-buffer memory,
 - estimate inference cadence and latency,
 - separate write-path critical work from asynchronous analysis,
-- define telemetry required from SCSI/NVMe command processing.
+- define telemetry required from SCSI/NVMe command processing,
+- convert the chosen model to MNN,
+- measure or estimate model file, model-owned tensors, input/output buffers, and
+  operator workspace attributable to the model,
+- compare MNN scores with the offline evaluation framework.
 
 Exit criteria:
 
-- prototype inference can run within a plausible storage-adjacent budget,
+- prototype inference can run within 500 KB model memory, excluding MNN runtime,
+- fixed-shape MNN inference has acceptable score parity,
 - any requirement for payload access or compression hardware is explicit,
 - response actions remain out of scope until detection quality is credible.
 
@@ -136,6 +150,7 @@ Secondary metrics:
 - feature extraction CPU cost,
 - inference latency,
 - memory footprint.
+- MNN conversion success and score parity.
 
 Avoid optimizing only for AUROC. Ransomware detection is operationally useful
 only if false positives are rare and alerts arrive early.
@@ -150,7 +165,8 @@ only if false positives are rare and alerts arrive early.
 | E3 | Does entropy dominate? | RanSAP | entropy ablation |
 | E4 | Does benign diversity break it? | UMass/SNIA benign traces | false-positive report |
 | E5 | Is CNN-GRU necessary? | RanSAP plus benign traces | architecture ablation |
-| E6 | Could this fit near storage? | trained model | size and latency estimate |
+| E6 | Does 10-second cadence still work? | deployed statistic tensors | latency and recall report |
+| E7 | Can the MNN model fit 500 KB? | trained candidate model | MNN model-memory and parity report |
 
 ## Risk Register
 
@@ -163,6 +179,9 @@ only if false positives are rare and alerts arrive early.
 | storage device lacks payload access | entropy feature may be impractical | use compression telemetry or metadata-only variant |
 | throttled ransomware changes slowly | late detection | evaluate cumulative score and longer temporal horizons |
 | public data is too narrow | weak generalization | treat Phase 1 as feasibility, not proof of deployability |
+| 500 KB model memory is too small for CNN-GRU | original architecture may not deploy | evaluate MLP, GRU-only, and temporal convolution AE |
+| MNN conversion changes scores | offline results may not transfer | require MNN parity before implementation claims |
+| 10-second statistics hide early signal | detection may arrive too late | measure bytes overwritten before first alert |
 
 ## Safety Rules
 
@@ -179,9 +198,9 @@ only if false positives are rare and alerts arrive early.
 2. Dataset acquisition notes and schema inspection complete.
 3. Feature extractor implemented with reproducible tensor output.
 4. Baseline rules evaluated.
-5. CNN-GRU AE evaluated with ablations.
+5. Tiny AE candidates evaluated with ablations.
 6. False-positive stress report complete.
-7. Device-fit memo complete.
+7. MNN 500 KB device-fit memo complete.
 8. Go/no-go review for deeper prototype.
 
 ## Go/No-Go Review Template
@@ -194,5 +213,6 @@ At the end of Phase 4, answer:
 - Does performance survive without entropy?
 - Which benign workloads still cause false positives?
 - What storage-device telemetry is mandatory?
+- Does the MNN model fit 500 KB excluding the MNN runtime?
+- Does 10-second cadence leave enough response time?
 - Is the remaining work a research problem, an engineering problem, or both?
-

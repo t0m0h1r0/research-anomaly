@@ -23,6 +23,8 @@ missing, and what evidence would be strong enough to continue.
   CNN-GRU AutoEncoder architecture, and inference path.
 - [Evaluation Roadmap](docs/03_evaluation_roadmap.md): experiments, baselines,
   metrics, risks, and milestones.
+- [Embedded Constraints](docs/04_embedded_constraints.md): 500 KB model memory
+  budget, 10-second statistics input, and MNN implementation path.
 
 ## Core Assumptions
 
@@ -31,8 +33,15 @@ missing, and what evidence would be strong enough to continue.
   entropy or compression-ratio telemetry.
 - Inputs are time series built from address distribution, I/O length
   distribution, read/write ratio, and entropy-like features.
-- The model is an AutoEncoder: CNN extracts local correlation and feature
-  patterns; GRU compresses temporal behavior; the decoder mirrors that structure.
+- Deployed inputs are 10-second statistics. The device should not depend on
+  expensive per-I/O or per-block calculations.
+- The embedded model memory budget is 500 KB, excluding the MNN runtime.
+- Alibaba MNN is the target runtime for the final embedded implementation.
+  Offline evaluation may use another framework, but MNN conversion and parity
+  testing are mandatory before implementation claims.
+- The model remains an AutoEncoder, but the CNN-GRU design is now a constrained
+  candidate rather than a default; it must fit the memory and cheap-feature
+  budget.
 - Public data must be sufficient for at least a credible offline feasibility
   study.
 
@@ -46,4 +55,5 @@ missing, and what evidence would be strong enough to continue.
    enterprise, search, and storage-system workloads.
 4. Decide whether entropy/compression signals require controlled replay or
    storage-device instrumentation beyond public trace metadata.
-
+5. Constrain the final model to 10-second statistics and prove that the MNN
+   model path fits the 500 KB model-memory budget.
