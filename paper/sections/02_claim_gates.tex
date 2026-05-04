@@ -26,9 +26,15 @@ evidence として扱い、単独では authority とみなさない。表
     false-positive claim &
     benign workload holdout、false alarms per volume per day、threshold tuning split。 &
     非主張。主要評価項目。 \\
+    未知脅威 claim &
+    AE は benign のみで学習・calibration し、攻撃 family は評価専用に保持する。
+    教師あり参照は既知 family で学習し、held-out family で別集計する。 &
+    非主張。family holdout は proxy 評価。 \\
     device-fit claim &
-    MNN 変換済み model、offline/MNN score parity、peak model-owned memory 測定。 &
-    非主張。500 KB は制約条件。 \\
+    MNN 変換済み model、offline/MNN score parity、volume あたり peak model-owned
+    memory、共有 weight と per-volume state の分解、volume 数 $V$ に対する
+    aggregate memory と 10 秒あたり CPU 時間。 &
+    非主張。500 KB は per-volume 制約条件。 \\
     \bottomrule
   \end{tabularx}
 \end{table}

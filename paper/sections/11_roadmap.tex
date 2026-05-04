@@ -5,7 +5,10 @@
   \item 10 秒統計抽出器: raw trace から表 \ref{tab:feature-schema} の tensor を生成する。
   \item baseline 実験: write ratio、entropy、mean LBA/length shift、classical anomaly detector を測る。
   \item tiny AE 実験: MLP、GRU-only、temporal convolution、tiny CNN-GRU を比較する。
-  \item robustness: entropy なし、BitLocker、family holdout、benign workload holdout を評価する。
-  \item MNN fit study: 変換、量子化、score parity、500 KB model-owned memory を測る。
+  \item 未知脅威 proxy 評価: AE は benign のみで calibration し、教師あり参照は
+        known-family training と held-out-family test を分けて評価する。
+  \item robustness: entropy なし、BitLocker、variant replay、benign workload holdout を評価する。
+  \item MNN fit study: 変換、量子化、score parity、per-volume 500 KB model-owned memory、
+        volume 数 $V$ に対する aggregate memory/CPU を測る。
   \item 論文化: 実験 manifest、source audit、failure mode を対応付けて本文を更新する。
 \end{enumerate}

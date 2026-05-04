@@ -27,8 +27,8 @@ block-store 固有の I/O 特性を利用する実用システムとして重要
 本稿の組み込み AE とは deployment boundary が異なる。したがって比較対象ではなく、
 block storage で false positive と復旧境界を同時に設計する先行例として扱う。
 計算ストレージの標準化動向\cite{snia-csd}は、ストレージ近傍で inference を
-評価する動機になるが、特定装置で 500 KB のモデル経路メモリが確保できる
-証拠にはならない。
+評価する動機になるが、特定装置で volume あたり 500 KB のモデル経路メモリや
+多数 volume の aggregate memory/CPU が確保できる証拠にはならない。
 
 \subsection{公開データセット}
 
@@ -65,6 +65,7 @@ false positive、検出遅延、復旧境界、振る舞い特徴の設計に関
 LSTM encoder-decoder\cite{malhotra2016lstm}、spacecraft anomaly detection
 \cite{hundman2018lstm}、USAD\cite{audibert2020usad} などは、
 時系列を再構成し、再構成誤差を anomaly score とする方法の基礎になる。
-しかし、ストレージ装置内、10 秒統計、500 KB モデル制約、MNN CPU 推論という
-条件を同時に満たすランサムウェア AE 研究は限定的である。本研究の novelty は
+しかし、ストレージ装置内、10 秒統計、volume あたり 500 KB モデル制約、
+多数 volume の aggregate cost、MNN CPU 推論という条件を同時に満たす
+ランサムウェア AE 研究は限定的である。本研究の novelty は
 大規模深層モデルではなく、この狭い制約下での検証可能性に置く。
