@@ -75,7 +75,7 @@ Generated docs:
 | docs/02_ACTIVE_LEDGER.md | live state, checklist, assumptions, lessons, replans |
 | docs/03_PROJECT_RULES.md | generated PR-1..PR-6 from kernel-project.md |
 | prompts/README.md | generated prompt-system guide |
-| AGENTS.md | lightweight external-agent instructions |
+| AGENTS.md | lightweight external-agent runbook: read order, worktree/commit discipline, source integrity, artifact routing, claim gates, and default planning task |
 
 ## Stage 3 - Generate Agent Prompts
 
@@ -96,6 +96,11 @@ Codex profile rule: shared Codex runtime defaults belong in
 `prompt_budget_policy`. Do not copy those defaults into every generated Codex
 agent unless a role needs a stricter override.
 
+AGENTS profile rule: `AGENTS.md` is the short entrypoint for humans and external
+agents. Keep it operational, not exhaustive; point to `prompts/meta/`,
+`docs/02_ACTIVE_LEDGER.md`, and `docs/03_PROJECT_RULES.md` instead of
+duplicating full kernel rules.
+
 ## Stage 4 - Validate
 
 Required checks:
@@ -109,6 +114,7 @@ Required checks:
 | 5 | handoff schema present | `kernel-roles.md` contains HandoffEnvelope |
 | 6 | prompt skills present | 5 skill capsules exist |
 | 7 | token report present | `token_telemetry_report.json` exists |
+| 8 | AGENTS runbook present | `AGENTS.md` names read order, source integrity, artifact routing, claim gates, experiment manifest, and main-merge gate |
 
 ## Stage 5 - Register
 

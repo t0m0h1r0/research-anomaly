@@ -11,8 +11,8 @@
 | current_objective | Optimize Codex-side prompt configuration while preserving compact generated agents |
 | active_brief | `docs/interface/ResearchBrief.md` |
 | source_artifact | none registered yet |
-| next_action | Commit Codex prompt configuration optimization and await explicit user instruction before any main merge |
-| updated_at_utc | 2026-05-04T12:55:33Z |
+| next_action | Commit AGENTS runbook optimization and await explicit user instruction before any main merge |
+| updated_at_utc | 2026-05-04T12:58:55Z |
 
 ## §CHECKLIST
 
@@ -44,6 +44,7 @@
 | CHK-RAD-024 | DONE | T/R/A | `docs/06_memory_aware_ae_candidates.md`, `docs/07_ae_implementation_spec.md`, `paper/sections/06_autoencoder_candidates.tex`, `src/rad_ae/torch_models.py` | refined AE-5 to use `K=1` Conv1D for cross-feature mixing, pre-GRU TD Dense frame denoising, GRU context, and post-GRU Dense bottleneck selection | 2026-05-04 |
 | CHK-RAD-025 | DONE | A/T/R | `docs/memo/ae_operator_narrative_strict_review.md`, `paper/sections/`, `docs/`, `src/rad_ae/torch_models.py`, `tests/test_torch_models.py` | completed strict AE operator-narrative review; resolved pointwise Conv1D axis ambiguity, AE-2 roadmap omission, manuscript notation, and implementation naming consistency | 2026-05-04 |
 | CHK-CODEXOPTI-001 | DONE | P | `prompts/agents-codex/_base.yaml`, `prompts/meta/kernel-deploy.md`, `artifacts/P/codex_config_optimization_audit.md` | optimized Codex shared runtime/git/prompt-budget defaults and recorded prompt audit checks | 2026-05-04 |
+| CHK-CODEXOPTI-002 | DONE | P | `AGENTS.md`, `prompts/README.md`, `prompts/meta/kernel-deploy.md`, `artifacts/P/agents_runbook_optimization_audit.md` | optimized external-agent runbook for read order, source integrity, artifact routing, claim gates, experiments, and merge discipline | 2026-05-04 |
 
 ## §ASSUMPTIONS
 
