@@ -62,12 +62,12 @@ Freeze this order in the feature extractor before training:
 ```python
 FEATURE_SLICES = {
     "intensity": slice(0, 2),              # total_count, total_bytes
-    "rw_ratio": slice(2, 4),               # read_ratio, write_ratio
-    "mean_lba": slice(4, 6),               # mean_read_lba, mean_write_lba
-    "mean_length": slice(6, 8),            # mean_read_len, mean_write_len
-    "frame_deltas": slice(8, 10),          # delta_mean_lba, delta_mean_len
-    "optional_telemetry": slice(10, 11),   # compression/entropy-like if cheap
-    "padding": slice(11, 12),              # excluded from loss and score
+    "write_ratio": slice(2, 3),            # writes / total_count
+    "mean_lba": slice(3, 4),               # total-count-weighted mean LBA
+    "mean_length": slice(4, 5),            # total-count-weighted mean length
+    "frame_deltas": slice(5, 7),           # delta_mean_lba, delta_mean_len
+    "optional_telemetry": slice(7, 8),     # compression/entropy-like if cheap
+    "padding": slice(8, 12),               # excluded from loss and score
 }
 ```
 
@@ -76,17 +76,19 @@ Expected frame layout:
 ```text
 frame_10s[D=12] =
   intensity[2],
-  rw_ratio[2],
-  mean_lba[2],
-  mean_length[2],
+  write_ratio[1],
+  mean_lba[1],
+  mean_length[1],
   frame_deltas[2],
   optional_telemetry[1],
-  padding[1]
+  padding[4]
 ```
 
 Metadata-only evaluation should keep unavailable optional telemetry and padding
-as zeroed slots with zero loss/score weights. Do not mix `D=10` and `D=12`
-tensors in one MNN graph.
+as zeroed slots with zero loss/score weights. Empty frames should zero-fill
+write ratio, mean LBA, mean length, and dependent deltas, with a separate
+loss/score mask. Do not mix narrower tensors and `D=12` tensors in one MNN
+graph.
 
 ## Config Schema
 
@@ -346,11 +348,11 @@ Training should start with weighted MSE by feature family.
 ```python
 FEATURE_WEIGHTS = {
     "intensity": 1.0,
-    "rw_ratio": 1.0,
+    "write_ratio": 1.0,
     "mean_lba": 1.0,
     "mean_length": 1.0,
     "frame_deltas": 0.5,
-    "optional_telemetry": 0.0,
+    "optional_telemetry": 1.0,
     "padding": 0.0,
 }
 

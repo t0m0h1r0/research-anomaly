@@ -9,6 +9,9 @@ storage-embedded ransomware anomaly detection.
 - Aggregates I/O events into fixed 10-second frames.
 - Builds sequence tensors with shape `[N, D=12]` using the scalar-only feature slices in
   `docs/07_ae_implementation_spec.md`.
+- Carries a separate loss/score mask so empty-frame statistics, unavailable
+  telemetry, and padding do not contribute to normalization, training loss, or
+  anomaly scores.
 - Trains only on benign sequences.
 - Calibrates an anomaly threshold on held-out benign sequences.
 - Evaluates held-out benign and attack sequences with:

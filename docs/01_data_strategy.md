@@ -7,9 +7,9 @@ The public-trace input schema for offline aggregation is:
 | Field | Purpose | Required |
 | --- | --- | --- |
 | timestamp | Build ordered windows and detection latency | yes |
-| operation | Read/write ratio and operation-specific channels | yes |
-| LBA or byte offset | Address distribution and spatial locality | yes |
-| transfer length | I/O length distribution | yes |
+| operation | Write ratio and I/O intensity | yes |
+| LBA or byte offset | Mean address movement | yes |
+| transfer length | Mean I/O length movement | yes |
 | entropy or compression ratio | Encrypted-write signal | target feature |
 | workload or attack label | Supervised evaluation only, not model training | yes |
 | device or volume identity | Per-device normalization and split hygiene | yes |
@@ -25,9 +25,9 @@ The deployed feature schema should be cheap to compute:
 | Feature | Embedded collection method | Notes |
 | --- | --- | --- |
 | total count and bytes | increment counters and add transfer length per command | no division required in device path |
-| read/write ratio | derive from read/write counters | fixed-point ratio is sufficient |
-| mean LBA | maintain read/write LBA sums and counts | no per-LBA map or sorting |
-| mean transfer length | maintain read/write length sums and counts | log1p scaling can happen after aggregation |
+| write ratio | derive from write and total counters | fixed-point ratio is sufficient |
+| mean LBA | maintain one LBA sum and total count | no per-LBA map or sorting |
+| mean transfer length | maintain one length sum and total count | log1p scaling can happen after aggregation |
 | frame deltas | compare current 10-second means with previous means | optional, no raw-event retention |
 | entropy/compression | use only if existing hardware telemetry is available | do not require per-block Shannon entropy |
 

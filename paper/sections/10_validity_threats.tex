@@ -18,7 +18,9 @@ channel-wise attribution が必要である。
 
 \paragraph{10 秒窓の遅延}
 10 秒統計は装置負荷を抑えるが、attack start 直後の小さなシグナルを隠す可能性がある。
-time to detect だけでなく、alert 前に失われる LBA fraction を測る。
+time to detect だけでなく、raw trace と攻撃ラベルから後処理で推定した
+alert 前の affected LBA fraction を測る。この fraction は検出器の入力特徴ではなく、
+検出の遅さがどれだけ被害量に変換されるかを見る評価指標である。
 
 \paragraph{MNN 変換差}
 offline framework で良好な AE が、MNN 変換や量子化後に score ordering を保つとは

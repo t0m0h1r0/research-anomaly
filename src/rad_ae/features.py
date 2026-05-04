@@ -13,36 +13,36 @@ from .ransap import IoEvent
 
 FEATURE_SLICES = {
     "intensity": slice(0, 2),
-    "rw_ratio": slice(2, 4),
-    "mean_lba": slice(4, 6),
-    "mean_length": slice(6, 8),
-    "frame_deltas": slice(8, 10),
-    "optional_telemetry": slice(10, 11),
-    "padding": slice(11, 12),
+    "write_ratio": slice(2, 3),
+    "mean_lba": slice(3, 4),
+    "mean_length": slice(4, 5),
+    "frame_deltas": slice(5, 7),
+    "optional_telemetry": slice(7, 8),
+    "padding": slice(8, 12),
 }
 
 FEATURE_NAMES = (
     "log_total_count",
     "log_total_bytes",
-    "read_ratio",
     "write_ratio",
-    "mean_read_lba",
-    "mean_write_lba",
-    "log_mean_read_len",
-    "log_mean_write_len",
+    "mean_lba",
+    "log_mean_length",
     "delta_mean_lba",
-    "delta_mean_len",
+    "delta_log_mean_length",
     "optional_entropy_or_compression",
-    "padding",
+    "padding_0",
+    "padding_1",
+    "padding_2",
+    "padding_3",
 )
 
 FEATURE_WEIGHTS = {
     "intensity": 1.0,
-    "rw_ratio": 1.0,
+    "write_ratio": 1.0,
     "mean_lba": 1.0,
     "mean_length": 1.0,
     "frame_deltas": 0.5,
-    "optional_telemetry": 0.0,
+    "optional_telemetry": 1.0,
     "padding": 0.0,
 }
 
@@ -52,7 +52,6 @@ class FeatureConfig:
     window_seconds: float = 10.0
     sequence_length: int = 12
     stride: int = 1
-    logical_block_bytes: int = 512
     include_entropy: bool = True
 
     def to_dict(self) -> dict[str, object]:
@@ -62,6 +61,7 @@ class FeatureConfig:
 @dataclass(frozen=True)
 class FrameBuildResult:
     frames: np.ndarray
+    score_masks: np.ndarray
     window_starts: np.ndarray
     namespace_lba: int
     event_count: int
@@ -76,9 +76,27 @@ class RobustNormalizer:
         self.center: np.ndarray | None = None
         self.scale: np.ndarray | None = None
 
-    def fit(self, x: np.ndarray) -> "RobustNormalizer":
+    def fit(self, x: np.ndarray, masks: np.ndarray | None = None) -> "RobustNormalizer":
         if x.size == 0:
             raise ValueError("cannot fit normalizer on an empty array")
+        if masks is not None:
+            if masks.shape != x.shape:
+                raise ValueError("normalizer masks must have the same shape as x")
+            self.center = np.zeros(x.shape[1:], dtype=np.float64)
+            self.scale = np.ones(x.shape[1:], dtype=np.float64)
+            for feature_index in np.ndindex(x.shape[1:]):
+                values = x[(slice(None), *feature_index)]
+                valid = masks[(slice(None), *feature_index)] > 0.0
+                if not np.any(valid):
+                    continue
+                valid_values = values[valid]
+                center = float(np.median(valid_values))
+                mad = float(np.median(np.abs(valid_values - center)))
+                std = float(np.std(valid_values))
+                scale = 1.4826 * mad if mad > self.epsilon else std
+                self.center[feature_index] = center
+                self.scale[feature_index] = scale if scale > self.epsilon else 1.0
+            return self
         self.center = np.median(x, axis=0)
         mad = np.median(np.abs(x - self.center), axis=0)
         std = np.std(x, axis=0)
@@ -111,7 +129,7 @@ def build_frames(
 
     if not events:
         empty = np.zeros((0, len(FEATURE_NAMES)), dtype=np.float32)
-        return FrameBuildResult(empty, np.zeros((0,), dtype=np.float64), 0, 0, 0)
+        return FrameBuildResult(empty, empty.copy(), np.zeros((0,), dtype=np.float64), 0, 0, 0)
 
     ordered = sorted(events, key=lambda event: event.timestamp)
     max_lba_seen = max(event.lba for event in ordered)
@@ -120,12 +138,10 @@ def build_frames(
     end = ordered[-1].timestamp
     frame_count = int(math.floor((end - start) / config.window_seconds)) + 1
     frames = np.zeros((frame_count, len(FEATURE_NAMES)), dtype=np.float32)
-    read_count = np.zeros((frame_count,), dtype=np.float64)
+    total_count_by_frame = np.zeros((frame_count,), dtype=np.float64)
     write_count = np.zeros((frame_count,), dtype=np.float64)
-    read_lba_sum = np.zeros((frame_count,), dtype=np.float64)
-    write_lba_sum = np.zeros((frame_count,), dtype=np.float64)
-    read_len_sum = np.zeros((frame_count,), dtype=np.float64)
-    write_len_sum = np.zeros((frame_count,), dtype=np.float64)
+    lba_sum = np.zeros((frame_count,), dtype=np.float64)
+    length_sum = np.zeros((frame_count,), dtype=np.float64)
     entropy_sum = np.zeros((frame_count,), dtype=np.float64)
     entropy_count = np.zeros((frame_count,), dtype=np.int64)
 
@@ -135,50 +151,46 @@ def build_frames(
         frame = frames[idx]
         frame[0] += 1.0
         frame[1] += float(event.size)
+        total_count_by_frame[idx] += 1.0
+        lba_sum[idx] += float(event.lba)
+        length_sum[idx] += float(event.size)
 
-        if event.op == "read":
-            read_count[idx] += 1.0
-            read_lba_sum[idx] += float(event.lba)
-            read_len_sum[idx] += float(event.size)
-        else:
+        if event.op != "read":
             write_count[idx] += 1.0
-            write_lba_sum[idx] += float(event.lba)
-            write_len_sum[idx] += float(event.size)
             if config.include_entropy and event.entropy is not None:
                 entropy_sum[idx] += float(event.entropy)
                 entropy_count[idx] += 1
 
-    combined_lba = np.zeros((frame_count,), dtype=np.float64)
-    combined_len = np.zeros((frame_count,), dtype=np.float64)
+    mean_lba = np.zeros((frame_count,), dtype=np.float64)
+    log_mean_length = np.zeros((frame_count,), dtype=np.float64)
+    score_masks = np.zeros_like(frames, dtype=np.float32)
     for idx in range(frame_count):
-        total_count = read_count[idx] + write_count[idx]
-        total_lba_count = max(total_count, 1.0)
-        total_len_count = max(total_count, 1.0)
-
-        read_lba_mean = read_lba_sum[idx] / max(read_count[idx], 1.0)
-        write_lba_mean = write_lba_sum[idx] / max(write_count[idx], 1.0)
-        read_len_mean = read_len_sum[idx] / max(read_count[idx], 1.0)
-        write_len_mean = write_len_sum[idx] / max(write_count[idx], 1.0)
-        combined_lba[idx] = (read_lba_sum[idx] + write_lba_sum[idx]) / total_lba_count / ns_lba
-        combined_len[idx] = math.log1p((read_len_sum[idx] + write_len_sum[idx]) / total_len_count)
+        total_count = total_count_by_frame[idx]
 
         frames[idx, 0] = math.log1p(float(frames[idx, 0]))
         frames[idx, 1] = math.log1p(float(frames[idx, 1]))
-        frames[idx, 2] = read_count[idx] / max(total_count, 1.0)
-        frames[idx, 3] = write_count[idx] / max(total_count, 1.0)
-        frames[idx, 4] = read_lba_mean / ns_lba
-        frames[idx, 5] = write_lba_mean / ns_lba
-        frames[idx, 6] = math.log1p(read_len_mean)
-        frames[idx, 7] = math.log1p(write_len_mean)
-        frames[idx, 10] = float(entropy_sum[idx] / entropy_count[idx]) if entropy_count[idx] else 0.0
-        frames[idx, 11] = 0.0
+        score_masks[idx, FEATURE_SLICES["intensity"]] = 1.0
+        if total_count > 0.0:
+            mean_lba[idx] = lba_sum[idx] / total_count / ns_lba
+            log_mean_length[idx] = math.log1p(length_sum[idx] / total_count)
+            frames[idx, 2] = write_count[idx] / total_count
+            frames[idx, 3] = mean_lba[idx]
+            frames[idx, 4] = log_mean_length[idx]
+            score_masks[idx, FEATURE_SLICES["write_ratio"]] = 1.0
+            score_masks[idx, FEATURE_SLICES["mean_lba"]] = 1.0
+            score_masks[idx, FEATURE_SLICES["mean_length"]] = 1.0
+        if config.include_entropy and entropy_count[idx]:
+            frames[idx, 7] = float(entropy_sum[idx] / entropy_count[idx])
+            score_masks[idx, FEATURE_SLICES["optional_telemetry"]] = 1.0
 
     if frame_count > 1:
-        frames[1:, 8] = np.diff(combined_lba).astype(np.float32)
-        frames[1:, 9] = np.diff(combined_len).astype(np.float32)
+        valid_delta = (total_count_by_frame[1:] > 0.0) & (total_count_by_frame[:-1] > 0.0)
+        frames[1:, 5] = (np.abs(np.diff(mean_lba)) * valid_delta).astype(np.float32)
+        frames[1:, 6] = (np.abs(np.diff(log_mean_length)) * valid_delta).astype(np.float32)
+        score_masks[1:, FEATURE_SLICES["frame_deltas"]] = valid_delta[:, np.newaxis].astype(np.float32)
 
     starts = start + np.arange(frame_count, dtype=np.float64) * config.window_seconds
-    return FrameBuildResult(frames, starts, ns_lba, len(ordered), int(entropy_count.sum()))
+    return FrameBuildResult(frames, score_masks, starts, ns_lba, len(ordered), int(entropy_count.sum()))
 
 
 def make_sequences(frames: np.ndarray, sequence_length: int, stride: int) -> np.ndarray:
@@ -203,7 +215,12 @@ def feature_schema(config: FeatureConfig) -> dict[str, object]:
         "feature_slices": {name: [value.start, value.stop] for name, value in FEATURE_SLICES.items()},
         "feature_weights_by_group": FEATURE_WEIGHTS,
         "effective_score_weights": feature_score_weights(config).tolist(),
-        "layout": "Spec-aligned scalar-only [N,D=12]: intensity, ratios, mean LBA/length, deltas, optional telemetry, pad.",
+        "mask_policy": (
+            "Intensity is always valid. Write ratio, mean LBA, and mean length are masked out for empty "
+            "frames. Deltas are valid only when both adjacent frames are non-empty. Optional telemetry "
+            "is valid only when present. Padding is always masked out."
+        ),
+        "layout": "Spec-aligned scalar-only [N,D=12]: intensity, write ratio, mean LBA/length, deltas, optional telemetry, pad.",
         "config": config.to_dict(),
     }
 
@@ -212,6 +229,6 @@ def feature_score_weights(config: FeatureConfig) -> np.ndarray:
     weights = np.ones((len(FEATURE_NAMES),), dtype=np.float32)
     for name, feature_slice in FEATURE_SLICES.items():
         weights[feature_slice] = FEATURE_WEIGHTS[name]
-    if config.include_entropy:
-        weights[FEATURE_SLICES["optional_telemetry"]] = 1.0
+    if not config.include_entropy:
+        weights[FEATURE_SLICES["optional_telemetry"]] = 0.0
     return weights

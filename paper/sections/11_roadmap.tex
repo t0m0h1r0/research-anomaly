@@ -3,7 +3,7 @@
 \begin{enumerate}
   \item データセット監査: RanSAP/RanSMAP の schema、license、trace split 単位を確認する。
   \item 10 秒統計抽出器: raw trace から表 \ref{tab:feature-schema} の tensor を生成する。
-  \item baseline 実験: write ratio、entropy、LBA shift、classical anomaly detector を測る。
+  \item baseline 実験: write ratio、entropy、mean LBA/length shift、classical anomaly detector を測る。
   \item tiny AE 実験: MLP、GRU-only、temporal convolution、tiny CNN-GRU を比較する。
   \item robustness: entropy なし、BitLocker、family holdout、benign workload holdout を評価する。
   \item MNN fit study: 変換、量子化、score parity、500 KB model-owned memory を測る。

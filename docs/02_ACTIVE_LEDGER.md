@@ -6,13 +6,13 @@
 
 | Field | Value |
 |-------|-------|
-| phase | DEPLOYED |
-| branch | codex/researcharchitect-ae-public-eval |
-| current_objective | Keep RanSAP AE evaluation code aligned with the latest scalar-only D=12 main contract |
+| phase | REVIEW |
+| branch | codex/researcharchitect-paper-review |
+| current_objective | Resolve manuscript/code review findings against the latest scalar-only D=12 main contract |
 | active_brief | `docs/interface/ResearchBrief.md` |
 | source_artifact | none registered yet |
-| next_action | Stage public RanSAP under `data/raw/RanSAP/`, run scalar-only `analysis/ae_public_eval/config.json`, then audit labels, leakage, entropy ablation, and false positives |
-| updated_at_utc | 2026-05-04T07:00:30Z |
+| next_action | Finish strict combined manuscript/code review, verify smoke/tests/build, and commit the review fix unit |
+| updated_at_utc | 2026-05-04T07:26:08Z |
 
 ## §CHECKLIST
 
@@ -36,6 +36,7 @@
 | CHK-RAD-016 | DONE | E/A | `docs/evidence/manuscript_claim_gate_matrix.md`, `paper/main.tex` | added manuscript claim-gate evidence matrix and paper-level evidence gates | 2026-05-04 |
 | CHK-RAD-017 | DONE | T/A | `paper/main.tex`, `docs/01_data_strategy.md`, `docs/02_feature_model_plan.md`, `docs/04_embedded_constraints.md`, `docs/06_memory_aware_ae_candidates.md`, `docs/07_ae_implementation_spec.md` | replaced histogram-first feature contract with scalar-only 10-second summaries and recalculated D=12 AE examples | 2026-05-04 |
 | CHK-RAD-018 | DONE | R | `src/rad_ae/`, `analysis/ae_public_eval/` | updated implementation from D=40 histogram profile to latest scalar-only D=12 feature contract and refreshed smoke manifest | 2026-05-04 |
+| CHK-RAD-019 | DONE | R/A | `src/rad_ae/`, `analysis/ae_public_eval/`, `docs/01_data_strategy.md`, `docs/02_feature_model_plan.md`, `docs/04_embedded_constraints.md`, `docs/06_memory_aware_ae_candidates.md`, `docs/07_ae_implementation_spec.md`, `docs/memo/combined_strict_review_rounds.md` | reconciled code and specs with the manuscript's one-write-ratio D=12 contract, added mask-aware loss/score handling, and reran smoke outputs | 2026-05-04 |
 
 ## §ASSUMPTIONS
 
@@ -65,4 +66,4 @@
 | ID | Branch | Worktree | Objective | Status | Updated |
 |----|--------|----------|-----------|--------|---------|
 | BLK-RAD-001 | codex/researcharchitect-ae-public-eval | `/private/tmp/new-project-3-researcharchitect-ae-eval` | continue AE evaluation implementation after main merge and scalar-only D=12 contract update | ACTIVE | 2026-05-04 |
-| RAD-RA-PR | codex/researcharchitect-paper-review | `/private/tmp/new-project-3-researcharchitect-paper-review` | reviewer-grade manuscript audit and root-cause revision | ACTIVE | 2026-05-04 |
+| RAD-RA-PR | codex/researcharchitect-paper-review | `/private/tmp/new-project-3-researcharchitect-paper-review` | reviewer-grade manuscript/code audit and root-cause revision | ACTIVE | 2026-05-04 |
