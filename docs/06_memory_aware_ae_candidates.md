@@ -37,6 +37,78 @@ overhead, operator workspace, input/output buffers, and score history. The
 research target should keep weights well below 240 KB so that tensor/workspace
 memory has room inside the 500 KB model-owned peak budget.
 
+## Common Model Contract
+
+All candidates share the same external contract:
+
+```text
+input  X     : [1, N, D] normalized 10-second statistic sequence
+output X_hat : [1, N, D] reconstructed sequence
+score  s     : computed outside the model from X and X_hat
+```
+
+The model should reconstruct normalized feature values directly. The embedded
+model should not include thresholding, alert logic, per-channel score reduction,
+or dynamic normalization. Those steps are easier to audit outside the neural
+network and avoid binding operational policy into the MNN graph.
+
+Recommended activation and output policy:
+
+- hidden dense/conv layers: ReLU or clipped ReLU in the first prototype,
+- GRU gates: framework default sigmoid/tanh,
+- output layer: linear,
+- postprocessing: optional clipping to the normalized feature range outside MNN,
+- histogram channels: reconstruct normalized histogram bins directly, not a
+  softmax distribution in the first prototype.
+
+This means the MNN graph stays small and operator-simple. If histogram
+normalization is needed for quality, it should be tested later as an ablation.
+
+## Feature Layout Used In Examples
+
+The initial `D = 40` planning value can be interpreted as:
+
+| Feature group | Dims | Notes |
+| --- | ---: | --- |
+| read/write counts and bytes | 4 | log-scaled counters |
+| read LBA histogram | 8 | normalized bucket counts |
+| write LBA histogram | 8 | normalized bucket counts |
+| read length histogram | 8 | log-size buckets |
+| write length histogram | 8 | log-size buckets |
+| sequentiality counters | 2 | read/write sequential estimates |
+| optional compression/entropy and pad | 2 | can be removed in metadata-only mode |
+| total | 40 | rounded deployment-friendly width |
+
+The exact order should be frozen in the feature extractor and exported with the
+MNN parity suite. A candidate may internally reshape the 32 histogram dimensions
+as four 8-bin channels, but it must still accept and emit the same `[1, N, D]`
+contract.
+
+## Parameter Counting Rules
+
+Dense layer from `A` to `B`:
+
+```text
+params = A * B + B
+```
+
+GRU layer with input `I` and hidden state `H`, assuming reset/update/new gates
+and separate input/recurrent biases:
+
+```text
+params = 3 * (I * H + H * H + 2 * H)
+```
+
+Conv1D layer with input channels `Cin`, output channels `Cout`, and kernel
+width `K`:
+
+```text
+params = K * Cin * Cout + Cout
+```
+
+MNN-converted files may store metadata and quantization tables, so these formulae
+are only planning estimates.
+
 ## Candidate Summary
 
 The following estimates use `D = 40` and `N = 12`.
@@ -57,17 +129,36 @@ feature-family reshape and decoder-head choice.
 
 ## AE-0: Linear Tiny AE
 
-Shape:
+Layer flow for `N = 12`, `D = 40`:
 
 ```text
-Input [1, N, D]
-  -> flatten [1, N*D]
-  -> Dense 32
-  -> Dense 8
-  -> Dense 32
-  -> Dense N*D
-  -> reshape [1, N, D]
+Input X                         [1, 12, 40]
+Flatten                         [1, 480]
+Dense 32 + ReLU                 [1, 32]
+Dense 8 + ReLU                  [1, 8]
+Dense 32 + ReLU                 [1, 32]
+Dense 480 + linear              [1, 480]
+Reshape                         [1, 12, 40]
 ```
+
+Parameter detail:
+
+| Layer | Params |
+| --- | ---: |
+| Dense 480 -> 32 | 15,392 |
+| Dense 32 -> 8 | 264 |
+| Dense 8 -> 32 | 288 |
+| Dense 32 -> 480 | 15,840 |
+| total | 31,784 |
+
+Interpretation:
+
+- The 8-dimensional bottleneck is the entire compressed representation of the
+  two-minute sequence.
+- The model can learn correlations between any feature at any time step, but
+  only through a flattened vector.
+- If this model performs well, the signal is likely dominated by coarse
+  sequence-level distribution shifts rather than fine temporal dynamics.
 
 Why it matters:
 
@@ -89,19 +180,38 @@ Recommendation:
 
 ## AE-1: Flat MLP AE
 
-Shape:
+Layer flow for `N = 12`, `D = 40`:
 
 ```text
-Input [1, N, D]
-  -> flatten [1, 480]
-  -> Dense 64
-  -> Dense 16
-  -> Dense 4
-  -> Dense 16
-  -> Dense 64
-  -> Dense 480
-  -> reshape [1, N, D]
+Input X                         [1, 12, 40]
+Flatten                         [1, 480]
+Dense 64 + ReLU                 [1, 64]
+Dense 16 + ReLU                 [1, 16]
+Dense 4 + ReLU                  [1, 4]
+Dense 16 + ReLU                 [1, 16]
+Dense 64 + ReLU                 [1, 64]
+Dense 480 + linear              [1, 480]
+Reshape                         [1, 12, 40]
 ```
+
+Parameter detail:
+
+| Layer | Params |
+| --- | ---: |
+| Dense 480 -> 64 | 30,784 |
+| Dense 64 -> 16 | 1,040 |
+| Dense 16 -> 4 | 68 |
+| Dense 4 -> 16 | 80 |
+| Dense 16 -> 64 | 1,088 |
+| Dense 64 -> 480 | 31,200 |
+| total | 64,260 |
+
+Interpretation:
+
+- The 4-dimensional central bottleneck forces a very strong compression.
+- The larger outer layers make it a stronger flattened baseline than AE-0.
+- FP32 weights already exceed the initial 240 KB weight target, so this model is
+  mainly useful if FP16/Int8 parity is acceptable.
 
 Memory note:
 
@@ -117,20 +227,46 @@ Expected role:
 
 ## AE-2: Shared-Frame Bottleneck AE
 
-Shape:
+Layer flow for `N = 12`, `D = 40`:
 
 ```text
-Input [1, N, D]
-  -> TimeDistributed Dense 24
-  -> TimeDistributed Dense 12
-  -> flatten [1, N*12]
-  -> Dense 32
-  -> Dense 8
-  -> Dense 32
-  -> Dense N*12
-  -> TimeDistributed Dense 24
-  -> TimeDistributed Dense D
+Input X                         [1, 12, 40]
+TimeDistributed Dense 24 + ReLU  [1, 12, 24]
+TimeDistributed Dense 12 + ReLU  [1, 12, 12]
+Flatten                         [1, 144]
+Dense 32 + ReLU                 [1, 32]
+Dense 8 + ReLU                  [1, 8]
+Dense 32 + ReLU                 [1, 32]
+Dense 144 + ReLU                [1, 144]
+Reshape                         [1, 12, 12]
+TimeDistributed Dense 24 + ReLU  [1, 12, 24]
+TimeDistributed Dense 40 linear  [1, 12, 40]
 ```
+
+Parameter detail:
+
+| Layer | Params |
+| --- | ---: |
+| shared Dense 40 -> 24 | 984 |
+| shared Dense 24 -> 12 | 300 |
+| Dense 144 -> 32 | 4,640 |
+| Dense 32 -> 8 | 264 |
+| Dense 8 -> 32 | 288 |
+| Dense 32 -> 144 | 4,752 |
+| shared Dense 12 -> 24 | 312 |
+| shared Dense 24 -> 40 | 1,000 |
+| total | 12,540 |
+
+Interpretation:
+
+- Each 10-second frame is first compressed from 40 dimensions to 12 dimensions
+  using the same small encoder.
+- The whole 12-frame sequence is then compressed through an 8-dimensional
+  sequence bottleneck.
+- The decoder expands the sequence bottleneck back to per-frame embeddings and
+  then reconstructs each frame.
+- This is a good "deployment-first" model because it preserves frame structure
+  while staying dense-only.
 
 Why it matters:
 
@@ -152,15 +288,42 @@ Recommendation:
 
 ## AE-3: GRU Seq2Seq AE
 
-Shape:
+Layer flow for `H = 24`, `N = 12`, `D = 40`:
 
 ```text
-Input [1, N, D]
-  -> GRU encoder hidden H
-  -> repeat/context sequence [1, N, H]
-  -> GRU decoder hidden H
-  -> TimeDistributed Dense D
+Input X                         [1, 12, 40]
+GRU encoder, return last state   [1, 24]
+Repeat context N times           [1, 12, 24]
+GRU decoder, return sequence     [1, 12, 24]
+TimeDistributed Dense 40 linear  [1, 12, 40]
 ```
+
+Parameter detail for `H = 24`:
+
+| Layer | Params |
+| --- | ---: |
+| encoder GRU, I=40, H=24 | 4,752 |
+| decoder GRU, I=24, H=24 | 3,600 |
+| output Dense 24 -> 40 | 1,000 |
+| total | 9,352 |
+
+Parameter detail for `H = 32`:
+
+| Layer | Params |
+| --- | ---: |
+| encoder GRU, I=40, H=32 | 7,104 |
+| decoder GRU, I=32, H=32 | 6,336 |
+| output Dense 32 -> 40 | 1,320 |
+| total | 14,760 |
+
+Interpretation:
+
+- The encoder reads the `N` frames in order and compresses the whole history
+  into the final hidden state.
+- The decoder receives that hidden state repeated across `N` steps and learns to
+  reconstruct the original sequence.
+- This tests whether ransomware is better represented as a temporal rhythm shift
+  than as a flattened distribution shift.
 
 Recommended hidden sizes:
 
@@ -189,17 +352,39 @@ Recommendation:
 
 ## AE-4: Temporal Convolution AE
 
-Shape:
+Layer flow for `N = 12`, `D = 40`:
 
 ```text
-Input [1, N, D]
-  -> Conv1D over time, channels 24, kernel 3
-  -> Conv1D over time, channels 24, kernel 3
-  -> 1x1 bottleneck, channels 8
-  -> 1x1 expand, channels 24
-  -> Conv1D decoder, channels 24, kernel 3
-  -> Conv1D output, channels D, kernel 3
+Input X                         [1, 12, 40]
+Conv1D K=3, C=24 + ReLU          [1, 12, 24]
+Conv1D K=3, C=24 + ReLU          [1, 12, 24]
+Pointwise Conv1D C=8 + ReLU      [1, 12, 8]
+Pointwise Conv1D C=24 + ReLU     [1, 12, 24]
+Conv1D K=3, C=24 + ReLU          [1, 12, 24]
+Conv1D K=3, C=40 linear          [1, 12, 40]
 ```
+
+Parameter detail:
+
+| Layer | Params |
+| --- | ---: |
+| Conv1D K=3, 40 -> 24 | 2,904 |
+| Conv1D K=3, 24 -> 24 | 1,752 |
+| Conv1D K=1, 24 -> 8 | 200 |
+| Conv1D K=1, 8 -> 24 | 216 |
+| Conv1D K=3, 24 -> 24 | 1,752 |
+| Conv1D K=3, 24 -> 40 | 2,920 |
+| total | 9,744 |
+
+Interpretation:
+
+- The model reconstructs each frame using nearby frames, so it can learn local
+  temporal motifs such as burst onset, sustained write-heavy periods, and
+  recovery to normal.
+- Weight count is almost independent of `N`; increasing `N` mainly increases
+  activation memory.
+- This is likely the cleanest temporal model for MNN if recurrent operators are
+  awkward or memory-hungry.
 
 Implementation note:
 
@@ -223,16 +408,39 @@ Recommendation:
 
 ## AE-5: Tiny CNN-GRU AE
 
-Shape:
+Layer flow for one concrete variant:
 
 ```text
-Input [1, N, D]
-  -> reshape each frame into feature-family buckets, e.g. [families=5, buckets=8]
-  -> TimeDistributed small Conv1D over buckets
-  -> per-frame embedding, e.g. 16 dims
-  -> GRU encoder/decoder H=24
-  -> TimeDistributed Dense or small heads back to D
+Input X                                  [1, 12, 40]
+Reshape per frame                        [1, 12, 5, 8]
+TimeDistributed Conv1D over 8 buckets     [1, 12, 5, 8]
+Flatten per-frame feature map             [1, 12, 40]
+TimeDistributed Dense 16 + ReLU           [1, 12, 16]
+GRU encoder hidden 24                     [1, 24]
+Repeat context N times                    [1, 12, 24]
+GRU decoder hidden 24                     [1, 12, 24]
+TimeDistributed Dense 40 linear           [1, 12, 40]
 ```
+
+Possible feature-family reshape:
+
+| Family | Width |
+| --- | ---: |
+| read LBA histogram | 8 |
+| write LBA histogram | 8 |
+| read length histogram | 8 |
+| write length histogram | 8 |
+| scalar/padded group | 8 |
+
+Interpretation:
+
+- The per-frame CNN only looks across neighboring buckets inside each feature
+  family. It is meant to learn local spatial structure such as adjacent LBA
+  buckets or nearby I/O size buckets.
+- The per-frame dense layer converts CNN features into a compact embedding.
+- The GRU handles temporal ordering across the `N` frames.
+- This is the closest model to the original CNN-GRU hypothesis, but it relies on
+  a somewhat artificial 5-by-8 layout for scalar channels.
 
 Why it matters:
 
@@ -254,16 +462,28 @@ Recommendation:
 
 ## AE-6: Split Histogram/Scalar AE
 
-Shape:
+Layer flow for one concrete variant:
 
 ```text
-Input [1, N, D]
-  -> histogram branch for LBA/length distributions
-  -> scalar branch for counts, bytes, ratios, sequentiality, optional compression
-  -> shared temporal trunk, GRU or Conv1D
-  -> histogram reconstruction head
-  -> scalar reconstruction head
+Input X                                      [1, 12, 40]
+Split histogram channels                     [1, 12, 32]
+Split scalar channels                        [1, 12, 8]
+Histogram branch Dense/Conv embedding         [1, 12, 16]
+Scalar branch Dense embedding                 [1, 12, 8]
+Concatenate embeddings                        [1, 12, 24]
+Temporal trunk, GRU or Conv1D                 [1, 12, 24]
+Histogram reconstruction head                 [1, 12, 32]
+Scalar reconstruction head                    [1, 12, 8]
+Concatenate outputs                           [1, 12, 40]
 ```
+
+Interpretation:
+
+- Histograms and scalar counters are reconstructed by separate heads.
+- This makes per-channel error reporting cleaner and lets the training loss
+  weight histograms differently from counters and ratios.
+- It is useful if single-head models either overfit counters or underfit
+  histogram shape.
 
 Why it matters:
 

@@ -346,6 +346,48 @@ buffer、score history は別途測定する必要がある。
 測る候補である。AE-5 は元の CNN-GRU 仮説の検証用として残すが、単純候補が
 十分に弱いことを確認する前に既定解にしない。
 
+\begin{table}[tb]
+  \centering
+  \caption{主要候補の内部動作}
+  \label{tab:model-details}
+  \small
+  \begin{tabularx}{\linewidth}{lY Y}
+    \toprule
+    ID & Encoder and latent representation & Decoder and reconstruction \\
+    \midrule
+    AE-0/1 &
+    $[1,N,D]$ を flatten し、dense 層で 8 次元または 4 次元の系列全体 latent に圧縮する。 &
+    dense 層で $N \times D$ 次元へ戻し、$[1,N,D]$ に reshape する。時間順序は明示的には扱わない。 \\
+    AE-2 &
+    各 10 秒フレームを共有 dense encoder で $D \rightarrow 24 \rightarrow 12$ に圧縮し、
+    その $N$ フレーム分を flatten して 8 次元 latent にする。 &
+    8 次元 latent から $N \times 12$ の frame embedding を再生成し、
+    共有 dense decoder で各フレームを $D$ 次元へ戻す。 \\
+    AE-3 &
+    GRU encoder が $N$ フレームを順に読み、最後の hidden state $H$ を
+    系列全体の latent とする。初期候補は $H=24$。 &
+    latent を $N$ 回 repeat して GRU decoder に入力し、各時刻の hidden state から
+    dense head で $D$ 次元フレームを復元する。 \\
+    AE-4 &
+    時間方向 Conv1D が近傍フレームの burst pattern を抽出し、
+    pointwise Conv1D で各時刻を 8 channel bottleneck に落とす。 &
+    pointwise expand と時間方向 Conv1D decoder で、各時刻の $D$ 次元統計を復元する。
+    weight は $N$ にほぼ依存しない。 \\
+    AE-5 &
+    各フレームを feature-family bucket map に reshape し、small CNN で
+    LBA/length bucket の局所相関を embedding 化してから GRU に渡す。 &
+    GRU decoder と per-frame head で $D$ 次元へ戻す。元の CNN-GRU 仮説に近いが、
+    scalar channel の reshape が人工的になり得る。 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+すべての候補は、入力と同じ $[1,N,D]$ の正規化統計列を線形出力として再構成する。
+alert 判定、しきい値処理、channel-wise error 集計は MNN graph の外で実行する。
+これにより、モデルを小さく保ちつつ、運用上のしきい値や説明情報を後から変更できる。
+ヒストグラム channel に softmax を入れる案も考えられるが、初期実装では MNN operator と
+量子化 drift を増やさないため、正規化済み bucket 値を直接復元する。
+
 図 \ref{fig:pipeline} に、最終的な検出 pipeline の概念図を示す。
 
 \begin{figure}[tb]
