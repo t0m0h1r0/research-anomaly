@@ -16,7 +16,7 @@ storage-embedded ransomware anomaly detection.
 - Calibrates an anomaly threshold on held-out benign sequences.
 - Evaluates held-out benign and attack sequences with:
   - memory-first NumPy MLP AutoEncoder,
-  - optional PyTorch GRU/CNN-GRU AutoEncoder code path,
+  - optional PyTorch two-level Dense, GRU, temporal Conv1D, and CNN-GRU AutoEncoder code paths,
   - write-ratio and mean-write-entropy baselines.
 - Writes `manifest.json`, `metrics.json`, `scores.csv`, `model_summary.json`,
   and `run.log`.

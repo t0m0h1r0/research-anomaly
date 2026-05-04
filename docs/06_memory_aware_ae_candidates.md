@@ -125,8 +125,9 @@ The candidate set uses a strict role separation:
   place where the sequence is collapsed.
 - Conv1D layers are feature-analysis layers, not compression mechanisms. In
   AE-4, `K=3` Conv1D expands scalar frame inputs into local temporal views. In
-  AE-5, `K=1` Conv1D mixes heterogeneous feature channels within each frame
-  before recurrent context modeling.
+  AE-5, `K=1` Conv1D is implemented over the sequence layout but cannot inspect
+  neighboring frames; it is a shared pointwise channel mixer for heterogeneous
+  feature channels within each frame before recurrent context modeling.
 
 This keeps the architecture story inspectable: feature mixing/extraction,
 optional Dense frame denoising, and temporal context are separate from the final
@@ -311,6 +312,9 @@ predictable temporal baseline.
 Use this to test the original CNN-GRU hypothesis after simpler candidates. With
 scalar-only features, the CNN component is a pointwise Conv1D feature mixer over
 the fixed `[N,D]` sequence, not a fake LBA or transfer-size bucket convolution.
+Although the layer is a Conv1D in the framework graph, `kernel_size=1` makes it
+a per-frame channel-mixing operator with shared weights across frames; temporal
+context is left to the GRU.
 
 Layer flow for `N = 12`, `D = 12`, `C = 24`, `F = 16`, and `H = 24`:
 

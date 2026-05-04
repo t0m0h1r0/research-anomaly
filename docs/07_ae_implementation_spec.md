@@ -350,6 +350,9 @@ buckets.
 
 For AE-5, `kernel_size=1` is deliberate: the convolution mixes heterogeneous
 feature channels within each frame before the GRU sees a denoised frame code.
+The framework still applies Conv1D over the sequence layout, but a width-1 kernel
+cannot read neighboring frames; the layer is therefore a shared per-frame channel
+mixer, not a temporal convolution.
 
 Architecture for `N=12`, `D=12`, `H=24`:
 
@@ -377,7 +380,7 @@ class AE5TinyCNNGRU(nn.Module):
         self.cfg = cfg
         c = cfg.conv_channels
         h = cfg.hidden_dim
-        self.temporal_cnn = nn.Sequential(
+        self.pointwise_mixer = nn.Sequential(
             nn.Conv1d(cfg.d_features, c, kernel_size=1),
             make_activation(cfg.activation),
         )
@@ -409,7 +412,7 @@ class AE5TinyCNNGRU(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         assert_3d_input(x, self.cfg.n_frames, self.cfg.d_features)
-        y = self.temporal_cnn(x.transpose(1, 2)).transpose(1, 2)
+        y = self.pointwise_mixer(x.transpose(1, 2)).transpose(1, 2)
         y = self.frame_code(y)
         context, _ = self.encoder(y)
         z = self.bottleneck(context)

@@ -8,11 +8,11 @@
 |-------|-------|
 | phase | REVIEW |
 | branch | codex/researcharchitect-500kb-memory |
-| current_objective | Refine AE-5 into pointwise Conv1D feature mixing, pre-GRU Dense frame code, GRU context, and post-GRU Dense bottleneck |
+| current_objective | Complete strict AE operator-narrative review and resolve manuscript/docs/code consistency findings |
 | active_brief | `docs/interface/ResearchBrief.md` |
 | source_artifact | none registered yet |
-| next_action | Verify updated AE-5 parameter/story consistency, commit; do not merge main until explicitly instructed |
-| updated_at_utc | 2026-05-04T11:30:52Z |
+| next_action | Commit strict AE narrative review fixes; do not merge main until explicitly instructed |
+| updated_at_utc | 2026-05-04T12:10:00Z |
 
 ## §CHECKLIST
 
@@ -42,6 +42,7 @@
 | CHK-RAD-022 | DONE | T/R/A | `docs/memo/ae_candidate_operator_role_review.md`, `docs/06_memory_aware_ae_candidates.md`, `docs/07_ae_implementation_spec.md`, `paper/sections/06_autoencoder_candidates.tex`, `src/rad_ae/torch_models.py` | resolved AE candidate role ambiguity: Dense performs compression, GRU provides temporal context, and Conv1D expands/extracts local temporal features | 2026-05-04 |
 | CHK-RAD-023 | DONE | T/R/A | `src/rad_ae/models.py`, `src/rad_ae/torch_models.py`, `analysis/ae_public_eval/`, `docs/memo/ae_candidate_operator_role_review.md` | completed strict AE candidate re-review; aligned NumPy AE-0, added AE-2/AE-4 PyTorch paths, corrected AE-2 parameter arithmetic, and regenerated smoke outputs | 2026-05-04 |
 | CHK-RAD-024 | DONE | T/R/A | `docs/06_memory_aware_ae_candidates.md`, `docs/07_ae_implementation_spec.md`, `paper/sections/06_autoencoder_candidates.tex`, `src/rad_ae/torch_models.py` | refined AE-5 to use `K=1` Conv1D for cross-feature mixing, pre-GRU TD Dense frame denoising, GRU context, and post-GRU Dense bottleneck selection | 2026-05-04 |
+| CHK-RAD-025 | DONE | A/T/R | `docs/memo/ae_operator_narrative_strict_review.md`, `paper/sections/`, `docs/`, `src/rad_ae/torch_models.py`, `tests/test_torch_models.py` | completed strict AE operator-narrative review; resolved pointwise Conv1D axis ambiguity, AE-2 roadmap omission, manuscript notation, and implementation naming consistency | 2026-05-04 |
 
 ## §ASSUMPTIONS
 

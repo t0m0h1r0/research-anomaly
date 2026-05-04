@@ -160,7 +160,8 @@ class _TinyCnnGruAutoEncoder:
         class TinyCnnGruAutoEncoder(nn.Module):
             def __init__(self) -> None:
                 super().__init__()
-                self.temporal_cnn = nn.Sequential(
+                # Kernel size 1 makes this a shared per-frame channel mixer.
+                self.pointwise_mixer = nn.Sequential(
                     nn.Conv1d(config.d_features, config.conv_channels, kernel_size=1),
                     nn.ReLU(),
                 )
@@ -182,7 +183,7 @@ class _TinyCnnGruAutoEncoder:
 
             def forward(self, x):
                 batch = x.shape[0]
-                embedded = self.temporal_cnn(x.transpose(1, 2)).transpose(1, 2)
+                embedded = self.pointwise_mixer(x.transpose(1, 2)).transpose(1, 2)
                 frame_code = self.frame_code(embedded)
                 context, _ = self.encoder(frame_code)
                 z = self.bottleneck(context)

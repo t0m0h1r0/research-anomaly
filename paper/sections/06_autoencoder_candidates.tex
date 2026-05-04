@@ -23,7 +23,7 @@ false alarms per volume per day を主指標にする。
 
 \subsection{候補アーキテクチャ}
 
-ユーザ仮説では、CNN が I/O 情報の相関や局所特徴を抽出し、GRU が時系列文脈を
+初期の CNN-GRU 仮説では、CNN が I/O 情報の相関や局所特徴を抽出し、GRU が時系列文脈を
 付与し、decoder は bottleneck 表現から入力列を再構成する。これは自然な候補であるが、
 本稿で AE を選ぶ理由は、複雑な深層モデルを使いたいからではない。
 教師なしにより未知脅威を正常時系列からの逸脱として扱えること、かつ
@@ -31,6 +31,9 @@ false alarms per volume per day を主指標にする。
 volume あたり 500 KB の detector-data 制約、さらに多数 volume へ同じ検出器を展開する制約では、
 小型候補との比較が必須である。
 そこで本稿では、まず演算子の意味を固定し、その上で候補モデルを設計する。
+以降で $X \in \mathbb{R}^{B_{\mathrm{batch}} \times N \times D}$ と書き、
+$[1,N,D]$ は device 上で 1 volume 分を推論する固定 batch shape、
+\texttt{None} は offline framework の batch 次元を表す。
 表 \ref{tab:operator-roles} に、本稿内での operator の役割を示す。
 
 \begin{table}[tb]
@@ -42,14 +45,14 @@ volume あたり 500 KB の detector-data 制約、さらに多数 volume へ同
     Operator & 本稿で担う意味 & 担わせない役割 \\
     \midrule
     Dense / TD(Dense) &
-    情報を選ぶ層である。frame-level denoising、明示的 bottleneck、bottleneck からの再展開を担う。 &
-    時系列文脈そのものの抽出。 \\
+    scalar feature を線形結合で再表現する。幅を絞る Dense は frame-level denoising と明示的 bottleneck を担い、対応する Dense が bottleneck から再展開する。 &
+    隣接 frame の順序や長期文脈そのものの抽出。 \\
     Conv1D($K=3$) &
     AE-4 で隣接 10 秒 frame 間の局所時間 pattern を複数チャネルへ展開・抽出する。 &
     情報圧縮や系列全体の要約。 \\
     Conv1D($K=1$) &
-    AE-5 で同一 frame 内の intensity、write ratio、address/length、delta など異種 scalar feature を混合する。 &
-    時間方向の畳み込みや LBA/length bucket の仮定。 \\
+    AE-5 で全 frame に共有される pointwise channel mixer として、同一 frame 内の intensity、write ratio、address/length、delta など異種 scalar feature を混合する。 &
+    隣接 frame を見る時間畳み込みや LBA/length bucket の仮定。 \\
     GRU &
     各 frame に時系列文脈を付与する。常に \texttt{return\_sequences=True} として sequence を保つ。 &
     最終 hidden state への系列圧縮。 \\
@@ -61,8 +64,10 @@ volume あたり 500 KB の detector-data 制約、さらに多数 volume へ同
 \end{table}
 
 この役割定義により、GRU や Conv1D に圧縮責任を曖昧に負わせない。
-圧縮または denoising は Dense に置き、Conv1D は feature analysis、GRU は temporal
+圧縮、denoising、または情報選択は幅を絞る Dense に置き、Conv1D は feature analysis、GRU は temporal
 context、decoder は再構成に限定する。
+特に AE-5 の Conv1D($K=1$) は実装上 sequence tensor に適用されるが、kernel 幅が 1 なので
+隣接 frame は参照せず、各 10 秒 frame に同じ重みを適用する channel mixer として解釈する。
 
 各候補は、複雑な model family を順に足すためではなく、どの仮説が必要かを切り分けるために置く。
 AE-0 は、観測境界そのものに再構成信号があるかを見る最小 flattened baseline である。
@@ -70,7 +75,7 @@ AE-1 は flattened Dense 系の容量不足を切り分ける capacity check で
 AE-2 は recurrent/convolution を使わず、frame-level と sequence-level の二段 Dense 圧縮だけで足りるかを見る。
 AE-3 は、Dense bottleneck は維持したまま GRU による時系列文脈だけを追加する。
 AE-4 は、recurrent workspace を使わず、$K=3$ Conv1D で局所時間 pattern を抽出できるかを見る。
-AE-5 は最も強い仮説検証用であり、$K=1$ Conv1D による異種 feature mixing、
+AE-5 は最も強い仮説検証用であり、pointwise Conv1D による異種 feature mixing、
 GRU 前の TD(Dense) による frame denoising、GRU による文脈化、GRU 後の Dense bottleneck による
 重要成分選択を組み合わせる。ただし、これは既定解ではなく、単純候補が不十分な場合にだけ正当化される。
 
@@ -219,15 +224,16 @@ default である \texttt{reset\_after=True} を仮定する。
 \normalsize
 
 AE-5 は volume あたり 500 KB detector-data 制約内で CNN-GRU 仮説を試す最小構成として、以下の制約を置く。
-feature layout は scalar-only の $D=12$ に固定し、CNN は feature 方向ではなく
-時間方向の \texttt{Conv1D(24, 1)} として使う。これは時間をまたぐ畳み込みではなく、
-同一 10 秒 frame 内の intensity、write ratio、mean LBA/length、delta、optional telemetry
-を混合して異種情報間の相互作用を抽出するためである。次の \texttt{TD(Dense(16))} は、
-GRU に入れる前に noisy な feature mixture を frame-level の大局 code へ落とす。
+feature layout は scalar-only の $D=12$ に固定する。AE-5 の \texttt{Conv1D(24, 1)} は
+sequence axis に沿う Conv1D 形式で実装するが、kernel 幅が 1 なので隣接 frame は参照しない。
+重みは全 frame で共有され、各 10 秒 frame 内の intensity、write ratio、mean LBA/length、
+delta、optional telemetry を 24 channel へ混合する pointwise mixer である。
+次の \texttt{TD(Dense(16))} は、GRU に入れる前に noisy な feature mixture を
+frame-level macro code へ落とす。
 GRU は encoder/decoder とも 1 層、hidden size 24 に固定するが、
 系列全体を 1 vector に潰すためには使わない。GRU は各 frame へ文脈を付与し、
-GRU 後の \texttt{TD(Dense(8))} が総合作用として最重要な contextual component を選ぶ
-bottleneck になる。Conv1D は異種 feature mixing、GRU は時系列文脈、Dense は
+GRU 後の \texttt{TD(Dense(8))} が文脈化後に情報幅を絞る integrated bottleneck になる。
+Conv1D は異種 feature mixing、GRU は時系列文脈、Dense は
 frame denoising と圧縮という役割を分ける。Conv2D、
 transposed convolution、多層 GRU、attention、モデル内 thresholding は使わない。
 この条件では raw FP32 weight は 32,208 bytes に収まるが、入力統計/state を含む per-volume

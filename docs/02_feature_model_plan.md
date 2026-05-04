@@ -142,10 +142,12 @@ Input [N, D]
 ```
 
 In AE-5, Conv1D is used as a pointwise cross-feature mixer rather than a temporal
-compressor. The pre-GRU Dense layer denoises each frame into a macro feature
-code. GRU is used as a temporal context extractor. The post-GRU Dense bottleneck
-then selects the most important contextual components. The architecture can
-therefore explain what is mixed, what is contextualized, and what is compressed.
+compressor. It is implemented as Conv1D over the sequence layout, but
+`kernel_size=1` means it does not inspect neighboring frames. The pre-GRU Dense
+layer denoises each frame into a macro feature code. GRU is used as a temporal
+context extractor. The post-GRU Dense bottleneck then selects the most important
+contextual components. The architecture can therefore explain what is mixed, what
+is contextualized, and what is compressed.
 
 Loss:
 
@@ -158,8 +160,9 @@ Memory-first alternatives to evaluate:
 | Candidate | Why it may fit better |
 | --- | --- |
 | MLP bottleneck AE | smallest operator set, easiest MNN conversion |
-| GRU contextual AE | keeps temporal modeling with an explicit Dense bottleneck and fewer activation maps |
+| two-level Dense AE | separates per-frame denoising from sequence-level Dense compression without temporal operators |
 | 1D temporal convolution AE | local temporal feature expansion with Dense compression and no recurrent state overhead |
+| GRU contextual AE | keeps temporal modeling with an explicit Dense bottleneck and fewer activation maps |
 | tiny CNN-GRU AE | preserves original idea if Conv1D/GRU add quality under the Dense bottleneck budget |
 
 Concrete memory-aware model sketches and rough parameter estimates are recorded
