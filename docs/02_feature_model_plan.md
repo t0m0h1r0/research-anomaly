@@ -149,6 +149,9 @@ Memory-first alternatives to evaluate:
 | 1D temporal convolution AE | predictable memory, no recurrent state overhead |
 | tiny CNN-GRU AE | preserves original idea if quantized memory fits |
 
+Concrete memory-aware model sketches and rough parameter estimates are recorded
+in [Memory-Aware AutoEncoder Candidate Models](06_memory_aware_ae_candidates.md).
+
 The final candidate should prefer fixed input shapes and MNN-supported
 operators. Quantized Int8 weights should be tested early; however, the anomaly
 score must be validated for quantization drift.

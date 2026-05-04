@@ -101,10 +101,11 @@ its place against smaller alternatives.
 
 Preferred evaluation order:
 
-1. MLP bottleneck AE over flattened 10-second sequences.
-2. GRU-only AE with a small hidden state.
+1. Linear tiny AE as the smallest flattened baseline.
+2. Shared-frame bottleneck AE as the smallest deployable candidate.
 3. 1D temporal convolution AE with fixed sequence length.
-4. Tiny CNN-GRU AE only if the first three are insufficient.
+4. GRU-only AE with a small hidden state.
+5. Tiny CNN-GRU AE only if the first four are insufficient.
 
 Selection criteria:
 

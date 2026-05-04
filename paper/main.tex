@@ -313,6 +313,39 @@ scalar は MSE または Huber loss を使う。しきい値 $\tau$ は benign c
   \end{tabularx}
 \end{table}
 
+表 \ref{tab:concrete-models} に、$D=40$、$N=12$、すなわち 480 次元の
+flattened 入力を仮定した具体的な小型 AE 例を示す。これは重みだけの粗い
+見積もりであり、MNN の operator workspace、allocator overhead、input/output
+buffer、score history は別途測定する必要がある。
+
+\begin{table}[tb]
+  \centering
+  \caption{メモリ制約を考慮した具体 AE 例}
+  \label{tab:concrete-models}
+  \small
+  \resizebox{\linewidth}{!}{%
+  \begin{tabular}{llrrl}
+    \toprule
+    ID & Model sketch & Params & FP32 & Role \\
+    \midrule
+    AE-0 & \texttt{480-32-8-32-480} & 31,784 & 124KB & flat baseline \\
+    AE-1 & \texttt{480-64-16-4-16-64-480} & 64,260 & 251KB & stronger flat AE \\
+    AE-2 & shared frame + sequence bottleneck & 12,540 & 49KB & deployable first pick \\
+    AE-3a & GRU seq2seq, hidden 24 & 9,352 & 37KB & first recurrent AE \\
+    AE-3b & GRU seq2seq, hidden 32 & 14,760 & 58KB & stronger recurrent AE \\
+    AE-4 & temporal Conv1D AE, 24 channels & 9,744 & 38KB & MNN-friendly temporal AE \\
+    AE-5 & per-frame CNN + GRU hidden 24 & 9k--30k & 35--117KB & original-hypothesis test \\
+    \bottomrule
+  \end{tabular}
+  }
+\end{table}
+
+初期実装では AE-0、AE-2、AE-4、AE-3a の順で評価する。AE-0 は性能を期待する
+本命ではなく、flattened AE の最低線である。AE-2 と AE-4 は 500KB 制約下で
+最も実装しやすい候補であり、AE-3a は recurrent operator が MNN 上で許容できるかを
+測る候補である。AE-5 は元の CNN-GRU 仮説の検証用として残すが、単純候補が
+十分に弱いことを確認する前に既定解にしない。
+
 図 \ref{fig:pipeline} に、最終的な検出 pipeline の概念図を示す。
 
 \begin{figure}[tb]

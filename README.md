@@ -28,6 +28,8 @@ missing, and what evidence would be strong enough to continue.
 - [Literature Survey](docs/05_literature_survey.md): prior work on
   storage-level, filesystem-level, dynamic-analysis, and AE-based ransomware
   detection.
+- [Memory-Aware AE Candidates](docs/06_memory_aware_ae_candidates.md): concrete
+  small AutoEncoder examples and rough memory estimates.
 
 ## Core Assumptions
 
