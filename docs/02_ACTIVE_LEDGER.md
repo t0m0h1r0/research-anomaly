@@ -6,13 +6,13 @@
 
 | Field | Value |
 |-------|-------|
-| phase | REVIEW |
-| branch | codex/researcharchitect-500kb-memory |
-| current_objective | Complete strict AE operator-narrative review and resolve manuscript/docs/code consistency findings |
+| phase | PROMPT_CONFIG |
+| branch | codex/optimize-codex-config |
+| current_objective | Optimize Codex-side prompt configuration while preserving compact generated agents |
 | active_brief | `docs/interface/ResearchBrief.md` |
 | source_artifact | none registered yet |
-| next_action | Commit strict AE narrative review fixes; do not merge main until explicitly instructed |
-| updated_at_utc | 2026-05-04T12:10:00Z |
+| next_action | Commit AGENTS runbook optimization and await explicit user instruction before any main merge |
+| updated_at_utc | 2026-05-04T12:58:55Z |
 
 ## §CHECKLIST
 
@@ -43,6 +43,8 @@
 | CHK-RAD-023 | DONE | T/R/A | `src/rad_ae/models.py`, `src/rad_ae/torch_models.py`, `analysis/ae_public_eval/`, `docs/memo/ae_candidate_operator_role_review.md` | completed strict AE candidate re-review; aligned NumPy AE-0, added AE-2/AE-4 PyTorch paths, corrected AE-2 parameter arithmetic, and regenerated smoke outputs | 2026-05-04 |
 | CHK-RAD-024 | DONE | T/R/A | `docs/06_memory_aware_ae_candidates.md`, `docs/07_ae_implementation_spec.md`, `paper/sections/06_autoencoder_candidates.tex`, `src/rad_ae/torch_models.py` | refined AE-5 to use `K=1` Conv1D for cross-feature mixing, pre-GRU TD Dense frame denoising, GRU context, and post-GRU Dense bottleneck selection | 2026-05-04 |
 | CHK-RAD-025 | DONE | A/T/R | `docs/memo/ae_operator_narrative_strict_review.md`, `paper/sections/`, `docs/`, `src/rad_ae/torch_models.py`, `tests/test_torch_models.py` | completed strict AE operator-narrative review; resolved pointwise Conv1D axis ambiguity, AE-2 roadmap omission, manuscript notation, and implementation naming consistency | 2026-05-04 |
+| CHK-CODEXOPTI-001 | DONE | P | `prompts/agents-codex/_base.yaml`, `prompts/meta/kernel-deploy.md`, `artifacts/P/codex_config_optimization_audit.md` | optimized Codex shared runtime/git/prompt-budget defaults and recorded prompt audit checks | 2026-05-04 |
+| CHK-CODEXOPTI-002 | DONE | P | `AGENTS.md`, `prompts/README.md`, `prompts/meta/kernel-deploy.md`, `artifacts/P/agents_runbook_optimization_audit.md` | optimized external-agent runbook for read order, source integrity, artifact routing, claim gates, experiments, and merge discipline | 2026-05-04 |
 
 ## §ASSUMPTIONS
 
@@ -76,3 +78,4 @@
 | BLK-RAD-001 | codex/researcharchitect-ae-public-eval | `/private/tmp/new-project-3-researcharchitect-ae-eval` | continue AE evaluation implementation after main merge and scalar-only D=12 contract update | ACTIVE | 2026-05-04 |
 | RAD-RA-PR | codex/researcharchitect-paper-review | `/private/tmp/new-project-3-researcharchitect-paper-review` | reviewer-grade manuscript/code audit and root-cause revision | ACTIVE | 2026-05-04 |
 | RAD-RA-500KB | codex/researcharchitect-500kb-memory | `/private/tmp/new-project-3-researcharchitect-500kb-memory` | correct 500 KB detector-data budget rationale and align docs/manuscript gates | ACTIVE | 2026-05-04 |
+| RAD-CODEXCFG | codex/optimize-codex-config | `/private/tmp/research-anomaly-codex-config` | optimize Codex prompt configuration and audit compactness/trust boundaries | ACTIVE | 2026-05-04 |

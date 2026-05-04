@@ -13,7 +13,7 @@ revision, and prompt/workflow evolution.
 | Kernel | `prompts/meta/kernel-*.md` | source of truth |
 | Generated agents | `prompts/agents-claude/`, `prompts/agents-codex/` | executable role prompts |
 | Skill capsules | `prompts/skills/` | JIT operation details |
-| Runtime docs | `docs/00_GLOBAL_RULES.md`, `docs/01_PROJECT_MAP.md`, `docs/02_ACTIVE_LEDGER.md`, `docs/03_PROJECT_RULES.md` | compact working memory |
+| Runtime docs | `AGENTS.md`, `docs/00_GLOBAL_RULES.md`, `docs/01_PROJECT_MAP.md`, `docs/02_ACTIVE_LEDGER.md`, `docs/03_PROJECT_RULES.md` | compact working memory and external-agent runbook |
 
 ## Active Project
 
@@ -41,3 +41,7 @@ For project retargeting, replace `prompts/meta/kernel-project.md` and regenerate
 `AGENTS.md`, and validation reports. For workflow changes, update the relevant
 kernel file, regenerate agent prompts, then run prompt audit before using changed
 agents.
+
+`AGENTS.md` should stay short and operational: read-order, worktree/commit
+discipline, source integrity, artifact routing, claim gates, and the default
+planning task. Full rule bodies belong in `prompts/meta/` or skill capsules.
