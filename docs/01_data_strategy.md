@@ -64,6 +64,31 @@ Source:
 - <https://github.com/manabu-hirano/RanSAP>
 - <https://doi.org/10.1016/j.fsidi.2021.301314>
 
+### RanSMAP
+
+RanSMAP is the successor to RanSAP and adds low-level memory access patterns to
+storage access patterns. It is useful for understanding the limitations of
+storage-only features because its authors report that storage-only RanSAP-style
+detection struggled when Office applications and web browsers were executed
+simultaneously, while memory access patterns improved detection in those mixed
+conditions.
+
+Use it for:
+
+- storage-only re-evaluation on newer Windows 10 traces,
+- mixed benign/ransomware execution stress tests,
+- comparison against memory-augmented detection, while keeping memory features
+  out of the final embedded storage-only model unless the product scope changes.
+
+Expected caveat: RanSMAP's memory-access features are outside the current
+storage-device observation boundary. They should be used as diagnostic evidence,
+not as production features.
+
+Sources:
+
+- <https://github.com/manabu-hirano/RanSMAP>
+- <https://doi.org/10.1016/j.cose.2024.104202>
+
 ### SNIA IOTTA and Related Block-I/O Traces
 
 SNIA IOTTA is a broad repository for storage I/O traces and tools. Its public
@@ -135,6 +160,7 @@ Source:
 | Dataset | Benign | Ransomware | Time | LBA/offset | Length | R/W | Entropy | Main role |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | RanSAP | yes | yes | yes | yes | yes | yes | write entropy | primary feasibility |
+| RanSMAP | yes | yes | yes | yes | yes | yes | write entropy plus memory features | storage-only stress and limitation analysis |
 | SNIA IOTTA traces | yes | no | varies | varies | varies | varies | usually no | false positives |
 | UMass storage traces | yes | no | yes | likely | likely | likely | no | benign diversity |
 | NapierOne | file corpus | no | no | no | file size | no | computable | entropy calibration |

@@ -25,6 +25,9 @@ missing, and what evidence would be strong enough to continue.
   metrics, risks, and milestones.
 - [Embedded Constraints](docs/04_embedded_constraints.md): 500 KB model memory
   budget, 10-second statistics input, and MNN implementation path.
+- [Literature Survey](docs/05_literature_survey.md): prior work on
+  storage-level, filesystem-level, dynamic-analysis, and AE-based ransomware
+  detection.
 
 ## Core Assumptions
 
