@@ -16,7 +16,7 @@ storage-embedded ransomware anomaly detection.
 - Calibrates an anomaly threshold on held-out benign sequences.
 - Evaluates held-out benign and attack sequences with:
   - memory-first NumPy MLP AutoEncoder,
-  - optional PyTorch GRU/CNN-GRU AutoEncoder code path,
+  - optional PyTorch two-level Dense, GRU, temporal Conv1D, and CNN-GRU AutoEncoder code paths,
   - write-ratio and mean-write-entropy baselines.
 - Writes `manifest.json`, `metrics.json`, `scores.csv`, `model_summary.json`,
   and `run.log`.
@@ -56,8 +56,9 @@ The default `numpy_mlp` model is the AE-0 memory-first baseline required before
 crediting a heavier model. The optional `torch_two_level_dense`, `torch_gru`,
 `torch_tcn`, and `torch_cnn_gru` paths implement the proposed AE-2 through AE-5
 family when PyTorch is installed on the experiment machine. In those paths, GRU
-provides temporal context, Conv1D extracts local temporal views, and Dense
-layers provide the bottleneck. Offline PyTorch results still do not imply MNN
+provides temporal context, Conv1D performs the candidate-specific feature
+analysis, and Dense layers provide frame denoising or the bottleneck. Offline
+PyTorch results still do not imply MNN
 readiness; MNN conversion, score parity, and 500 KB memory measurement remain
 later gates.
 

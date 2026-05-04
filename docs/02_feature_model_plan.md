@@ -114,10 +114,12 @@ scheduled slot counts, and MNN operator support decide whether CNN-GRU survives.
 
 Encoder:
 
-1. Optional temporal Conv1D over the `[N, D]` scalar sequence to expand local
-   frame-to-frame patterns into multiple feature views.
-2. GRU over the temporal embeddings, with `return_sequences=True`.
-3. TimeDistributed Dense bottleneck over the contextualized per-frame features.
+1. Pointwise Conv1D with `kernel_size=1` over the `[N, D]` scalar sequence to
+   mix heterogeneous feature channels inside each frame.
+2. TimeDistributed Dense frame code to reduce noisy mixtures into macro
+   per-frame features before recurrence.
+3. GRU over the frame codes, with `return_sequences=True`.
+4. TimeDistributed Dense bottleneck over the contextualized per-frame features.
 
 Decoder:
 
@@ -129,7 +131,8 @@ Starting architecture:
 
 ```text
 Input [N, D]
-  -> temporal Conv1D over 10-second frames
+  -> pointwise Conv1D feature mixer
+  -> TimeDistributed Dense frame code
   -> GRU temporal context
   -> TimeDistributed Dense bottleneck z_seq
   -> TimeDistributed Dense expansion
@@ -138,10 +141,13 @@ Input [N, D]
   -> Reconstructed [N, D]
 ```
 
-Conv1D is used as a local temporal feature extractor and expander. GRU is used
-as a temporal context extractor. Neither operator is responsible for
-compression. The bottleneck is explicit and dense, so the architecture can
-explain what is compressed and why.
+In AE-5, Conv1D is used as a pointwise cross-feature mixer rather than a temporal
+compressor. It is implemented as Conv1D over the sequence layout, but
+`kernel_size=1` means it does not inspect neighboring frames. The pre-GRU Dense
+layer denoises each frame into a macro feature code. GRU is used as a temporal
+context extractor. The post-GRU Dense bottleneck then selects the most important
+contextual components. The architecture can therefore explain what is mixed, what
+is contextualized, and what is compressed.
 
 Loss:
 
@@ -154,8 +160,9 @@ Memory-first alternatives to evaluate:
 | Candidate | Why it may fit better |
 | --- | --- |
 | MLP bottleneck AE | smallest operator set, easiest MNN conversion |
-| GRU contextual AE | keeps temporal modeling with an explicit Dense bottleneck and fewer activation maps |
+| two-level Dense AE | separates per-frame denoising from sequence-level Dense compression without temporal operators |
 | 1D temporal convolution AE | local temporal feature expansion with Dense compression and no recurrent state overhead |
+| GRU contextual AE | keeps temporal modeling with an explicit Dense bottleneck and fewer activation maps |
 | tiny CNN-GRU AE | preserves original idea if Conv1D/GRU add quality under the Dense bottleneck budget |
 
 Concrete memory-aware model sketches and rough parameter estimates are recorded

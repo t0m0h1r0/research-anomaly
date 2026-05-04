@@ -24,8 +24,9 @@ ransomware windows should exceed a threshold calibrated on benign workloads.
 
 A CNN-GRU AutoEncoder remains a candidate architecture because:
 
-- CNN layers can learn local temporal correlations across neighboring
-  10-second scalar frames.
+- CNN layers can learn either local temporal correlations across neighboring
+  10-second scalar frames or pointwise interactions among heterogeneous scalar
+  features within one frame, depending on the selected kernel.
 - GRU layers can learn temporal transitions between windows without requiring a
   heavy transformer-class model in the storage device.
 - A mirrored decoder gives an interpretable reconstruction-error signal per
@@ -36,8 +37,8 @@ budget, excluding shared MNN runtime/library memory, and consume only 10-second
 statistics that are cheap to collect. This budget covers model weight
 information plus retained input statistics/state for one volume. If CNN-GRU
 cannot fit that budget after quantization and MNN conversion, the
-research should prefer a smaller AE such as GRU contextual AE, temporal convolution AE,
-or MLP bottleneck AE over preserving the original architecture.
+research should prefer a smaller AE such as MLP bottleneck AE, two-level Dense AE,
+temporal convolution AE, or GRU contextual AE over preserving the original architecture.
 
 ## Scope
 

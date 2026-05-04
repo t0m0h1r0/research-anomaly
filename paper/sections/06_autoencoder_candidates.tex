@@ -23,17 +23,61 @@ false alarms per volume per day を主指標にする。
 
 \subsection{候補アーキテクチャ}
 
-ユーザ仮説では、CNN が I/O 情報の相関や局所特徴を抽出し、GRU が時系列文脈を
+初期の CNN-GRU 仮説では、CNN が I/O 情報の相関や局所特徴を抽出し、GRU が時系列文脈を
 付与し、decoder は bottleneck 表現から入力列を再構成する。これは自然な候補であるが、
 本稿で AE を選ぶ理由は、複雑な深層モデルを使いたいからではない。
 教師なしにより未知脅威を正常時系列からの逸脱として扱えること、かつ
 固定 shape の再構成問題として MNN に載せやすいことが主理由である。
 volume あたり 500 KB の detector-data 制約、さらに多数 volume へ同じ検出器を展開する制約では、
 小型候補との比較が必須である。
-本稿では operator の役割を固定する。Dense は情報圧縮、GRU は各 frame への
-時系列文脈付与、Conv1D は scalar 入力を複数の局所時間視点へ展開して短距離
-pattern を抽出する処理とする。したがって、GRU や Conv1D に圧縮責任を曖昧に
-負わせず、圧縮は明示的な Dense bottleneck に置く。
+そこで本稿では、まず演算子の意味を固定し、その上で候補モデルを設計する。
+以降で $X \in \mathbb{R}^{B_{\mathrm{batch}} \times N \times D}$ と書き、
+$[1,N,D]$ は device 上で 1 volume 分を推論する固定 batch shape、
+\texttt{None} は offline framework の batch 次元を表す。
+表 \ref{tab:operator-roles} に、本稿内での operator の役割を示す。
+
+\begin{table}[tb]
+  \centering
+  \caption{AE 候補における operator の意味}
+  \label{tab:operator-roles}
+  \begin{tabularx}{\linewidth}{lY Y}
+    \toprule
+    Operator & 本稿で担う意味 & 担わせない役割 \\
+    \midrule
+    Dense / TD(Dense) &
+    scalar feature を線形結合で再表現する。幅を絞る Dense は frame-level denoising と明示的 bottleneck を担い、対応する Dense が bottleneck から再展開する。 &
+    隣接 frame の順序や長期文脈そのものの抽出。 \\
+    Conv1D($K=3$) &
+    AE-4 で隣接 10 秒 frame 間の局所時間 pattern を複数チャネルへ展開・抽出する。 &
+    情報圧縮や系列全体の要約。 \\
+    Conv1D($K=1$) &
+    AE-5 で全 frame に共有される pointwise channel mixer として、同一 frame 内の intensity、write ratio、address/length、delta など異種 scalar feature を混合する。 &
+    隣接 frame を見る時間畳み込みや LBA/length bucket の仮定。 \\
+    GRU &
+    各 frame に時系列文脈を付与する。常に \texttt{return\_sequences=True} として sequence を保つ。 &
+    最終 hidden state への系列圧縮。 \\
+    Decoder / output head &
+    bottleneck 表現から入力と同じ $[1,N,D]$ scalar sequence を再構成する。 &
+    thresholding、alert 判定、score state の保持。 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+この役割定義により、GRU や Conv1D に圧縮責任を曖昧に負わせない。
+圧縮、denoising、または情報選択は幅を絞る Dense に置き、Conv1D は feature analysis、GRU は temporal
+context、decoder は再構成に限定する。
+特に AE-5 の Conv1D($K=1$) は実装上 sequence tensor に適用されるが、kernel 幅が 1 なので
+隣接 frame は参照せず、各 10 秒 frame に同じ重みを適用する channel mixer として解釈する。
+
+各候補は、複雑な model family を順に足すためではなく、どの仮説が必要かを切り分けるために置く。
+AE-0 は、観測境界そのものに再構成信号があるかを見る最小 flattened baseline である。
+AE-1 は flattened Dense 系の容量不足を切り分ける capacity check であり、別の科学仮説ではない。
+AE-2 は recurrent/convolution を使わず、frame-level と sequence-level の二段 Dense 圧縮だけで足りるかを見る。
+AE-3 は、Dense bottleneck は維持したまま GRU による時系列文脈だけを追加する。
+AE-4 は、recurrent workspace を使わず、$K=3$ Conv1D で局所時間 pattern を抽出できるかを見る。
+AE-5 は最も強い仮説検証用であり、pointwise Conv1D による異種 feature mixing、
+GRU 前の TD(Dense) による frame denoising、GRU による文脈化、GRU 後の Dense bottleneck による
+重要成分選択を組み合わせる。ただし、これは既定解ではなく、単純候補が不十分な場合にだけ正当化される。
 
 \begin{table}[tb]
   \centering
@@ -54,7 +98,7 @@ pattern を抽出する処理とする。したがって、GRU や Conv1D に圧
     計算量と activation memory を制御しやすい。 &
     長い文脈や不規則な attack rhythm への追従が弱い可能性。 \\
     Tiny CNN-GRU AE &
-    10 秒フレーム列の局所変化を Conv1D で展開・抽出し、GRU で文脈化し、Dense bottleneck で圧縮できる。 &
+    $K=1$ Conv1D で異種 feature を混合し、TD Dense で GRU 前の frame code を作り、GRU 後の Dense bottleneck で重要成分を選択できる。 &
     最も複雑で、volume あたり 500 KB detector-data と MNN operator support の制約を受けやすい。 \\
     \bottomrule
   \end{tabularx}
@@ -80,23 +124,18 @@ flattened 入力を仮定した具体的な小型 AE 例を示す。これは重
     AE-3a & GRU context + dense bottleneck, hidden 24 & 7,052 & 28,208 & recurrent context AE \\
     AE-3b & GRU context + dense bottleneck, hidden 32 & 11,700 & 46,800 & stronger recurrent AE \\
     AE-4 & temporal Conv1D AE, 24 channels & 5,684 & 22,736 & MNN-friendly temporal AE \\
-    AE-5 & Conv1D + GRU context + dense bottleneck & 8,804 & 35,216 & constrained CNN-GRU test \\
+    AE-5 & pointwise Conv1D + TD frame code + GRU + dense bottleneck & 8,052 & 32,208 & constrained CNN-GRU test \\
     \bottomrule
   \end{tabular}
   }
 \end{table}
 
-初期実装では AE-0、AE-2、AE-4、AE-3a の順で評価する。AE-0 は性能を期待する
-本命ではなく、教師なし再構成がこの観測境界で最低限の信号を持つかを見る
-flattened AE の最低線である。AE-2 と AE-4 は volume あたり 500 KB detector-data 制約下で
-最も実装しやすく、多数 volume へ複製した場合にも総コストを抑えやすい候補である。
-AE-1 は flatten 系の容量不足を切り分ける候補であり、AE-3a は recurrent operator が
-MNN 上で許容できるかを測る候補である。AE-3 と AE-5 では、GRU は時系列特徴を
-各 frame に付与するために使い、AE-4 と AE-5 では Conv1D は局所時間特徴を
-多チャネルに展開して抽出するために使う。いずれも、情報を減らす処理は
-TimeDistributed Dense bottleneck に明示的に任せる。
-AE-5 は元の CNN-GRU 仮説の検証用として残すが、単純候補が十分に弱いことを
-確認する前に既定解にしない。
+初期実装では AE-0、AE-2、AE-4、AE-3a の順で評価する。これは、
+flattened baseline、Dense-only 圧縮、recurrent なしの temporal feature extraction、
+recurrent context の順に、追加した operator の必要性を切り分けるためである。
+AE-1、AE-3b、AE-5 は、それぞれ flattened capacity、recurrent capacity、
+CNN-GRU 仮説の追加検証として扱う。AE-5 は単純候補が不十分なことを確認する前に
+既定解にしない。
 
 表 \ref{tab:model-details} は、初期評価対象を TensorFlow/Keras の
 \texttt{model.summary()} に近い形式で固定したものである。TD は
@@ -172,27 +211,32 @@ default である \texttt{reset\_after=True} を仮定する。
   \multicolumn{3}{r}{AE-4 total} & 5,684 \\
   \midrule
   AE-5 & \texttt{Input(shape=(12, 12))} & \texttt{(None, 12, 12)} & 0 \\
-  AE-5 & \texttt{Conv1D(24, 3, padding="same", activation="relu")} & \texttt{(None, 12, 24)} & 888 \\
-  AE-5 & \texttt{GRU(24, return\_sequences=True)} & \texttt{(None, 12, 24)} & 3,600 \\
+  AE-5 & \texttt{Conv1D(24, 1, padding="same", activation="relu")} & \texttt{(None, 12, 24)} & 312 \\
+  AE-5 & \texttt{TD(Dense(16, activation="relu"))} & \texttt{(None, 12, 16)} & 400 \\
+  AE-5 & \texttt{GRU(24, return\_sequences=True)} & \texttt{(None, 12, 24)} & 3,024 \\
   AE-5 & \texttt{TD(Dense(8, activation="relu", name="z\_seq"))} & \texttt{(None, 12, 8)} & 200 \\
   AE-5 & \texttt{TD(Dense(24, activation="relu"))} & \texttt{(None, 12, 24)} & 216 \\
   AE-5 & \texttt{GRU(24, return\_sequences=True)} & \texttt{(None, 12, 24)} & 3,600 \\
   AE-5 & \texttt{TD(Dense(12, activation="linear"))} & \texttt{(None, 12, 12)} & 300 \\
-  \multicolumn{3}{r}{AE-5 total} & 8,804 \\
+  \multicolumn{3}{r}{AE-5 total} & 8,052 \\
 \end{longtable}
 \setlength{\tabcolsep}{6pt}
 \normalsize
 
 AE-5 は volume あたり 500 KB detector-data 制約内で CNN-GRU 仮説を試す最小構成として、以下の制約を置く。
-feature layout は scalar-only の $D=12$ に固定し、CNN は feature 方向ではなく
-時間方向の \texttt{Conv1D(24, 3)} として使う。これは 10 秒フレーム列の局所的な
-増減を複数チャネルへ展開して抽出するためであり、平均値しかない入力に存在しない
-bucket locality を仮定しない。GRU は encoder/decoder とも 1 層、hidden size 24 に固定するが、
+feature layout は scalar-only の $D=12$ に固定する。AE-5 の \texttt{Conv1D(24, 1)} は
+sequence axis に沿う Conv1D 形式で実装するが、kernel 幅が 1 なので隣接 frame は参照しない。
+重みは全 frame で共有され、各 10 秒 frame 内の intensity、write ratio、mean LBA/length、
+delta、optional telemetry を 24 channel へ混合する pointwise mixer である。
+次の \texttt{TD(Dense(16))} は、GRU に入れる前に noisy な feature mixture を
+frame-level macro code へ落とす。
+GRU は encoder/decoder とも 1 層、hidden size 24 に固定するが、
 系列全体を 1 vector に潰すためには使わない。GRU は各 frame へ文脈を付与し、
-情報圧縮は \texttt{TD(Dense(8))} の時系列 bottleneck が担う。Conv1D は特徴抽出、
-Dense は圧縮という役割を分ける。Conv2D、
+GRU 後の \texttt{TD(Dense(8))} が文脈化後に情報幅を絞る integrated bottleneck になる。
+Conv1D は異種 feature mixing、GRU は時系列文脈、Dense は
+frame denoising と圧縮という役割を分ける。Conv2D、
 transposed convolution、多層 GRU、attention、モデル内 thresholding は使わない。
-この条件では raw FP32 weight は 35,216 bytes に収まるが、入力統計/state を含む per-volume
+この条件では raw FP32 weight は 32,208 bytes に収まるが、入力統計/state を含む per-volume
 500 KB detector-data 達成と aggregate device-fit は変換後の実測で判定する。
 
 すべての候補は、入力と同じ $[1,N,D]$ の正規化統計列を線形出力として再構成する。

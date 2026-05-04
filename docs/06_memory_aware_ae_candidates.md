@@ -118,15 +118,20 @@ formulae are only planning estimates.
 
 The candidate set uses a strict role separation:
 
-- Dense layers are the only intentional information-reducing bottlenecks.
+- Dense layers are the only intentional information-reducing transformations:
+  AE-5 uses one pre-GRU Dense layer for frame denoising and one post-GRU Dense
+  layer as the bottleneck.
 - GRU layers attach temporal context to each frame and must not be the hidden
   place where the sequence is collapsed.
-- Conv1D layers expand scalar frame inputs into multiple local temporal views
-  and extract short-range patterns. They are feature analysis layers, not the
-  compression mechanism.
+- Conv1D layers are feature-analysis layers, not compression mechanisms. In
+  AE-4, `K=3` Conv1D expands scalar frame inputs into local temporal views. In
+  AE-5, `K=1` Conv1D is implemented over the sequence layout but cannot inspect
+  neighboring frames; it is a shared pointwise channel mixer for heterogeneous
+  feature channels within each frame before recurrent context modeling.
 
-This keeps the architecture story inspectable: feature extraction and temporal
-context happen before the Dense bottleneck; reconstruction happens after it.
+This keeps the architecture story inspectable: feature mixing/extraction,
+optional Dense frame denoising, and temporal context are separate from the final
+Dense bottleneck; reconstruction happens after it.
 
 ## Candidate Summary
 
@@ -140,7 +145,7 @@ The following estimates use `D = 12` and `N = 12`.
 | AE-3a | GRU contextual AE, H=24 | GRU context, per-frame dense `24 -> 8`, GRU decoder | 7,052 | 28,208 | 14,104 | 7,052 | first recurrent context model |
 | AE-3b | GRU contextual AE, H=32 | GRU context, per-frame dense `32 -> 8`, GRU decoder | 11,700 | 46,800 | 23,400 | 11,700 | stronger recurrent context model |
 | AE-4 | Temporal convolution AE | Conv1D temporal feature expansion, per-frame dense `24 -> 8` | 5,684 | 22,736 | 11,368 | 5,684 | predictable MNN-friendly temporal model |
-| AE-5 | Tiny CNN-GRU AE | Conv1D local feature expansion, GRU context, per-frame dense `24 -> 8` | 8,804 | 35,216 | 17,608 | 8,804 | constrained CNN-GRU hypothesis test |
+| AE-5 | Tiny CNN-GRU AE | pointwise Conv1D feature mixing, dense pre-GRU frame code, GRU context, dense bottleneck | 8,052 | 32,208 | 16,104 | 8,052 | constrained CNN-GRU hypothesis test |
 
 The byte columns are exact raw weight bytes from the parameter count and do not
 include converter metadata or quantization tables. All candidates are far below
@@ -305,14 +310,18 @@ predictable temporal baseline.
 ## AE-5: Tiny CNN-GRU AE
 
 Use this to test the original CNN-GRU hypothesis after simpler candidates. With
-scalar-only features, the CNN must operate over time, not over nonexistent LBA
-or length buckets.
+scalar-only features, the CNN component is a pointwise Conv1D feature mixer over
+the fixed `[N,D]` sequence, not a fake LBA or transfer-size bucket convolution.
+Although the layer is a Conv1D in the framework graph, `kernel_size=1` makes it
+a per-frame channel-mixing operator with shared weights across frames; temporal
+context is left to the GRU.
 
-Layer flow for `N = 12`, `D = 12`, `H = 24`:
+Layer flow for `N = 12`, `D = 12`, `C = 24`, `F = 16`, and `H = 24`:
 
 ```text
 Input X                         [1, 12, 12]
-Conv1D K=3, C=24 + ReLU         [1, 12, 24]
+Pointwise Conv1D K=1, C=24 + ReLU [1, 12, 24]
+TimeDistributed Dense 16 + ReLU [1, 12, 16]
 GRU context H=24                [1, 12, 24]
 TimeDistributed Dense 8 + ReLU  [1, 12, 8]
 TimeDistributed Dense 24 + ReLU [1, 12, 24]
@@ -324,27 +333,33 @@ Parameter detail:
 
 | Layer | Params |
 | --- | ---: |
-| Conv1D K=3, 12 -> 24 | 888 |
-| context GRU, I=24, H=24 | 3,600 |
+| pointwise Conv1D K=1, 12 -> 24 | 312 |
+| pre-GRU Dense 24 -> 16 | 400 |
+| context GRU, I=16, H=24 | 3,024 |
 | bottleneck Dense 24 -> 8 | 200 |
 | expansion Dense 8 -> 24 | 216 |
 | decoder GRU, I=24, H=24 | 3,600 |
 | output Dense 24 -> 12 | 300 |
-| total | 8,804 |
+| total | 8,052 |
 
 Constraints:
 
-- one temporal Conv1D layer only,
-- Conv1D expands the scalar frame into 24 local-temporal channels,
+- one pointwise Conv1D layer only,
+- Conv1D uses `K=1` to mix heterogeneous scalar feature channels within each
+  10-second frame,
+- TimeDistributed Dense `24 -> 16` reduces noisy frame-level mixtures into a
+  compact macro feature code before GRU,
 - GRU encoder and decoder are one layer each,
 - hidden size fixed to 24 for the first test,
-- information reduction is done by the TimeDistributed Dense bottleneck, not by
-  collapsing the GRU state to one vector,
+- the post-GRU Dense `24 -> 8` is the integrated bottleneck that selects the
+  most important contextual components,
+- information reduction is done by Dense layers, not by collapsing the GRU state
+  to one vector,
 - no Conv2D, transposed convolution, attention, model-side thresholding, or
   distribution softmax,
 - output reconstructs the same `[1, N, 12]` scalar sequence.
 
-This stays within 35,216 raw FP32 weight bytes, before converter metadata. The
+This stays within 32,208 raw FP32 weight bytes, before converter metadata. The
 500 KB question must still be
 answered by measuring the converted weight representation together with the
 retained input statistics/state for one volume. Operator workspace and tensor

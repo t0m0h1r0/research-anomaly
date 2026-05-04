@@ -23,8 +23,9 @@ The candidate family now uses a single role contract:
 
 - Dense layers perform intentional information reduction.
 - GRU layers attach temporal context to each frame.
-- Conv1D layers expand scalar frame sequences into multiple local temporal
-  feature views and extract short-range patterns.
+- Conv1D layers perform feature analysis without owning compression. AE-4 uses
+  temporal Conv1D for short-range patterns; AE-5 uses `K=1` Conv1D for
+  heterogeneous within-frame feature mixing.
 
 Any candidate that cannot explain its bottleneck under this rule should be
 removed or rewritten.
@@ -37,7 +38,7 @@ removed or rewritten.
 | AE-2 | Reframe as two-level dense AE. | It has frame-level Dense compression and sequence-level Dense compression, with no recurrent or convolutional ambiguity. |
 | AE-3 | Reframe as GRU contextual AE. | GRU now returns a contextual sequence. A per-frame Dense bottleneck performs compression before the GRU decoder. |
 | AE-4 | Reframe as temporal Conv1D expansion AE. | Conv1D expands local temporal views; the bottleneck is TimeDistributed Dense `24 -> 8`. The old `Conv1D(8,1)` compression story is removed. |
-| AE-5 | Reframe as constrained CNN-GRU with Dense bottleneck. | Conv1D expands to 24 local-temporal channels, GRU contextualizes, and TimeDistributed Dense `24 -> 8` is the only compression point. |
+| AE-5 | Reframe as constrained CNN-GRU with Dense bottleneck. | `K=1` Conv1D mixes heterogeneous feature channels, pre-GRU Dense forms a denoised frame code, GRU contextualizes, and post-GRU Dense `24 -> 8` selects the integrated bottleneck. |
 
 ## Review Rounds
 
@@ -53,11 +54,11 @@ as an implicit compression layer.
 Resolution: AE-4 now uses Conv1D only for local temporal feature extraction and
 uses TimeDistributed Dense for `24 -> 8 -> 24`.
 
-Round 3 finding: MINOR. AE-5 parameter estimates and prose still reflected a
-16-channel Conv1D and an older 32 KB estimate.
+Round 3 finding: MINOR. AE-5 parameter estimates and prose still reflected an
+older Conv1D/channel estimate.
 
-Resolution: AE-5 is consistently documented as `Conv1D 12 -> 24`, with 8,804
-parameters and 35,216 raw FP32 weight bytes.
+Resolution: AE-5 was made internally consistent at that time; Round 9 records
+the later pointwise-mixer redesign.
 
 Round 4 result: no MAJOR-or-higher findings remain in the reviewed design
 contract. Remaining risk is empirical: whether the added temporal operators
@@ -95,3 +96,11 @@ Round 8 result: no MAJOR-or-higher findings remain in the candidate narrative,
 operator-role contract, parameter arithmetic, model-selection implementation,
 or smoke manifest. Remaining risk is empirical and belongs to future public
 dataset and MNN conversion gates.
+
+Round 9 design update: AE-5 was further refined to make the CNN-GRU hypothesis
+more meaningful for scalar-only input. The Conv1D layer now uses `K=1` for
+within-frame heterogeneous feature mixing, `TD(Dense(16))` denoises that mixture
+before GRU, and the post-GRU `TD(Dense(8))` is the integrated contextual
+bottleneck. The updated AE-5 has 8,052 parameters and 32,208 raw FP32 weight
+bytes. This preserves the rule that Conv1D analyzes, GRU contextualizes, and
+Dense performs denoising/compression.

@@ -4,7 +4,7 @@
   \item データセット監査: RanSAP/RanSMAP の schema、license、trace split 単位を確認する。
   \item 10 秒統計抽出器: raw trace から表 \ref{tab:feature-schema} の tensor を生成する。
   \item baseline 実験: write ratio、entropy、mean LBA/length shift、classical anomaly detector を測る。
-  \item tiny AE 実験: MLP、Dense bottleneck 付き GRU-context、temporal Conv1D、tiny CNN-GRU を比較する。
+  \item tiny AE 実験: AE-0/1 flattened MLP、AE-2 two-level Dense、AE-4 temporal Conv1D、AE-3 GRU-context、AE-5 tiny CNN-GRU を比較する。
   \item 未知脅威 proxy 評価: AE は benign のみで calibration し、教師あり参照は
         known-family training と held-out-family test を分けて評価する。
   \item robustness: entropy なし、BitLocker、variant replay、benign workload holdout を評価する。

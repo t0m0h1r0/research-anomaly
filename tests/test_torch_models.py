@@ -55,7 +55,11 @@ class TorchModelShapeTest(unittest.TestCase):
         y = model(x)
 
         self.assertEqual(tuple(y.shape), (2, 12, 12))
-        self.assertEqual(count_torch_parameters(model), 8804)
+        self.assertEqual(count_torch_parameters(model), 8052)
+        mixer = model.pointwise_mixer[0]
+        self.assertEqual(mixer.kernel_size, (1,))
+        self.assertEqual(mixer.in_channels, 12)
+        self.assertEqual(mixer.out_channels, 24)
 
 
 if __name__ == "__main__":
