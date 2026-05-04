@@ -31,9 +31,11 @@ A CNN-GRU AutoEncoder remains a candidate architecture because:
 - A mirrored decoder gives an interpretable reconstruction-error signal per
   feature channel and per time step.
 
-However, the deployed model must fit a 500 KB model-memory budget, excluding the
-MNN runtime, and consume only 10-second statistics that are cheap to collect. If
-CNN-GRU cannot fit that budget after quantization and MNN conversion, the
+However, the deployed detector must fit a 500 KB per-volume detector-data
+budget, excluding shared MNN runtime/library memory, and consume only 10-second
+statistics that are cheap to collect. This budget covers model weight
+information plus retained input statistics/state for one volume. If CNN-GRU
+cannot fit that budget after quantization and MNN conversion, the
 research should prefer a smaller AE such as GRU-only, temporal convolution AE,
 or MLP bottleneck AE over preserving the original architecture.
 
@@ -87,8 +89,8 @@ Continue the research if offline experiments show all of the following:
   rates,
 - detection time is early enough to matter operationally,
 - the signal remains useful when entropy is removed or degraded,
-- model memory plausibly fits 500 KB with 10-second statistics and CPU
-  inference,
+- model weights plus retained input statistics/state plausibly fit 500 KB per
+  volume with 10-second statistics and CPU inference,
 - the final model can be converted to MNN with acceptable score parity,
 - false-positive analysis identifies practical allow-listing or calibration
   paths.
@@ -101,7 +103,7 @@ Stop or redesign if:
   dominate the anomaly score,
 - public data cannot support entropy/compression evaluation,
 - the architecture requires host-only context to be credible.
-- the MNN model cannot fit the 500 KB model-memory budget or requires
+- the MNN detector cannot fit the 500 KB detector-data budget or requires
   unsupported operators.
 
 ## Initial Success Criteria
@@ -114,5 +116,6 @@ Stop or redesign if:
   and encrypted-volume conditions where public data permits.
 - Explainability: report reconstruction error by feature channel so operators can
   see whether the anomaly is address, length, read/write, entropy, or temporal.
-- Implementability: keep model weights, model-owned tensors, and input/output
-  buffers within 500 KB, excluding the MNN runtime itself.
+- Implementability: keep model weights plus retained input statistics/state
+  within 500 KB per volume, excluding shared MNN runtime/library memory, while
+  measuring transient inference scratch separately.

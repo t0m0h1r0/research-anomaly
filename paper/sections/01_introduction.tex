@@ -24,24 +24,27 @@ AE は固定長 tensor を受け取り、同じ shape の tensor を返し、外
 operator に落としやすい。従来のストレージレベル研究ではルール、決定木、
 ランダムフォレスト、XGBoost などの教師あり分類器が有力であり、AE が
 性能面で優位とは限らない。したがって本稿では、AE を既定解ではなく、
-未知脅威対応、実装容易性、安価な統計、volume あたり 500 KB モデルメモリ制約の下で
+未知脅威対応、実装容易性、安価な統計、volume あたり 500 KB detector-data 制約の下で
 検証されるべき仮説として扱う。
 
 このメモリ制約は、単一モデルが小さいかどうかだけの問題ではない。ストレージ装置では
-多数の volume、namespace、tenant を定義でき、volume ごとに正常性、しきい値、
-score history、入力バッファを持つ設計になり得る。したがって、volume あたりは
-軽量な anomaly detector でも、全 volume に常時適用すると総メモリと CPU 時間が
-支配的になる。本研究では、モデル単体の重みだけでなく、volume 単位で複製される
-normalization constant、sequence buffer、score history、operator workspace を含めて
-測定対象にする。以下では NVMe namespace、論理 volume、tenant 境界をまとめて
-volume と呼び、device-fit claim は単一 volume だけでなく volume 数 $V$ に対する
-総コストで判定する。
+約 2000 個の volume、namespace、tenant を定義し、検出器データ用に約 1 GB を
+割り当てる構成を想定できる。この割り当てを volume 数で割ると、volume あたり
+約 500 KB になる。本研究では、この 500 KB を model weight 情報と、10 秒統計列、
+normalization constant、threshold、score history など入力統計/state の予算として
+扱う。MNN runtime、共有 library、共通 heap は多数 volume で償却されるため
+この per-volume 予算から除外する。一方で、activation tensor、operator workspace、
+inference slot などの transient scratch は 10 秒周期で全 volume を処理できるかを
+左右するため、別の device-fit 測定として報告する。以下では NVMe namespace、
+論理 volume、tenant 境界をまとめて volume と呼び、device-fit claim は単一 volume の
+detector-data fit だけでなく volume 数 $V$ に対する総コストで判定する。
 
 現段階の論文としての貢献は、(i) ブロック装置から見たランサムウェア
 異常の分類、(ii) 10 秒統計列の固定入力契約、(iii) AE と単純規則の
 公平な比較プロトコル、(iv) entropy 依存、benign workload shift、
 split leakage、MNN memory fit を同時に扱う証拠ゲートである。性能値、
-SOTA、実装完了、MNN 適合、per-volume 500 KB 達成、aggregate device-fit 達成は、
+SOTA、実装完了、MNN 適合、per-volume 500 KB detector-data 達成、
+aggregate device-fit 達成は、
 本稿の主張ではない。
 
 本稿が扱う研究課題は以下である。
@@ -55,9 +58,9 @@ SOTA、実装完了、MNN 適合、per-volume 500 KB 達成、aggregate device-f
   \item エントロピーまたは圧縮率信号がない場合にも検出性能が残るか。
   \item 攻撃ラベルを学習やしきい値調整に使わない教師なし AE が、family holdout
         条件で、既知ラベル依存の参照分類器とは異なる検出価値を持つか。
-  \item MNN CPU 推論に変換したモデルが、MNN ランタイムを除く volume あたり
-        500 KB のモデルメモリ内に収まり、多数 volume へ展開したときの
-        aggregate memory/CPU budget を破らないか。
+  \item MNN CPU 推論に変換したモデルの weight 情報と入力統計/state が、
+        共有 runtime/library を除く volume あたり 500 KB の detector-data 予算内に
+        収まり、多数 volume へ展開したときの aggregate memory/CPU budget を破らないか。
   \item ファイルシステム、ボリューム利用率、暗号化済みボリューム、
         バックアップやデータベース処理などの benign workload shift に対し、
         低 false positive を維持できるか。
@@ -65,5 +68,6 @@ SOTA、実装完了、MNN 適合、per-volume 500 KB 達成、aggregate device-f
 
 これらの問いは、肯定されることだけを期待して設定するものではない。
 AE が write throughput や entropy の単純規則に負ける場合、または
-MNN 変換後の score ordering、per-volume 500 KB fit、aggregate device-fit が崩れる場合、その結果も
+MNN 変換後の score ordering、per-volume 500 KB detector-data fit、
+aggregate device-fit が崩れる場合、その結果も
 本研究の結論として採用する。

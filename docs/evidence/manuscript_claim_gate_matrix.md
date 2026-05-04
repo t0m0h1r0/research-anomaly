@@ -22,7 +22,7 @@ claim. It exists to keep future manuscript claims traceable.
 | Entropy-independent detection | Metadata-only profile is evaluated separately from any dataset-provided write entropy or device compression/entropy telemetry. | Non-claim. |
 | Unknown or variant threat detection | AE training and calibration use benign data only; ransomware family labels are evaluation-only for AE; supervised references use known-family training and held-out-family testing. Results are reported by family, variant, storage condition, and failure mode. | Proxy protocol only. |
 | Architecture choice | AE candidates and rule/classical/supervised references share documented feature availability and tuning budgets. | Protocol only. |
-| MNN deployability | Converted MNN model, offline/MNN score parity, model file size, operator support, per-volume peak model-owned memory, shared weight versus per-volume state breakdown, and aggregate memory/CPU curves over volume count `V` are measured under fixed input shapes. | Non-claim. |
+| MNN deployability | Converted MNN model, offline/MNN score parity, converted weight size, operator support, per-volume detector-data size for weights plus retained input statistics/state, separate transient scratch measurement, shared weight versus per-volume state breakdown, and aggregate memory/CPU curves over volume count `V` are measured under fixed input shapes. | Non-claim. |
 
 ## Current Manuscript Position
 
@@ -30,5 +30,5 @@ The revised manuscript should be read as a falsifiable protocol paper. It may
 claim that the project has a defined observation boundary, feature profile,
 evaluation plan, and device-fit gate. It may not claim that AE detection works,
 outperforms baselines, generalizes to unknown threats, fits the per-volume
-500 KB budget, satisfies aggregate memory/CPU limits across many volumes, or is
+500 KB detector-data budget, satisfies aggregate memory/CPU limits across many volumes, or is
 novel against all prior work until the corresponding gates above are satisfied.

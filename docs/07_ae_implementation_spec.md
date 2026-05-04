@@ -426,5 +426,7 @@ Before claiming any candidate fits:
 - ONNX export succeeds with fixed shape,
 - MNN conversion succeeds,
 - offline and MNN scores match within a documented tolerance,
-- model file, tensors, workspace, input/output buffers, and score state fit
-  inside the 500 KB model-owned budget.
+- model weights plus retained input statistics/state fit inside the 500 KB
+  per-volume detector-data budget,
+- transient tensors, operator workspace, and reusable inference slots are
+  measured separately for the target many-volume schedule.

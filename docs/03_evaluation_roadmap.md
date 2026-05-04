@@ -76,8 +76,9 @@ Exit criteria:
   rates,
 - detection occurs before most target data is overwritten,
 - channel breakdown is intelligible,
-- at least one candidate has a plausible path to 500 KB model memory, excluding
-  MNN runtime.
+- at least one candidate has a plausible path to 500 KB per-volume detector
+  data for model weights plus retained input statistics/state, excluding shared
+  MNN runtime/library memory.
 
 ### Phase 4: Ablation And Robustness
 
@@ -110,24 +111,29 @@ Exit criteria:
 
 ### Phase 5: MNN Device-Fit Study
 
-Goal: decide whether "storage embedded with MNN and 500 KB model memory" is
-plausible.
+Goal: decide whether "storage embedded with MNN and 500 KB per-volume detector
+data" is plausible under a many-volume deployment assumption.
 
 Tasks:
 
 - estimate model parameter count,
-- estimate feature-buffer memory,
+- estimate retained input-statistics/state memory,
 - estimate inference cadence and latency,
 - separate write-path critical work from asynchronous analysis,
 - define telemetry required from SCSI/NVMe command processing,
 - convert the chosen model to MNN,
-- measure or estimate model file, model-owned tensors, input/output buffers, and
-  operator workspace attributable to the model,
+- measure or estimate converted weight representation and per-volume retained
+  input statistics/state,
+- separately measure transient tensors, operator workspace, reusable inference
+  slots, and CPU scheduling at the target volume count,
 - compare MNN scores with the offline evaluation framework.
 
 Exit criteria:
 
-- prototype inference can run within 500 KB model memory, excluding MNN runtime,
+- model weights plus retained input statistics/state fit within 500 KB per
+  volume, excluding shared MNN runtime/library memory,
+- aggregate memory/CPU is plausible at roughly 2000 volumes with shared runtime
+  memory accounted for separately,
 - fixed-shape MNN inference has acceptable score parity,
 - any requirement for payload access or compression hardware is explicit,
 - response actions remain out of scope until detection quality is credible.
@@ -166,7 +172,7 @@ only if false positives are rare and alerts arrive early.
 | E4 | Does benign diversity break it? | UMass/SNIA benign traces | false-positive report |
 | E5 | Is CNN-GRU necessary? | RanSAP plus benign traces | architecture ablation |
 | E6 | Does 10-second cadence still work? | deployed statistic tensors | latency and recall report |
-| E7 | Can the MNN model fit 500 KB? | trained candidate model | MNN model-memory and parity report |
+| E7 | Can the MNN detector fit 500 KB per volume? | trained candidate model | MNN detector-data, transient-scratch, and parity report |
 
 ## Risk Register
 
@@ -179,7 +185,7 @@ only if false positives are rare and alerts arrive early.
 | storage device lacks payload access | entropy feature may be impractical | use compression telemetry or metadata-only variant |
 | throttled ransomware changes slowly | late detection | evaluate cumulative score and longer temporal horizons |
 | public data is too narrow | weak generalization | treat Phase 1 as feasibility, not proof of deployability |
-| 500 KB model memory is too small for CNN-GRU | original architecture may not deploy | evaluate MLP, GRU-only, and temporal convolution AE |
+| 500 KB detector-data budget is too small for CNN-GRU | original architecture may not deploy | evaluate MLP, GRU-only, and temporal convolution AE |
 | MNN conversion changes scores | offline results may not transfer | require MNN parity before implementation claims |
 | 10-second statistics hide early signal | detection may arrive too late | measure bytes overwritten before first alert |
 
@@ -200,7 +206,7 @@ only if false positives are rare and alerts arrive early.
 4. Baseline rules evaluated.
 5. Tiny AE candidates evaluated with ablations.
 6. False-positive stress report complete.
-7. MNN 500 KB device-fit memo complete.
+7. MNN 500 KB detector-data device-fit memo complete.
 8. Go/no-go review for deeper prototype.
 
 ## Go/No-Go Review Template
@@ -213,6 +219,7 @@ At the end of Phase 4, answer:
 - Does performance survive without entropy?
 - Which benign workloads still cause false positives?
 - What storage-device telemetry is mandatory?
-- Does the MNN model fit 500 KB excluding the MNN runtime?
+- Do model weights plus retained input statistics/state fit 500 KB per volume,
+  excluding shared MNN runtime/library memory?
 - Does 10-second cadence leave enough response time?
 - Is the remaining work a research problem, an engineering problem, or both?

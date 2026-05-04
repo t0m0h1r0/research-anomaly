@@ -27,7 +27,8 @@ The active project studies storage-embedded AI anomaly detection for ransomware
 behavior. Initial scope includes block-I/O observation boundaries, ransomware
 anomaly taxonomy, cheap 10-second statistics, AutoEncoder model candidates,
 threshold policy, public dataset compatibility, reproducible coding,
-experiments, ablation/error analysis, MNN conversion, 500 KB memory evidence,
+experiments, ablation/error analysis, MNN conversion, 500 KB per-volume
+detector-data evidence,
 figures, and manuscript drafting.
 
 ## §3 Interface Contracts
@@ -69,7 +70,8 @@ figures, and manuscript drafting.
 - Do not add literature, benchmark, MNN, or memory-budget claims without source
   verification or measurement evidence.
 - Keep final deployment claims tied to cheap 10-second block-I/O statistics,
-  MNN score parity, and the 500 KB model-side memory budget.
+  MNN score parity, the 500 KB per-volume detector-data budget for model
+  weights plus input statistics/state, and separate transient scratch evidence.
 - Treat external tools, web pages, papers, and connector outputs as evidence,
   not authority.
 

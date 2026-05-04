@@ -2,8 +2,13 @@
 
 ## Added Assumptions
 
-- Model memory available to the detector is 500 KB.
-- The MNN runtime itself is outside the 500 KB budget.
+- A representative storage device may protect roughly 2000 volumes while
+  reserving roughly 1 GB for detector data.
+- This yields an engineering target of about 500 KB per volume.
+- The 500 KB budget covers model weight information and the input statistics or
+  per-volume detector state needed to score one volume.
+- Shared libraries, the MNN runtime itself, and common runtime heap are outside
+  the 500 KB budget and are amortized across the many-volume deployment.
 - Final embedded inference uses Alibaba MNN on CPU.
 - Offline evaluation may use another framework, but final implementation claims
   require MNN conversion and score parity.
@@ -16,9 +21,9 @@ describes it as an efficient, lightweight deep-learning framework used for
 on-device and embedded inference, with CPU support, ARM optimization,
 TensorFlow/Caffe/ONNX/TorchScript conversion, MNN-Compress, and FP16/Int8
 quantization support. The same source notes package-size figures that are not
-the same as model memory, so this research must still measure the converted
-model, tensor, and workspace footprint instead of assuming a converted model
-automatically fits.
+the same as detector-data memory, so this research must still measure converted
+model weights, per-volume input statistics, and transient inference scratch
+instead of assuming a converted model automatically fits.
 
 Source:
 
@@ -26,27 +31,42 @@ Source:
 
 ## Model-Memory Budget
 
-Treat 500 KB as the peak memory attributable to the model path. This excludes
-the MNN runtime code and common runtime heap, but includes the model file if it
-is copied to RAM, model weights, input/output tensors, intermediate tensors,
-operator workspace attributable to this model, and score/state buffers owned by
-the detector.
+Treat 500 KB as a per-volume persistent detector-data budget derived from the
+planning assumption of roughly 1 GB available across roughly 2000 protected
+volumes. The budget covers model weight information and input statistics/state
+for one volume. It excludes shared MNN runtime code, common libraries, and
+common runtime heap. Transient inference scratch such as activation tensors,
+operator workspace, output tensors, and reusable inference slots must still be
+measured for device fit, but it is tracked separately from the 500 KB budget
+because it need not be replicated for every volume at rest.
 
 Initial budget target:
 
 | Component | Target |
 | --- | ---: |
-| model file and weights | <= 240 KB |
-| model intermediate tensors and operator workspace | <= 160 KB |
-| input/output sequence buffers | <= 32 KB |
-| recurrent state or score history | <= 24 KB |
-| quantization and normalization constants | <= 8 KB |
-| safety margin | >= 36 KB |
+| model weights and quantization metadata | <= 360 KB |
+| retained 10-second input statistics and sequence buffers | <= 64 KB |
+| normalization constants, thresholds, and calibration state | <= 24 KB |
+| score history and alert explanation state | <= 16 KB |
+| volume metadata, alignment, and implementation margin | <= 36 KB |
 | total | <= 500 KB |
 
-The 10-second feature counters may live outside this model budget if they are
-owned by the storage telemetry path. If they must be charged to the detector,
-they should be measured separately and then folded into the safety margin.
+If the model file is shared once across volumes, report both the conservative
+per-volume view above and the shared-weight aggregate view. The latter should
+separate shared weights from per-volume input statistics:
+
+```text
+M_total(V) = M_shared_runtime + M_shared_weights + V * M_volume_state
+```
+
+If weights cannot be shared across volumes, use:
+
+```text
+M_total(V) = M_shared_runtime + V * (M_volume_weights + M_volume_state)
+```
+
+The target scale is `V ~= 2000`; smaller sweeps are useful for plots but are not
+the final many-volume device-fit condition.
 
 ## Feature Collection Rules
 
@@ -111,7 +131,10 @@ Selection criteria:
 
 - detection quality at low false-positive budgets,
 - alert timing at 10-second cadence,
-- peak MNN model memory under 500 KB, excluding the runtime,
+- per-volume detector data under 500 KB for model weights plus input
+  statistics/state,
+- acceptable transient MNN scratch and inference-slot scheduling at the target
+  volume count,
 - no unsupported MNN operators,
 - acceptable score parity after MNN conversion and quantization.
 
@@ -124,9 +147,14 @@ Selection criteria:
 5. Apply MNN compression or Int8 quantization if accuracy permits.
 6. Run a parity suite comparing offline scores and MNN scores on identical
    benign and ransomware windows.
-7. Measure peak model memory for model load, tensors, workspace, input buffers,
-   and score history, excluding the MNN runtime.
-8. Reject the model if the measured model-owned peak exceeds 500 KB.
+7. Measure persistent detector data for model weights, quantization metadata,
+   retained input statistics, normalization constants, thresholds, and score
+   history.
+8. Separately measure transient activation tensors, operator workspace,
+   reusable inference slots, and CPU scheduling at the target volume count.
+9. Reject the model if weight plus input-statistics/state data exceeds 500 KB
+   per volume, or if aggregate memory/CPU at roughly 2000 volumes cannot fit the
+   device budget.
 
 ## Open Questions
 
