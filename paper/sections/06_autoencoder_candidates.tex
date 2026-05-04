@@ -70,32 +70,82 @@ context、decoder は再構成に限定する。
 隣接 frame は参照せず、各 10 秒 frame に同じ重みを適用する channel mixer として解釈する。
 
 各候補は、複雑な model family を順に足すためではなく、どの仮説が必要かを切り分けるために置く。
-表 \ref{tab:ae-eval-viewpoints} に、候補ごとの評価観点を固定する。
+表 \ref{tab:ae-eval-viewpoints} に、時間の扱い、入力パラメタすなわち feature channel 間の相関、
+およびメモリ/計算効率の観点から、候補ごとの評価軸を固定する。
 
 \begin{table}[tb]
   \centering
-  \caption{AE 候補を比較する評価観点}
+  \caption{AE 候補を比較する評価軸}
   \label{tab:ae-eval-viewpoints}
   \small
-  \begin{tabularx}{\linewidth}{lY Y}
+  \begin{tabularx}{\linewidth}{lY Y Y}
     \toprule
-    ID & 検証する仮説 & 解釈上の注意 \\
+    ID & 時間の扱い & feature channel 間の相関 & メモリ/計算効率 \\
     \midrule
     AE-0/1 &
-    最小限の flattened Dense AE で再構成信号が出るか。frame index と feature index を固定位置の成分として一つの vector にし、Dense だけで情報選択する。 &
-    時間と feature を意味的に同一視するわけではない。時間方向の重み共有、局所性、遷移構造という inductive bias を意図的に持たない control である。AE-1 は容量確認であり別仮説ではない。 \\
+    $N \times D$ を 1 vector に flatten し、frame index を固定位置として扱う。時間的局所性や遷移の inductive bias は持たない。 &
+    Dense が全成分を結合できるため任意の共起は表現できるが、同じ feature が異なる時刻に現れるという共有構造は使わない。 &
+    operator set は最小で MNN 変換が容易。重みは $N D$ に依存して増え、AE-1 は容量確認用にだけ広げる。 \\
     AE-2 &
-    標準的な Dense bottleneck を保ちながら、TD(Dense) で全 frame に同じ feature transform を共有すれば十分か。 &
-    TD は単なる節約ではなく、各 frame を同じ基準で denoise/code 化する制約である。ただし sequence-level の順序構造は flatten 後の Dense に任せる。 \\
+    各 frame は TD(Dense) で同じ規則により code 化し、その後の flattened sequence Dense が 12-frame pattern を見る。明示的な局所時間 operator は使わない。 &
+    frame 内 feature の相関は共有 TD(Dense) が抽出し、frame 間の大域的な共起は sequence bottleneck が選ぶ。 &
+    TD により時刻ごとの別重みを避ける。GRU/Conv1D workspace は不要だが、sequence Dense は $N$ に応じて増える。 \\
     AE-3 &
-    Dense bottleneck は維持したまま、GRU による時間文脈が必要か。 &
-    GRU は系列を 1 vector に圧縮するためではなく、各 frame に前後の文脈を付与するために使う。情報を減らす責任は TD(Dense) に残す。 \\
+    GRU が各 frame に前後の時間文脈を付与する。系列を final hidden state に潰さず、\texttt{return\_sequences=True} で保持する。 &
+    feature 間の相互作用は GRU gates と後段 TD(Dense) を通じて文脈込みで選ばれる。 &
+    weight は主に $D$ と hidden size に依存し、$N$ に対しては recurrent 実行時間と scratch が増える。MNN の recurrent support と量子化 drift を要測定。 \\
     AE-4 &
-    Dense-only ではなく、局所時間相関に適した Conv1D($K=3$) で短い pattern を抽出する価値があるか。 &
-    Conv1D は Dense の代替圧縮器ではない。局所 pattern を共有重みで抽出し、圧縮は TD(Dense) bottleneck が担う。長いまたは不規則な文脈は苦手になり得る。 \\
+    Conv1D($K=3$) が隣接 frame の短い局所時間 pattern を抽出する。長い文脈や不規則な rhythm は直接持たない。 &
+    Conv1D は隣接時刻と channel をまたぐ局所相関を複数 channel へ展開し、圧縮は TD(Dense) bottleneck が担う。 &
+    重み共有により計算が規則的で parallelize しやすい。recurrent state は不要だが activation map と Conv workspace は測る。 \\
     AE-5 &
-    pointwise feature mixing、pre-GRU frame denoising、GRU context、post-GRU Dense bottleneck を組み合わせる価値があるか。 &
-    最も強い CNN-GRU 仮説検証であり、単純候補が不十分な場合にだけ正当化する。 \\
+    pointwise Conv1D と TD(Dense) で frame code を作り、GRU が時間文脈を付与する。局所時間 Conv ではなく recurrent context に寄せる。 &
+    Conv1D($K=1$) が同一 frame 内の異種 feature を混合し、pre-GRU Dense が denoise し、post-GRU Dense が文脈込みの重要成分を選ぶ。 &
+    最も複雑な候補で、weight は小さいが operator 種類、workspace、変換/量子化 parity の確認項目が多い。単純候補が不十分な場合にだけ正当化する。 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+ここでの網羅性は、任意の neural architecture 全体ではなく、本稿の制約内の設計空間を指す。
+すなわち、scalar-only の $[1,N,D]$ 入力、MNN へ落としやすい Dense/Conv1D/GRU、
+明示的 Dense bottleneck、volume あたり 500 KB detector-data 予算という範囲である。
+したがって候補集合は全組合せを尽くすのではなく、時間仮定、feature channel 間の相関仮定、
+および効率 profile について、評価で切り分けるべき代表点を漏れなく置く。
+表 \ref{tab:ae-design-coverage} に、この範囲で必要な設計選択と候補の対応を示す。
+
+\begin{table}[tb]
+  \centering
+  \caption{AE 候補集合による設計空間の網羅性}
+  \label{tab:ae-design-coverage}
+  \small
+  \begin{tabularx}{\linewidth}{lYl}
+    \toprule
+    観点 & 本稿で押さえる設計選択 & 対応候補 \\
+    \midrule
+    時間仮定なし &
+    $N \times D$ を固定 vector として扱い、時刻間の局所性や遷移を仮定しない最小 control。 &
+    AE-0/1 \\
+    時間 operator 前の共有 frame transform &
+    時間 operator に渡す前に、全 frame へ同じ feature transform を適用し、frame ごとの denoising/code 化を共有する。 &
+    AE-2, AE-5 \\
+    flattened sequence bottleneck &
+    12-frame 全体を Dense bottleneck に通し、recurrent/convolution なしで sequence-level 情報選択を行う。 &
+    AE-0/1, AE-2 \\
+    recurrent context &
+    各 frame を残したまま GRU で時間文脈を付与し、時間依存が必要かを測る。 &
+    AE-3, AE-5 \\
+    local temporal pattern &
+    隣接 frame の短い局所相関を Conv1D($K=3$) で抽出し、GRU なしで temporal feature を試す。 &
+    AE-4 \\
+    explicit channel mixer &
+    同一 10 秒 frame 内の異種 feature channel の相互作用を、時間畳み込みと分けた専用 operator で抽出する。 &
+    AE-5 \\
+    explicit Dense compression &
+    情報を減らす責任を Dense bottleneck に置き、GRU/Conv1D を暗黙の圧縮器にしない。 &
+    AE-0--AE-5 \\
+    効率プロファイル &
+    最小 Dense、容量増加 Dense、TD 共有、Conv 共有、recurrent context、複合 CNN-GRU の代表的なコスト構造を比較する。 &
+    AE-0--AE-5 \\
     \bottomrule
   \end{tabularx}
 \end{table}
