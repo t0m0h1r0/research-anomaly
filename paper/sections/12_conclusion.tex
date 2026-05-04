@@ -1,0 +1,15 @@
+\section{結論}
+
+本稿は、ストレージ装置組み込み型 AutoEncoder によるランサムウェア検出の
+研究プロトコルである。中心アイデアは、SCSI/NVMe 的なブロック I/O から得られる
+10 秒統計を $N$ 個並べた $N \times 10$ 秒分の正常時系列として学習し、
+AE の再構成誤差上昇をランサムウェアらしい
+異常として検出することである。研究上の難所は、AE 自体ではなく、
+安価な特徴量、低 false positive、entropy 依存からの脱却、benign workload shift、
+MNN 変換後の score parity、500 KB モデルメモリ制約である。
+
+今後は、RanSAP を用いた feature pipeline と baseline から開始し、
+AE が単純な write/entropy ルールを上回る情報を持つかを検証する。
+その後、RanSMAP、SNIA IOTTA、UMass、controlled replay を用いて false positive と
+汎化性を評価し、最終的に MNN 上の実測メモリと score parity によって
+組み込み可能性を判断する。

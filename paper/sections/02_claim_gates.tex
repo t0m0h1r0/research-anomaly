@@ -1,0 +1,34 @@
+\section{主張境界と証拠ゲート}
+
+本稿では、外部文献、公開データセット、tool output、実験結果をすべて
+evidence として扱い、単独では authority とみなさない。表
+\ref{tab:claim-gates} に、今後の論文化で各主張を昇格するための最低条件を示す。
+この表を満たさない文は、本文では仮説、計画、または評価項目として記述する。
+
+\begin{table}[tb]
+  \centering
+  \caption{主張クラスと昇格に必要な証拠}
+  \label{tab:claim-gates}
+  \small
+  \begin{tabularx}{\linewidth}{lYY}
+    \toprule
+    主張クラス & 必要な証拠 & 現在の扱い \\
+    \midrule
+    文献・既存研究 claim &
+    source URL、DOI、可能なら source paper または publication page の監査記録。 &
+    background evidence。novelty や SOTA は非主張。 \\
+    dataset claim &
+    schema、license、run 単位、label 意味、trace split 可能性の source audit。 &
+    RanSAP/RanSMAP は候補。利用可能性は未確定。 \\
+    性能 claim &
+    experiment manifest、固定 split、feature schema、seed、metrics、verdict。 &
+    非主張。評価プロトコルのみ。 \\
+    false-positive claim &
+    benign workload holdout、false alarms per volume per day、threshold tuning split。 &
+    非主張。主要評価項目。 \\
+    device-fit claim &
+    MNN 変換済み model、offline/MNN score parity、peak model-owned memory 測定。 &
+    非主張。500 KB は制約条件。 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}

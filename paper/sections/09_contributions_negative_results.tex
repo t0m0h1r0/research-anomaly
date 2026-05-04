@@ -1,0 +1,21 @@
+\section{想定される貢献と否定結果}
+
+本稿の現在の貢献は、観測境界、異常分類、入力契約、評価プロトコル、
+証拠ゲートを固定することである。今後の実験が仮説を支持した場合、
+本研究の経験的貢献は以下になる。
+
+\begin{enumerate}
+  \item ストレージ装置内で収集可能な安価な 10 秒 I/O 統計による、
+        ransomware anomaly detection の入力契約。
+  \item 正常学習 AE の再構成誤差が、write-heavy ルールや entropy ルールを超えて
+        どの条件で有効かを示す評価。
+  \item entropy/compression なし、暗号化済みボリューム、benign workload shift に対する
+        false positive 分析。
+  \item 500 KB モデルメモリ制約下での AE architecture 選択と MNN 変換/parity/peak memory
+        測定手順。
+  \item channel-wise error に基づく、ストレージ管理者向け説明可能性の設計。
+\end{enumerate}
+
+逆に、AE が単純 baseline を上回らない場合も重要な結果である。その場合は、
+ストレージ装置内では教師あり軽量分類器またはルールが妥当であり、
+AE は feature discovery または補助 score に限定すべきである、という結論になる。

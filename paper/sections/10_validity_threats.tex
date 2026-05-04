@@ -1,0 +1,25 @@
+\section{妥当性への脅威}
+
+\paragraph{公開データの偏り}
+RanSAP/RanSMAP は初期検証に有用だが、ransomware family、OS、volume condition、
+benign workload の範囲は限定的である。headline accuracy ではなく、
+family holdout、condition holdout、benign workload holdout を使う必要がある。
+
+\paragraph{entropy 依存}
+write entropy が高い ransomware は検出しやすい一方、既に暗号化されたボリューム、
+圧縮済み benign file、backup、deduplication では entropy が信頼できない。
+また、dataset-provided write entropy は embedded collector の cheap telemetry と
+同一ではない。metadata-only variant を主結果として扱えるかが鍵になる。
+
+\paragraph{workload intensity の混同}
+AE は入力分布全体を再構成するため、ransomware ではなく単に write intensive な
+作業を異常とみなす危険がある。これを防ぐには intensity-only baseline と
+channel-wise attribution が必要である。
+
+\paragraph{10 秒窓の遅延}
+10 秒統計は装置負荷を抑えるが、attack start 直後の小さなシグナルを隠す可能性がある。
+time to detect だけでなく、alert 前に失われる LBA fraction を測る。
+
+\paragraph{MNN 変換差}
+offline framework で良好な AE が、MNN 変換や量子化後に score ordering を保つとは
+限らない。MNN parity は研究後半の付録ではなく、実装主張の中心評価項目である。

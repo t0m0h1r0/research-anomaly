@@ -1,0 +1,90 @@
+\section{提案する入力契約}
+
+\subsection{記法}
+
+本稿では、10 秒の集約幅を $\Delta=10$ s とし、$k$ を 10 秒フレームの
+index とする。1 フレームの正規化済み特徴ベクトルを
+$x_k \in \mathbb{R}^{D}$、$N$ 個の連続フレームからなるモデル入力を
+$X_k \in \mathbb{R}^{N \times D}$ と書く。$D$ は実装上の固定幅であり、
+本稿のモデル例では padding を含む $D=12$ を使う。特徴群の集合を $G$、
+特徴群 $g$ に属する index 集合を $I_g$、AE の再構成出力を
+$\hat{X}_k=f_{\theta}(X_k)$、anomaly score を $s(X_k)$、alert threshold を
+$\gamma$ とする。training batch size は $B_{\mathrm{batch}}$ と書く。
+
+\subsection{10 秒フレーム}
+
+装置側 collector は、raw I/O を保持せず、10 秒ごとに固定長統計へ集約する。
+初期契約を式 \eqref{eq:frame} に示す。
+
+\begin{align}
+  x_k = \operatorname{concat}(&n_k, b_k, \rho^r_k, \rho^w_k,
+        \bar{a}^r_k, \bar{a}^w_k,
+        \bar{\ell}^r_k, \bar{\ell}^w_k, \nonumber \\
+        &\delta^a_k, \delta^\ell_k, c_k, p_k) ,
+  \label{eq:frame}
+\end{align}
+
+式 \eqref{eq:frame} の comma-separated entry は、12 個の scalar slot である。
+ここで、$n_k$ は総 I/O 数、$b_k$ は総バイト数、$\rho^r_k,\rho^w_k$ は
+read/write 比率、$\bar{a}^r_k,\bar{a}^w_k$ は read/write 別の平均正規化 LBA、
+$\bar{\ell}^r_k,\bar{\ell}^w_k$ は read/write 別の平均転送長である。
+$\delta^a_k$ と $\delta^\ell_k$ は、それぞれ平均 LBA と平均転送長の
+前フレームからの絶対変化であり、raw event を保持せずに計算できる。
+$c_k$ は optional な圧縮率または entropy 相当信号、$p_k$ は固定幅 alignment のための
+padding slot である。したがって、直接収集する scalar profile は P0 で
+$D=8$、窓間差分を加える P1 で $D=10$、optional slot と padding を含む
+実装固定幅は P2 で $D=12$ となる。AE は単一フレーム $x_k$ ではなく、
+式 \eqref{eq:sequence} のように
+$N$ 個の連続フレームを束ねた時系列を入力する。
+
+\begin{equation}
+  X_k = (x_{k-N+1}, x_{k-N+2}, \ldots, x_k) \in \mathbb{R}^{N \times D}.
+  \label{eq:sequence}
+\end{equation}
+
+したがって入力が表す時間幅は $N \times 10$ 秒である。最初の実装では
+$N$ を実験パラメータとして $6,12,24$ で比較する。初期候補の $N=12$ は
+2 分の文脈に対応する。
+
+\begin{table}[tb]
+  \centering
+  \caption{初期フレームスキーマと feature profile}
+  \label{tab:feature-schema}
+  \begin{tabularx}{\linewidth}{lrlY}
+    \toprule
+    特徴群 & 次元 & profile & 備考 \\
+    \midrule
+    total I/O count & 1 & P0 & log scaling または robust scaling。 \\
+    total bytes & 1 & P0 & intensity と anomaly の混同に注意。 \\
+    read/write ratio & 2 & P0 & $n=0$ の窓は zero-fill と mask を記録する。 \\
+    mean read/write LBA & 2 & P0 & namespace size で正規化した平均値。 \\
+    mean read/write length & 2 & P0 & log1p 後の平均または固定小数点平均。 \\
+    frame-to-frame deltas & 2 & P1 & 平均 LBA と平均転送長の窓間絶対変化。 \\
+    compression/entropy-like signal & 0--1 & P2 & 既存装置カウンタがある場合のみ。 \\
+    padding/alignment & 1--2 & P2 & MNN 固定 shape 用。score から除外する。 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+ここでは histogram を主契約に入れない。10 秒窓の平均 LBA、平均転送長、
+R/W 比率しか取れない装置で ``LBA 分布'' や ``length 分布'' を主張すると、
+入力にない情報をモデルが見ていることになるためである。per-I/O bucket counter を
+装置側で追加できる場合だけ、histogram は別 profile の拡張または ablation として
+扱う。RanSAP の write entropy は P2 の optional slot に入れて upper-bound または
+ablation として評価できるが、target device が安価なカウンタを持つことを
+確認するまで、組み込み主張の必須特徴にしてはならない。
+MNN 固定 shape の実装では $D=12$ を使い、利用できない optional slot は
+zero-fill し、normalization、loss、score の feature group から除外する。
+
+この入力契約の重要点は、研究用に raw event や高価な特徴を足さないことである。
+公開 trace が per-I/O 情報を持つ場合も、最終主張に使う実験では同じ 10 秒統計へ
+落としてから AE に入力する。
+
+\subsection{正規化}
+
+正規化パラメータは benign training split のみから推定する。平均 LBA は
+namespace size または観測範囲で $[0,1]$ に正規化し、平均転送長、count、
+byte は log1p 後に median と IQR、または訓練 split の percentile で scale する。
+ratio は device 上で浮動小数点除算を必須にせず、raw counter から固定小数点で
+生成できる形にする。窓間差分は正規化済み scalar の差分として計算し、欠損した
+先頭フレームは zero-fill と mask により score から除外する。
