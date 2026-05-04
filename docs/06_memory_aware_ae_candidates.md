@@ -24,9 +24,9 @@ Initial input contract:
 - initial example: `N = 12`, so flattened length `L = N * D = 144`.
 
 `D = 12` covers the scalar statistics that can be emitted from 10-second
-window summaries: total intensity, read/write ratio, read/write mean LBA,
-read/write mean transfer length, cheap frame-to-frame deltas, one optional
-compression/entropy-like telemetry slot, and one padding/alignment slot.
+window summaries: total intensity, write ratio, mean LBA, mean transfer
+length, cheap frame-to-frame deltas, one optional compression/entropy-like
+telemetry slot, and four padding/alignment slots.
 
 Weight-size estimates:
 
@@ -69,12 +69,12 @@ The initial `D = 12` planning value is:
 | Feature group | Dims | Notes |
 | --- | ---: | --- |
 | total count and total bytes | 2 | log-scaled intensity scalars |
-| read/write ratio | 2 | fixed-point ratios derived from counters |
-| read/write mean LBA | 2 | normalized by namespace size or observed range |
-| read/write mean transfer length | 2 | log1p-scaled or fixed-point mean |
+| write ratio | 1 | fixed-point ratio derived from write and total counters |
+| mean LBA | 1 | normalized by namespace size or observed range |
+| mean transfer length | 1 | log1p-scaled or fixed-point mean |
 | frame-to-frame deltas | 2 | absolute changes of mean LBA and mean length |
 | optional compression/entropy-like telemetry | 1 | only if cheap telemetry exists |
-| padding/alignment | 1 | excluded from loss and score |
+| padding/alignment | 4 | excluded from loss and score |
 | total | 12 | scalar-only deployment-friendly width |
 
 The exact order must be frozen in the feature extractor and exported with the

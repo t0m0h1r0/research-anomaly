@@ -8,7 +8,7 @@
   "dataset_refs": [
     {
       "name": "Tiny RanSAP schema fixture",
-      "root": "/private/tmp/new-project-3-researcharchitect-ae-eval/analysis/ae_public_eval/fixtures/tiny_ransap",
+      "root": "/private/tmp/new-project-3-researcharchitect-paper-review/analysis/ae_public_eval/fixtures/tiny_ransap",
       "mode": "fixture",
       "license_note": "RanSAP is distributed under CC BY-ND 4.0 per its public README."
     }
@@ -33,7 +33,6 @@
       "window_seconds": 10.0,
       "sequence_length": 3,
       "stride": 1,
-      "logical_block_bytes": 512,
       "include_entropy": true
     },
     "model": {
@@ -55,54 +54,54 @@
     "feature_names": [
       "log_total_count",
       "log_total_bytes",
-      "read_ratio",
       "write_ratio",
-      "mean_read_lba",
-      "mean_write_lba",
-      "log_mean_read_len",
-      "log_mean_write_len",
+      "mean_lba",
+      "log_mean_length",
       "delta_mean_lba",
-      "delta_mean_len",
+      "delta_log_mean_length",
       "optional_entropy_or_compression",
-      "padding"
+      "padding_0",
+      "padding_1",
+      "padding_2",
+      "padding_3"
     ],
     "feature_slices": {
       "intensity": [
         0,
         2
       ],
-      "rw_ratio": [
+      "write_ratio": [
         2,
-        4
+        3
       ],
       "mean_lba": [
-        4,
-        6
+        3,
+        4
       ],
       "mean_length": [
-        6,
-        8
+        4,
+        5
       ],
       "frame_deltas": [
-        8,
-        10
+        5,
+        7
       ],
       "optional_telemetry": [
-        10,
-        11
+        7,
+        8
       ],
       "padding": [
-        11,
+        8,
         12
       ]
     },
     "feature_weights_by_group": {
       "intensity": 1.0,
-      "rw_ratio": 1.0,
+      "write_ratio": 1.0,
       "mean_lba": 1.0,
       "mean_length": 1.0,
       "frame_deltas": 0.5,
-      "optional_telemetry": 0.0,
+      "optional_telemetry": 1.0,
       "padding": 0.0
     },
     "effective_score_weights": [
@@ -111,20 +110,20 @@
       1.0,
       1.0,
       1.0,
-      1.0,
-      1.0,
-      1.0,
       0.5,
       0.5,
       1.0,
+      0.0,
+      0.0,
+      0.0,
       0.0
     ],
-    "layout": "Spec-aligned scalar-only [N,D=12]: intensity, ratios, mean LBA/length, deltas, optional telemetry, pad.",
+    "mask_policy": "Intensity is always valid. Write ratio, mean LBA, and mean length are masked out for empty frames. Deltas are valid only when both adjacent frames are non-empty. Optional telemetry is valid only when present. Padding is always masked out.",
+    "layout": "Spec-aligned scalar-only [N,D=12]: intensity, write ratio, mean LBA/length, deltas, optional telemetry, pad.",
     "config": {
       "window_seconds": 10.0,
       "sequence_length": 3,
       "stride": 1,
-      "logical_block_bytes": 512,
       "include_entropy": true
     }
   },
@@ -135,50 +134,50 @@
     "model": {
       "type": "numpy_mlp",
       "threshold": {
-        "threshold": 4226.412109375,
+        "threshold": 165.82351684570312,
         "quantile": 0.95,
         "calibration_count": 4
       },
       "score_summary": {
         "train": {
           "count": 4,
-          "mean": 0.04349922388792038,
-          "std": 0.01168770156800747,
-          "min": 0.02870861627161503,
-          "p50": 0.04226943850517273,
-          "p90": 0.05630878359079361,
-          "p99": 0.060305334627628326,
-          "max": 0.060749396681785583
+          "mean": 0.04007350653409958,
+          "std": 0.023836316540837288,
+          "min": 0.016444819048047066,
+          "p50": 0.034895941615104675,
+          "p90": 0.06707999110221863,
+          "p99": 0.07335959374904633,
+          "max": 0.07405732572078705
         },
         "calibration": {
           "count": 4,
-          "mean": 3334.1923828125,
-          "std": 887.4483642578125,
-          "min": 2291.905517578125,
-          "p50": 3406.58544921875,
-          "p90": 4221.13232421875,
-          "p99": 4230.6357421875,
-          "max": 4231.69189453125
+          "mean": 127.01412200927734,
+          "std": 34.946746826171875,
+          "min": 85.49386596679688,
+          "p50": 127.39488220214844,
+          "p90": 163.87420654296875,
+          "p99": 167.38296508789062,
+          "max": 167.7728271484375
         },
         "test": {
           "count": 8,
-          "mean": 951.5730590820312,
-          "std": 1005.2014770507812,
-          "min": 24.42584991455078,
-          "p50": 607.8868408203125,
-          "p90": 2263.60302734375,
-          "p99": 2683.325927734375,
-          "max": 2729.961669921875
+          "mean": 714.1689453125,
+          "std": 720.048583984375,
+          "min": 28.9332218170166,
+          "p50": 535.4838256835938,
+          "p90": 1587.654296875,
+          "p99": 1911.935546875,
+          "max": 1947.966552734375
         }
       },
       "metrics_at_threshold": {
-        "threshold": 4226.412109375,
-        "tp": 0,
+        "threshold": 165.82351684570312,
+        "tp": 4,
         "fp": 0,
         "tn": 4,
-        "fn": 4,
-        "precision": 0.0,
-        "recall": 0.0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
         "false_positive_rate": 0.0,
         "true_negative_rate": 1.0,
         "auroc": 1.0,
@@ -232,20 +231,20 @@
       },
       "mean_write_entropy": {
         "threshold": {
-          "threshold": 0.11283333599567413,
+          "threshold": 0.17000000178813934,
           "quantile": 0.95,
           "calibration_count": 4
         },
         "score_summary": {
           "calibration": {
             "count": 4,
-            "mean": 0.0833333358168602,
-            "std": 0.028382308781147003,
-            "min": 0.053333330899477005,
-            "p50": 0.0833333283662796,
-            "p90": 0.11233333498239517,
-            "p99": 0.11323333531618118,
-            "max": 0.1133333370089531
+            "mean": 0.16624999046325684,
+            "std": 0.0041457838378846645,
+            "min": 0.1599999964237213,
+            "p50": 0.16749998927116394,
+            "p90": 0.17000000178813934,
+            "p99": 0.17000000178813934,
+            "max": 0.17000000178813934
           },
           "test": {
             "count": 8,
@@ -259,18 +258,18 @@
           }
         },
         "metrics_at_threshold": {
-          "threshold": 0.11283333599567413,
+          "threshold": 0.17000000178813934,
           "tp": 4,
-          "fp": 3,
-          "tn": 1,
+          "fp": 0,
+          "tn": 4,
           "fn": 0,
-          "precision": 0.5714285714285714,
+          "precision": 1.0,
           "recall": 1.0,
-          "false_positive_rate": 0.75,
-          "true_negative_rate": 0.25,
+          "false_positive_rate": 0.0,
+          "true_negative_rate": 1.0,
           "auroc": 1.0,
           "average_precision": 1.0,
-          "false_alarms_per_day_approx": 6480.0
+          "false_alarms_per_day_approx": 0.0
         }
       }
     },
@@ -343,6 +342,6 @@
     "scores.csv",
     "model.npz"
   ],
-  "created_at_utc": "2026-05-04T07:01:32.410787+00:00",
+  "created_at_utc": "2026-05-04T07:29:06.819387+00:00",
   "verdict": "INCONCLUSIVE"
 }

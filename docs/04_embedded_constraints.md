@@ -55,7 +55,7 @@ Allowed in the embedded collector:
 - incrementing counters,
 - adding transfer lengths,
 - maintaining per-window sums for mean LBA and mean transfer length,
-- deriving read/write ratios from counters,
+- deriving write ratio from counters,
 - comparing current 10-second scalar summaries with the prior summary,
 - cheap fixed-point scaling,
 - reading existing compression or entropy-like hardware counters.
@@ -79,16 +79,13 @@ starting contract is:
 frame_10s = {
   total_count,
   total_bytes,
-  read_ratio,
   write_ratio,
-  mean_read_lba,
-  mean_write_lba,
-  mean_read_length,
-  mean_write_length,
+  mean_lba,
+  mean_length,
   delta_mean_lba,
   delta_mean_length,
   optional_compression_signal,
-  padding
+  padding[4]
 }
 ```
 

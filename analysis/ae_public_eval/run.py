@@ -46,6 +46,7 @@ class RunTensor:
     entropy_event_count: int
     frame_count: int
     sequences: np.ndarray
+    masks: np.ndarray
 
 
 def package_version(name: str) -> str | None:
@@ -109,6 +110,7 @@ def main() -> None:
         events = read_trace_events(source)
         frames = build_frames(events, feature_config)
         sequences = make_sequences(frames.frames, feature_config.sequence_length, feature_config.stride)
+        masks = make_sequences(frames.score_masks, feature_config.sequence_length, feature_config.stride)
         if sequences.shape[0] == 0:
             log_lines.append(f"skipped_short_run={source.run_id}")
             continue
@@ -121,29 +123,32 @@ def main() -> None:
                 entropy_event_count=frames.entropy_event_count,
                 frame_count=frames.frames.shape[0],
                 sequences=sequences,
+                masks=masks,
             )
         )
 
     splits = _split_runs(runs, rng, config)
     train_x = _concat_sequences(splits["train"])
+    train_masks = _concat_masks(splits["train"])
     cal_x = _concat_sequences(splits["calibration"])
-    test_x, test_labels, test_run_ids = _concat_with_labels(splits["test"])
+    cal_masks = _concat_masks(splits["calibration"])
+    test_x, test_masks, test_labels, test_run_ids = _concat_with_labels(splits["test"])
     if train_x.shape[0] == 0 or cal_x.shape[0] == 0 or test_x.shape[0] == 0:
         raise RuntimeError("train, calibration, and test splits must all contain at least one sequence")
 
-    normalizer = RobustNormalizer().fit(train_x)
-    train_norm = normalizer.transform(train_x)
-    cal_norm = normalizer.transform(cal_x)
-    test_norm = normalizer.transform(test_x)
+    normalizer = RobustNormalizer().fit(train_x, train_masks)
+    train_norm = normalizer.transform(train_x) * train_masks
+    cal_norm = normalizer.transform(cal_x) * cal_masks
+    test_norm = normalizer.transform(test_x) * test_masks
 
     model_type = str(config.get("model", {}).get("type", "numpy_mlp"))
     if model_type == "numpy_mlp":
         model, model_scores, model_summary = _train_numpy_mlp(
-            train_norm, cal_norm, test_norm, score_weights, config, out_dir
+            train_norm, cal_norm, test_norm, train_masks, cal_masks, test_masks, score_weights, config, out_dir
         )
     elif model_type in {"torch_gru", "torch_cnn_gru"}:
         model, model_scores, model_summary = _train_torch_model(
-            model_type, train_norm, cal_norm, test_norm, score_weights, config
+            model_type, train_norm, cal_norm, test_norm, train_masks, cal_masks, test_masks, score_weights, config
         )
     else:
         raise ValueError(f"unknown model.type: {model_type}")
@@ -158,7 +163,7 @@ def main() -> None:
         ae_metrics, feature_config.window_seconds, feature_config.stride
     )
 
-    baseline_results = _baseline_results(cal_x, test_x, test_labels, config, feature_config)
+    baseline_results = _baseline_results(cal_x, test_x, cal_masks, test_masks, test_labels, config, feature_config)
     scores_path = out_dir / "scores.csv"
     _write_scores(scores_path, test_run_ids, test_labels, test_scores, baseline_results)
 
@@ -276,20 +281,30 @@ def _concat_sequences(runs: list[RunTensor]) -> np.ndarray:
     return np.concatenate([run.sequences for run in runs], axis=0)
 
 
-def _concat_with_labels(runs: list[RunTensor]) -> tuple[np.ndarray, np.ndarray, list[str]]:
+def _concat_masks(runs: list[RunTensor]) -> np.ndarray:
+    if not runs:
+        return np.zeros((0, 0, 0), dtype=np.float32)
+    return np.concatenate([run.masks for run in runs], axis=0)
+
+
+def _concat_with_labels(runs: list[RunTensor]) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[str]]:
     x = _concat_sequences(runs)
+    masks = _concat_masks(runs)
     labels: list[int] = []
     run_ids: list[str] = []
     for run in runs:
         labels.extend([1 if run.label == "attack" else 0] * run.sequences.shape[0])
         run_ids.extend([run.run_id] * run.sequences.shape[0])
-    return x, np.asarray(labels, dtype=np.int32), run_ids
+    return x, masks, np.asarray(labels, dtype=np.int32), run_ids
 
 
 def _train_numpy_mlp(
     train_norm: np.ndarray,
     cal_norm: np.ndarray,
     test_norm: np.ndarray,
+    train_masks: np.ndarray,
+    cal_masks: np.ndarray,
+    test_masks: np.ndarray,
     score_weights: np.ndarray,
     config: dict[str, Any],
     out_dir: Path,
@@ -304,12 +319,16 @@ def _train_numpy_mlp(
         batch_size=int(model_config.get("batch_size", 64)),
         seed=int(config.get("seed", 0)),
     )
-    model = NumpyMLPAutoEncoder(ae_config).fit(flatten_sequences(train_norm))
+    train_loss_weights = train_masks * score_weights.reshape(1, 1, -1)
+    model = NumpyMLPAutoEncoder(ae_config).fit(
+        flatten_sequences(train_norm),
+        loss_weights=flatten_sequences(train_loss_weights),
+    )
     model.save(out_dir / "model.npz")
     scores = {
-        "train": _numpy_weighted_score(model, train_norm, score_weights),
-        "calibration": _numpy_weighted_score(model, cal_norm, score_weights),
-        "test": _numpy_weighted_score(model, test_norm, score_weights),
+        "train": _numpy_weighted_score(model, train_norm, train_masks, score_weights),
+        "calibration": _numpy_weighted_score(model, cal_norm, cal_masks, score_weights),
+        "test": _numpy_weighted_score(model, test_norm, test_masks, score_weights),
     }
     return model, scores, {
         "type": "numpy_mlp",
@@ -325,6 +344,9 @@ def _train_torch_model(
     train_norm: np.ndarray,
     cal_norm: np.ndarray,
     test_norm: np.ndarray,
+    train_masks: np.ndarray,
+    cal_masks: np.ndarray,
+    test_masks: np.ndarray,
     score_weights: np.ndarray,
     config: dict[str, Any],
 ):
@@ -344,6 +366,7 @@ def _train_torch_model(
     model = build_torch_autoencoder(torch_config)
     optimizer = torch.optim.Adam(model.parameters(), lr=float(model_config.get("learning_rate", 0.001)))
     train_tensor = torch.as_tensor(train_norm, dtype=torch.float32)
+    train_mask_tensor = torch.as_tensor(train_masks, dtype=torch.float32)
     weights_tensor = torch.as_tensor(score_weights, dtype=torch.float32).reshape(1, 1, -1)
     batch_size = int(model_config.get("batch_size", 64))
     losses: list[float] = []
@@ -352,26 +375,28 @@ def _train_torch_model(
         epoch_losses: list[float] = []
         order = torch.randperm(train_tensor.shape[0])
         for start in range(0, train_tensor.shape[0], batch_size):
-            batch = train_tensor[order[start : start + batch_size]]
+            batch_indices = order[start : start + batch_size]
+            batch = train_tensor[batch_indices]
+            batch_weights = train_mask_tensor[batch_indices] * weights_tensor
             optimizer.zero_grad()
             recon = model(batch)
-            loss = _torch_weighted_loss(torch, recon, batch, weights_tensor)
+            loss = _torch_weighted_loss(torch, recon, batch, batch_weights)
             loss.backward()
             optimizer.step()
             epoch_losses.append(float(loss.detach().cpu()))
         losses.append(float(np.mean(epoch_losses)))
 
-    def score(x: np.ndarray) -> np.ndarray:
+    def score(x: np.ndarray, masks: np.ndarray) -> np.ndarray:
         model.eval()
         with torch.no_grad():
             tensor = torch.as_tensor(x, dtype=torch.float32)
             recon = model(tensor).cpu().numpy()
-        return _weighted_sequence_score(x, recon, score_weights)
+        return _weighted_sequence_score(x, recon, masks, score_weights)
 
     scores = {
-        "train": score(train_norm),
-        "calibration": score(cal_norm),
-        "test": score(test_norm),
+        "train": score(train_norm, train_masks),
+        "calibration": score(cal_norm, cal_masks),
+        "test": score(test_norm, test_masks),
     }
     parameter_count = count_torch_parameters(model)
     return model, scores, {
@@ -390,14 +415,16 @@ def _train_torch_model(
 def _baseline_results(
     cal_x: np.ndarray,
     test_x: np.ndarray,
+    cal_masks: np.ndarray,
+    test_masks: np.ndarray,
     labels: np.ndarray,
     config: dict[str, Any],
     feature_config: FeatureConfig,
 ) -> dict[str, Any]:
     quantile = float(config.get("threshold_quantile", 0.99))
     raw_scores = {
-        "write_ratio": (_write_ratio_score(cal_x), _write_ratio_score(test_x)),
-        "mean_write_entropy": (_feature_score(cal_x, 10), _feature_score(test_x, 10)),
+        "write_ratio": (_write_ratio_score(cal_x, cal_masks), _write_ratio_score(test_x, test_masks)),
+        "mean_write_entropy": (_feature_score(cal_x, 7, cal_masks), _feature_score(test_x, 7, test_masks)),
     }
     metrics: dict[str, Any] = {}
     test_score_columns: dict[str, np.ndarray] = {}
@@ -421,34 +448,42 @@ def _baseline_results(
     return {"metrics": metrics, "test_scores": test_score_columns}
 
 
-def _write_ratio_score(x: np.ndarray) -> np.ndarray:
-    return np.mean(x[:, :, 3], axis=1)
+def _write_ratio_score(x: np.ndarray, masks: np.ndarray) -> np.ndarray:
+    return _feature_score(x, 2, masks)
 
 
-def _feature_score(x: np.ndarray, feature_position: int) -> np.ndarray:
-    return np.mean(x[:, :, feature_position], axis=1)
+def _feature_score(x: np.ndarray, feature_position: int, masks: np.ndarray) -> np.ndarray:
+    valid = masks[:, :, feature_position]
+    denominator = np.maximum(valid.sum(axis=1), 1.0)
+    return np.sum(x[:, :, feature_position] * valid, axis=1) / denominator
 
 
 def _numpy_weighted_score(
     model: NumpyMLPAutoEncoder,
     x: np.ndarray,
+    masks: np.ndarray,
     score_weights: np.ndarray,
 ) -> np.ndarray:
     flat = flatten_sequences(x)
     recon = model.reconstruct(flat).reshape(x.shape)
-    return _weighted_sequence_score(x, recon, score_weights)
+    return _weighted_sequence_score(x, recon, masks, score_weights)
 
 
-def _weighted_sequence_score(x: np.ndarray, recon: np.ndarray, score_weights: np.ndarray) -> np.ndarray:
-    weights = score_weights.reshape(1, 1, -1)
+def _weighted_sequence_score(
+    x: np.ndarray,
+    recon: np.ndarray,
+    masks: np.ndarray,
+    score_weights: np.ndarray,
+) -> np.ndarray:
+    weights = masks * score_weights.reshape(1, 1, -1)
     weighted_error = ((recon - x) ** 2) * weights
-    denominator = max(float(np.sum(score_weights)), 1.0) * x.shape[1]
+    denominator = np.maximum(np.sum(weights, axis=(1, 2)), 1.0)
     return np.sum(weighted_error, axis=(1, 2)) / denominator
 
 
 def _torch_weighted_loss(torch, recon, x, weights):
     active_weight_sum = torch.clamp(weights.sum(), min=1.0)
-    return (((recon - x) ** 2) * weights).sum() / (x.shape[0] * x.shape[1] * active_weight_sum)
+    return (((recon - x) ** 2) * weights).sum() / active_weight_sum
 
 
 def _write_scores(

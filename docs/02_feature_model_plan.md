@@ -56,9 +56,9 @@ Recommended starting point:
 Use the deployable 10-second scalar summaries as the core input:
 
 - total I/O count and total bytes,
-- read/write ratio,
-- read/write mean LBA,
-- read/write mean transfer length,
+- write ratio,
+- mean LBA,
+- mean transfer length,
 - frame-to-frame changes derived from those means,
 - entropy or compression-rate scalar, only when cheap telemetry already exists.
 
@@ -76,11 +76,12 @@ Initial feature groups:
 | Feature group | Construction |
 | --- | --- |
 | intensity | total count and total bytes |
-| read/write ratio | ratios derived from read/write counters |
-| mean LBA | read/write mean normalized LBA |
-| mean transfer length | read/write mean length |
+| write ratio | writes divided by total I/O count |
+| mean LBA | total-count-weighted mean normalized LBA |
+| mean transfer length | total-count-weighted mean transfer length |
 | frame deltas | changes in mean LBA and mean length from the prior frame |
-| compression telemetry | optional scalar only if already available |
+| compression telemetry | one optional slot, zero-filled and zero-weighted if unavailable |
+| padding | four fixed-shape slots, always zero-weighted |
 
 Keep I/O intensity separate in analysis because anomaly scores can otherwise
 become "busy workload" detectors.
@@ -91,13 +92,13 @@ exploratory profile rather than the main embedded claim.
 
 ## Normalization
 
-- LBA: normalize read/write mean LBA by observed or declared namespace size.
-- Length: log1p-scale read/write mean transfer length.
-- Read/write ratio: `writes / max(reads + writes, 1)`.
+- LBA: normalize mean LBA by observed or declared namespace size.
+- Length: log1p-scale mean transfer length.
+- Write ratio: `writes / max(total I/O count, 1)`.
 - Entropy/compression: use storage-provided compression telemetry if available;
   otherwise omit from the deployed model.
 - Counts: use log scaling and robust normalization from benign calibration data.
-- Ratios: prefer host-side or offline normalization for evaluation; embedded
+- Write ratio: prefer host-side or offline normalization for evaluation; embedded
   code can emit raw counters and let the model consume normalized fixed-point
   values after cheap scaling.
 

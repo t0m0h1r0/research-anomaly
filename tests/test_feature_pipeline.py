@@ -10,7 +10,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from rad_ae.features import FeatureConfig, RobustNormalizer, build_frames, make_sequences
-from rad_ae.ransap import discover_trace_sources, read_trace_events
+from rad_ae.ransap import IoEvent, discover_trace_sources, read_trace_events
 
 
 class FeaturePipelineTest(unittest.TestCase):
@@ -39,12 +39,32 @@ class FeaturePipelineTest(unittest.TestCase):
             self.assertEqual(result.event_count, 5)
             self.assertEqual(result.entropy_event_count, 2)
             self.assertEqual(sequences.shape[1:], (2, 12))
+            self.assertEqual(result.score_masks.shape, result.frames.shape)
             self.assertGreater(float(sequences[..., 1].max()), 0.0)
+            self.assertGreater(float(sequences[..., 2].max()), 0.0)
             self.assertGreater(float(sequences[..., 3].max()), 0.0)
+            self.assertGreater(float(sequences[..., 4].max()), 0.0)
+            self.assertEqual(float(result.score_masks[:, 8:].max()), 0.0)
+
+    def test_empty_windows_are_zero_filled_and_masked(self) -> None:
+        events = [
+            IoEvent(timestamp=0.0, op="write", lba=10, size=4096, entropy=0.5),
+            IoEvent(timestamp=30.0, op="read", lba=40, size=8192),
+        ]
+
+        result = build_frames(events, FeatureConfig(sequence_length=2))
+
+        self.assertEqual(result.frames.shape, (4, 12))
+        self.assertEqual(float(result.frames[1, 2:7].max()), 0.0)
+        self.assertEqual(float(result.score_masks[1, 2:7].max()), 0.0)
+        self.assertEqual(float(result.score_masks[0, 5:7].max()), 0.0)
+        self.assertEqual(float(result.score_masks[3, 5:7].max()), 0.0)
 
     def test_normalizer_round_trip_shape(self) -> None:
         x = np.arange(2 * 3 * 12, dtype=np.float32).reshape(2, 3, 12)
-        normalizer = RobustNormalizer().fit(x)
+        masks = np.ones_like(x, dtype=np.float32)
+        masks[:, :, 8:] = 0.0
+        normalizer = RobustNormalizer().fit(x, masks)
         transformed = normalizer.transform(x)
         self.assertEqual(transformed.shape, x.shape)
         self.assertTrue(np.isfinite(transformed).all())

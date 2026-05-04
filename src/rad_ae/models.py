@@ -41,11 +41,13 @@ class NumpyMLPAutoEncoder:
         self.b2 = np.zeros((config.input_dim,), dtype=np.float32)
         self.loss_history: list[float] = []
 
-    def fit(self, x: np.ndarray) -> "NumpyMLPAutoEncoder":
+    def fit(self, x: np.ndarray, loss_weights: np.ndarray | None = None) -> "NumpyMLPAutoEncoder":
         if x.ndim != 2:
             raise ValueError("NumpyMLPAutoEncoder.fit expects a 2-D flattened array")
         if x.shape[0] == 0:
             raise ValueError("cannot train AutoEncoder on an empty array")
+        if loss_weights is not None and loss_weights.shape != x.shape:
+            raise ValueError("loss_weights must have the same shape as x")
 
         rng = np.random.default_rng(self.config.seed)
         state = _AdamState.for_parameters((self.w1, self.b1, self.w2, self.b2))
@@ -53,12 +55,16 @@ class NumpyMLPAutoEncoder:
             order = rng.permutation(x.shape[0])
             epoch_losses: list[float] = []
             for start in range(0, x.shape[0], self.config.batch_size):
-                batch = x[order[start : start + self.config.batch_size]]
+                batch_indices = order[start : start + self.config.batch_size]
+                batch = x[batch_indices]
+                batch_weights = loss_weights[batch_indices] if loss_weights is not None else None
                 recon, latent = self._forward(batch)
                 diff = recon - batch
-                loss = float(np.mean(diff * diff))
+                denominator = _loss_denominator(diff, batch_weights)
+                weighted_diff = diff if batch_weights is None else diff * batch_weights
+                loss = float(np.sum(diff * weighted_diff) / denominator)
                 epoch_losses.append(loss)
-                grads = self._backward(batch, recon, latent)
+                grads = self._backward(batch, recon, latent, batch_weights)
                 state.update(
                     (self.w1, self.b1, self.w2, self.b2),
                     grads,
@@ -70,9 +76,15 @@ class NumpyMLPAutoEncoder:
     def reconstruct(self, x: np.ndarray) -> np.ndarray:
         return self._forward(x)[0]
 
-    def score(self, x: np.ndarray) -> np.ndarray:
+    def score(self, x: np.ndarray, loss_weights: np.ndarray | None = None) -> np.ndarray:
         recon = self.reconstruct(x)
-        return np.mean((recon - x) ** 2, axis=1)
+        err = (recon - x) ** 2
+        if loss_weights is None:
+            return np.mean(err, axis=1)
+        if loss_weights.shape != x.shape:
+            raise ValueError("loss_weights must have the same shape as x")
+        denominator = np.maximum(np.sum(loss_weights, axis=1), 1.0)
+        return np.sum(err * loss_weights, axis=1) / denominator
 
     def save(self, path: Path | str) -> None:
         np.savez_compressed(
@@ -107,10 +119,17 @@ class NumpyMLPAutoEncoder:
         recon = latent @ self.w2 + self.b2
         return recon.astype(np.float32), latent.astype(np.float32)
 
-    def _backward(self, x: np.ndarray, recon: np.ndarray, latent: np.ndarray) -> tuple[np.ndarray, ...]:
-        batch_size = max(1, x.shape[0])
-        scale = 2.0 / (batch_size * x.shape[1])
-        d_recon = (recon - x) * scale
+    def _backward(
+        self,
+        x: np.ndarray,
+        recon: np.ndarray,
+        latent: np.ndarray,
+        loss_weights: np.ndarray | None,
+    ) -> tuple[np.ndarray, ...]:
+        denominator = _loss_denominator(recon - x, loss_weights)
+        d_recon = 2.0 * (recon - x) / denominator
+        if loss_weights is not None:
+            d_recon *= loss_weights
         grad_w2 = latent.T @ d_recon
         grad_b2 = d_recon.sum(axis=0)
         d_latent = (d_recon @ self.w2.T) * (1.0 - latent * latent)
@@ -122,6 +141,12 @@ class NumpyMLPAutoEncoder:
             grad_w2.astype(np.float32),
             grad_b2.astype(np.float32),
         )
+
+
+def _loss_denominator(diff: np.ndarray, loss_weights: np.ndarray | None) -> float:
+    if loss_weights is None:
+        return float(max(1, diff.size))
+    return max(float(np.sum(loss_weights)), 1.0)
 
 
 class _AdamState:
