@@ -7,7 +7,9 @@ This memo proposes concrete AutoEncoder candidates for the 500 KB per-volume
 detector-data budget. The budget is derived from the planning assumption of
 roughly 1 GB available across roughly 2000 protected volumes, and it covers
 model weight information plus the input statistics/state needed to score one
-volume. The current deployable feature contract is scalar-only: it does not
+volume. If the available memory is stated as 1 GiB, the exact quotient is about
+524 KiB per volume, so 500 KB is a conservative rounded engineering target. The
+current deployable feature contract is scalar-only: it does not
 assume LBA or transfer-length histograms unless a target device explicitly
 exposes cheap per-window bucket counters.
 

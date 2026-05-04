@@ -88,26 +88,36 @@ AUROC は補助指標に留める。実運用で重要なのは、低 false posi
 
 ここで false positive は分類上の誤陽性、false alarms per volume per day は
 運用上の alert 率として区別する。device-fit のための volume scaling では、
-共有 runtime、共有 weight、volume ごとの detector state を分け、式
-\eqref{eq:aggregate-cost} の形で総コストを報告する。
+共有 runtime、共有 weight、volume ごとの detector state、transient scratch を分け、
+式 \eqref{eq:aggregate-cost} の形で総コストを報告する。$B_{\mathrm{volume}}$ は
+500 KB の per-volume detector data 予算、$Q$ は同時に確保する inference scratch slot 数である。
 
 \begin{equation}
-  M_{\mathrm{total}}(V) =
-  M_{\mathrm{shared}} + V M_{\mathrm{volume}}, \qquad
+\begin{aligned}
+  M_{\mathrm{persistent}}(V) =
+  M_{\mathrm{shared}} + M_{\mathrm{w,shared}}
+  + V \left(M_{\mathrm{w,volume}} + M_{\mathrm{state}}\right), \\
+  M_{\mathrm{peak}}(V,Q) =
+  M_{\mathrm{persistent}}(V) + Q M_{\mathrm{scratch}}, \\
   C_{\mathrm{total}}(V) =
   V C_{\mathrm{volume}} / 10\,\mathrm{s}.
+\end{aligned}
   \label{eq:aggregate-cost}
 \end{equation}
 
-$M_{\mathrm{shared}}$ は共有 runtime/library、共通 heap、共有できる model file や
-weight である。$M_{\mathrm{volume}}$ は、weight を共有できない場合の model weight と、
-volume ごとの retained input statistics、normalization state、threshold、score history である。
-operator workspace や activation tensor は transient scratch として同時 inference slot 数に
-応じて別に報告する。$C_{\mathrm{volume}}$ は 1 volume の 10 秒 frame 更新と
-推論に必要な CPU 時間である。target device の具体的 budget が未定の場合でも、
+$M_{\mathrm{shared}}$ は共有 runtime/library と共通 heap、$M_{\mathrm{w,shared}}$ は
+全 volume で共有できる model weight 表現、$M_{\mathrm{w,volume}}$ は volume ごとに
+複製される weight 表現、$M_{\mathrm{state}}$ は retained input statistics、
+normalization state、threshold、score history である。weight を共有できる実装では
+$M_{\mathrm{w,volume}}=0$ とし、共有できない実装では $M_{\mathrm{w,shared}}=0$ とする。
+$M_{\mathrm{scratch}}$ は activation tensor、operator workspace、output tensor などの
+reusable inference slot 1 個分である。per-volume gate は、共有 weight なら
+$(M_{\mathrm{w,shared}}/V)+M_{\mathrm{state}}\le B_{\mathrm{volume}}$、複製 weight なら
+$M_{\mathrm{w,volume}}+M_{\mathrm{state}}\le B_{\mathrm{volume}}$ として報告する。
+$C_{\mathrm{volume}}$ は 1 volume の 10 秒 frame 更新と推論に必要な CPU 時間である。
+target device の具体的 budget が未定の場合でも、
 $V \in \{1,8,32,128,2000\}$ などの sweep を示し、単一 volume の
-500 KB detector-data fit だけで
-device-fit claim を昇格しない。
+500 KB detector-data fit だけで device-fit claim を昇格しない。
 
 \subsection{アブレーション}
 

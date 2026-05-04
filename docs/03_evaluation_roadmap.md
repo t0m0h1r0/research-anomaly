@@ -133,7 +133,7 @@ Exit criteria:
 - model weights plus retained input statistics/state fit within 500 KB per
   volume, excluding shared MNN runtime/library memory,
 - aggregate memory/CPU is plausible at roughly 2000 volumes with shared runtime
-  memory accounted for separately,
+  memory and scheduled transient scratch slots accounted for separately,
 - fixed-shape MNN inference has acceptable score parity,
 - any requirement for payload access or compression hardware is explicit,
 - response actions remain out of scope until detection quality is credible.
@@ -172,7 +172,7 @@ only if false positives are rare and alerts arrive early.
 | E4 | Does benign diversity break it? | UMass/SNIA benign traces | false-positive report |
 | E5 | Is CNN-GRU necessary? | RanSAP plus benign traces | architecture ablation |
 | E6 | Does 10-second cadence still work? | deployed statistic tensors | latency and recall report |
-| E7 | Can the MNN detector fit 500 KB per volume? | trained candidate model | MNN detector-data, transient-scratch, and parity report |
+| E7 | Can the MNN detector fit 500 KB per volume? | trained candidate model | MNN detector-data, transient-scratch slot, scheduling, and parity report |
 
 ## Risk Register
 

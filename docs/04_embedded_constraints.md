@@ -4,7 +4,10 @@
 
 - A representative storage device may protect roughly 2000 volumes while
   reserving roughly 1 GB for detector data.
-- This yields an engineering target of about 500 KB per volume.
+- This yields an engineering target of about 500 KB per volume. If the device
+  budget is specified as 1 GiB rather than decimal 1 GB, the quotient is about
+  524 KiB per volume, so the 500 KB target remains a conservative rounded
+  budget.
 - The 500 KB budget covers model weight information and the input statistics or
   per-volume detector state needed to score one volume.
 - Shared libraries, the MNN runtime itself, and common runtime heap are outside
@@ -29,7 +32,7 @@ Source:
 
 - <https://github.com/alibaba/MNN>
 
-## Model-Memory Budget
+## Detector-Data Budget
 
 Treat 500 KB as a per-volume persistent detector-data budget derived from the
 planning assumption of roughly 1 GB available across roughly 2000 protected
@@ -51,22 +54,40 @@ Initial budget target:
 | volume metadata, alignment, and implementation margin | <= 36 KB |
 | total | <= 500 KB |
 
-If the model file is shared once across volumes, report both the conservative
-per-volume view above and the shared-weight aggregate view. The latter should
-separate shared weights from per-volume input statistics:
+Use this accounting model:
 
 ```text
-M_total(V) = M_shared_runtime + M_shared_weights + V * M_volume_state
+B_volume = 500 KB
+V = protected volume count
+Q = simultaneously allocated inference scratch slots
 ```
 
-If weights cannot be shared across volumes, use:
+Persistent detector data:
 
 ```text
-M_total(V) = M_shared_runtime + V * (M_volume_weights + M_volume_state)
+M_persistent(V) =
+  M_shared_runtime
+  + M_shared_weights
+  + V * (M_volume_weights + M_volume_state)
+```
+
+Per-volume detector-data gates:
+
+```text
+shared-weight view:     (M_shared_weights / V) + M_volume_state <= B_volume
+replicated-weight view: M_volume_weights + M_volume_state <= B_volume
+```
+
+Peak device-fit check:
+
+```text
+M_peak(V, Q) = M_persistent(V) + Q * M_transient_scratch
 ```
 
 The target scale is `V ~= 2000`; smaller sweeps are useful for plots but are not
-the final many-volume device-fit condition.
+the final many-volume device-fit condition. The schedule must justify `Q`,
+because multiple reusable inference slots may be needed to score all volumes
+within each 10-second cadence.
 
 ## Feature Collection Rules
 

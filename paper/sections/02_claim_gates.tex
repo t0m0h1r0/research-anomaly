@@ -32,8 +32,9 @@ evidence として扱い、単独では authority とみなさない。表
     非主張。family holdout は proxy 評価。 \\
     device-fit claim &
     MNN 変換済み model、offline/MNN score parity、volume あたりの model weight と
-    入力統計/state、transient scratch、共有 weight と per-volume state の分解、
-    volume 数 $V$ に対する aggregate memory と 10 秒あたり CPU 時間。 &
+    入力統計/state、inference slot あたりの transient scratch、slot 数 $Q$、
+    共有 weight と per-volume state の分解、volume 数 $V$ に対する aggregate memory と
+    10 秒あたり CPU 時間。 &
     非主張。500 KB は per-volume detector-data 制約条件。 \\
     \bottomrule
   \end{tabularx}

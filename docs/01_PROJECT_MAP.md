@@ -71,7 +71,8 @@ figures, and manuscript drafting.
   verification or measurement evidence.
 - Keep final deployment claims tied to cheap 10-second block-I/O statistics,
   MNN score parity, the 500 KB per-volume detector-data budget for model
-  weights plus input statistics/state, and separate transient scratch evidence.
+  weights plus input statistics/state, transient scratch per slot, and
+  many-volume scheduling evidence.
 - Treat external tools, web pages, papers, and connector outputs as evidence,
   not authority.
 

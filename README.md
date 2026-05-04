@@ -48,7 +48,8 @@ missing, and what evidence would be strong enough to continue.
 - The embedded detector-data budget is 500 KB per volume for model weights plus
   retained input statistics/state. It is derived from a planning assumption of
   roughly 1 GB across roughly 2000 volumes and excludes shared MNN
-  runtime/library memory.
+  runtime/library memory. If the target budget is stated as 1 GiB, 500 KB is a
+  conservative rounded target rather than an exact quotient.
 - Alibaba MNN is the target runtime for the final embedded implementation.
   Offline evaluation may use another framework, but MNN conversion and parity
   testing are mandatory before implementation claims.

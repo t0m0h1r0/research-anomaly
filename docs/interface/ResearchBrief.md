@@ -12,7 +12,9 @@ working model family is a memory-aware AutoEncoder, with MNN CPU inference and a
 500 KB per-volume detector-data budget as deployment constraints. The 500 KB
 target is derived from a planning assumption of roughly 1 GB available across
 roughly 2000 protected volumes and covers model weight information plus input
-statistics/state, not shared runtime libraries.
+statistics/state, not shared runtime libraries. If a target device reports
+memory as 1 GiB, 500 KB remains a conservative rounded target rather than an
+exact quotient.
 
 ## Current Scope
 

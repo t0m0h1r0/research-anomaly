@@ -23,8 +23,9 @@ entropy のような重い特徴量は、組み込み主張の前提にしない
 最終実装では Alibaba MNN による CPU 推論を想定する。ストレージ装置では
 約 2000 個の volume/namespace を定義し、検出器データに約 1 GB を割り当てる
 構成を想定できるため、volume あたりの持続的な detector data は約 500 KB に
-制限される。本稿では、この 500 KB を model weight 情報と入力統計/state の
-予算として扱い、MNN runtime や共有 library は除外する。性能、MNN 変換、
+制限される。1 GiB 表記なら商は約 524 KiB だが、本稿では 500 KB を保守的に丸めた
+engineering target として扱う。この 500 KB は model weight 情報と入力統計/state の
+予算であり、MNN runtime や共有 library は除外する。性能、MNN 変換、
 score parity、per-volume detector-data fit、transient inference scratch、
 aggregate memory/CPU は、manifest 付き実験と測定が揃うまで非主張とする。
 \end{abstract}

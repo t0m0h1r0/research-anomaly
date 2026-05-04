@@ -41,5 +41,6 @@ seed, split protocol, feature schema, metrics, outputs, timestamp, and verdict.
 Outputs prioritize problem framing, storage-level ransomware prior work, fair
 baselines, reproducible feature extraction and experiments, leakage and
 false-positive analysis, ablation and robustness checks, honest limitations,
-concise academic prose, MNN parity, 500 KB per-volume detector-data evidence,
-transient scratch scheduling evidence, and redeployable agent workflow artifacts.
+concise academic prose, MNN parity, conservative 500 KB per-volume detector-data
+evidence, transient scratch per slot, scheduling evidence, and redeployable
+agent workflow artifacts.

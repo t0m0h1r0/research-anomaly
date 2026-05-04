@@ -429,4 +429,6 @@ Before claiming any candidate fits:
 - model weights plus retained input statistics/state fit inside the 500 KB
   per-volume detector-data budget,
 - transient tensors, operator workspace, and reusable inference slots are
-  measured separately for the target many-volume schedule.
+  measured separately,
+- the target many-volume schedule records how many scratch slots are allocated
+  concurrently and still completes every 10-second cadence.

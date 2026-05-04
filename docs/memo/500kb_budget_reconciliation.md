@@ -26,42 +26,60 @@ The corrected interpretation is:
   is a separate scheduling/peak-memory check rather than the root of the
   500 KB per-volume budget.
 
-The arithmetic is intentionally approximate:
+The arithmetic is intentionally approximate and uses 500 KB as a rounded
+engineering target:
 
 ```text
 1 GB / 2000 volumes ~= 500 KB per volume
 ```
 
-Because "1 GB" and "2000 volumes" are planning assumptions rather than a target
-device measurement, manuscripts and design docs should present 500 KB as an
-engineering budget to be validated, not as empirical device evidence.
+If a target device specifies memory in binary units, then `1 GiB / 2000` is
+about 524 KiB per volume. Keeping the project target at 500 KB is therefore a
+conservative rounded budget. Because "1 GB" and "2000 volumes" are planning
+assumptions rather than a target device measurement, manuscripts and design docs
+should present 500 KB as an engineering budget to be validated, not as empirical
+device evidence.
 
 ## VERIFY
 
 Documents should avoid saying that 500 KB includes shared libraries, common MNN
-heap, or all transient operator workspace. Device-fit gates should instead
-separate:
+heap, or all transient operator workspace. Device-fit gates should instead use
+the following accounting terms:
 
 ```text
-M_total(V) =
-  M_shared_runtime
-  + M_shared_weights
-  + V * M_volume_state
+B_volume = 500 KB
+V = protected volume count
+Q = simultaneously allocated inference scratch slots
 ```
 
-or, when weights cannot be shared across volumes:
+Persistent detector data:
 
 ```text
-M_total(V) =
+M_persistent(V) =
   M_shared_runtime
+  + M_shared_weights
   + V * (M_volume_weights + M_volume_state)
 ```
 
-The conservative per-volume check remains:
+Here `M_shared_weights` is nonzero only when one converted weight
+representation can be shared across volumes. `M_volume_weights` is nonzero when
+each volume needs a separate weight representation. The per-volume budget gate
+is:
 
 ```text
-M_volume_weights + M_volume_input_statistics <= 500 KB
+shared-weight view:     (M_shared_weights / V) + M_volume_state <= B_volume
+replicated-weight view: M_volume_weights + M_volume_state <= B_volume
 ```
+
+Transient scratch is not part of the 500 KB root budget, but it is part of peak
+device fit:
+
+```text
+M_peak(V, Q) = M_persistent(V) + Q * M_transient_scratch
+```
+
+The schedule must justify `Q`, because 2000 volumes scored every 10 seconds may
+need more than one reusable inference slot.
 
 ## AUDIT
 

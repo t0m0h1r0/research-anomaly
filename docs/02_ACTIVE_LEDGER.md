@@ -8,7 +8,7 @@
 |-------|-------|
 | phase | REVIEW |
 | branch | codex/researcharchitect-500kb-memory |
-| current_objective | Reconcile the 500 KB detector-data budget with the corrected 2000-volume / 1 GB deployment assumption |
+| current_objective | Complete strict review rounds for the corrected 500 KB detector-data budget and stop with no MAJOR-or-higher findings |
 | active_brief | `docs/interface/ResearchBrief.md` |
 | source_artifact | none registered yet |
 | next_action | Await user review; do not merge main until explicitly instructed |
@@ -38,6 +38,7 @@
 | CHK-RAD-018 | DONE | R | `src/rad_ae/`, `analysis/ae_public_eval/` | updated implementation from D=40 histogram profile to latest scalar-only D=12 feature contract and refreshed smoke manifest | 2026-05-04 |
 | CHK-RAD-019 | DONE | R/A | `src/rad_ae/`, `analysis/ae_public_eval/`, `docs/01_data_strategy.md`, `docs/02_feature_model_plan.md`, `docs/04_embedded_constraints.md`, `docs/06_memory_aware_ae_candidates.md`, `docs/07_ae_implementation_spec.md`, `docs/memo/combined_strict_review_rounds.md` | reconciled code and specs with the manuscript's one-write-ratio D=12 contract, added mask-aware loss/score handling, and reran smoke outputs | 2026-05-04 |
 | CHK-RAD-020 | DONE | M/T/A | `docs/memo/500kb_budget_reconciliation.md`, `docs/interface/ResearchBrief.md`, `docs/04_embedded_constraints.md`, `docs/06_memory_aware_ae_candidates.md`, `paper/sections/` | corrected 500 KB rationale to per-volume detector data from roughly 1 GB over roughly 2000 volumes, excluding shared runtime/library memory and separating transient scratch | 2026-05-04 |
+| CHK-RAD-021 | DONE | M/T/A | `docs/memo/500kb_strict_review_rounds.md`, `docs/04_embedded_constraints.md`, `docs/05_literature_survey.md`, `paper/sections/07_evaluation_plan.tex`, `paper/sections/08_mnn_implementation_plan.tex` | completed strict review rounds; fixed MAJOR issues in aggregate scratch accounting, stale histogram feature contract, and 500 KB unit convention | 2026-05-04 |
 
 ## §ASSUMPTIONS
 
@@ -69,4 +70,4 @@
 |----|--------|----------|-----------|--------|---------|
 | BLK-RAD-001 | codex/researcharchitect-ae-public-eval | `/private/tmp/new-project-3-researcharchitect-ae-eval` | continue AE evaluation implementation after main merge and scalar-only D=12 contract update | ACTIVE | 2026-05-04 |
 | RAD-RA-PR | codex/researcharchitect-paper-review | `/private/tmp/new-project-3-researcharchitect-paper-review` | reviewer-grade manuscript/code audit and root-cause revision | ACTIVE | 2026-05-04 |
-| RAD-RA-500KB | codex/researcharchitect-500kb-memory | `/private/tmp/new-project-3-researcharchitect-500kb-memory` | correct 500 KB memory-budget rationale and align docs/manuscript gates | ACTIVE | 2026-05-04 |
+| RAD-RA-500KB | codex/researcharchitect-500kb-memory | `/private/tmp/new-project-3-researcharchitect-500kb-memory` | correct 500 KB detector-data budget rationale and align docs/manuscript gates | ACTIVE | 2026-05-04 |

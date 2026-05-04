@@ -735,26 +735,27 @@ Representative sources:
 - process, API, DLL, Mutex, registry, or kernel event sequences;
 - memory-access patterns from hypervisor SLAT/EPT.
 
-### Compromise Feature Set For 10-Second Frames
+### Production Feature Set For 10-Second Frames
 
-Use this as the first production-shaped frame:
+Use the scalar-only `D = 12` contract as the first production-shaped frame:
 
 ```text
-read_count
-write_count
-read_bytes_log
-write_bytes_log
-read_lba_hist[8]
-write_lba_hist[8]
-read_len_hist[8]
-write_len_hist[8]
-seq_read_count
-seq_write_count
-optional_reducibility_or_compression_signal
+total_count
+total_bytes
+write_ratio
+mean_lba
+mean_length
+delta_mean_lba
+delta_mean_length
+optional_compression_or_entropy_like_signal
+padding[4]
 ```
 
-This yields 38-39 scalar values per 10 seconds. With 12 frames, the MLP input is
-roughly 456-468 scalars before optional channels.
+This yields 12 scalar slots per 10-second frame. Four slots are padding and are
+zero-weighted in loss and score. With 12 frames, the flattened MLP input is
+144 scalars. LBA or transfer-length histograms are no longer part of the first
+embedded contract; they are a separate feature profile only if a target device
+already exposes cheap bucket counters.
 
 ## Evaluation Lessons
 
