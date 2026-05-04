@@ -33,9 +33,7 @@
       "window_seconds": 10.0,
       "sequence_length": 3,
       "stride": 1,
-      "bucket_count": 8,
       "logical_block_bytes": 512,
-      "length_bucket_min_log2": 9,
       "include_entropy": true
     },
     "model": {
@@ -51,90 +49,82 @@
   "feature_schema": {
     "input_shape": [
       3,
-      40
+      12
     ],
     "window_seconds": 10.0,
     "feature_names": [
-      "log_read_count",
-      "log_write_count",
-      "log_read_bytes",
-      "log_write_bytes",
-      "read_lba_hist_0",
-      "read_lba_hist_1",
-      "read_lba_hist_2",
-      "read_lba_hist_3",
-      "read_lba_hist_4",
-      "read_lba_hist_5",
-      "read_lba_hist_6",
-      "read_lba_hist_7",
-      "write_lba_hist_0",
-      "write_lba_hist_1",
-      "write_lba_hist_2",
-      "write_lba_hist_3",
-      "write_lba_hist_4",
-      "write_lba_hist_5",
-      "write_lba_hist_6",
-      "write_lba_hist_7",
-      "read_len_hist_0",
-      "read_len_hist_1",
-      "read_len_hist_2",
-      "read_len_hist_3",
-      "read_len_hist_4",
-      "read_len_hist_5",
-      "read_len_hist_6",
-      "read_len_hist_7",
-      "write_len_hist_0",
-      "write_len_hist_1",
-      "write_len_hist_2",
-      "write_len_hist_3",
-      "write_len_hist_4",
-      "write_len_hist_5",
-      "write_len_hist_6",
-      "write_len_hist_7",
-      "log_seq_read_count",
-      "log_seq_write_count",
-      "mean_write_entropy",
-      "optional_pad"
+      "log_total_count",
+      "log_total_bytes",
+      "read_ratio",
+      "write_ratio",
+      "mean_read_lba",
+      "mean_write_lba",
+      "log_mean_read_len",
+      "log_mean_write_len",
+      "delta_mean_lba",
+      "delta_mean_len",
+      "optional_entropy_or_compression",
+      "padding"
     ],
     "feature_slices": {
-      "rw_counts_bytes": [
+      "intensity": [
         0,
+        2
+      ],
+      "rw_ratio": [
+        2,
         4
       ],
-      "read_lba_hist": [
+      "mean_lba": [
         4,
+        6
+      ],
+      "mean_length": [
+        6,
+        8
+      ],
+      "frame_deltas": [
+        8,
+        10
+      ],
+      "optional_telemetry": [
+        10,
+        11
+      ],
+      "padding": [
+        11,
         12
-      ],
-      "write_lba_hist": [
-        12,
-        20
-      ],
-      "read_len_hist": [
-        20,
-        28
-      ],
-      "write_len_hist": [
-        28,
-        36
-      ],
-      "sequentiality": [
-        36,
-        38
-      ],
-      "optional_compression_or_pad": [
-        38,
-        40
       ]
     },
-    "histogram_slices_are_per_frame_normalized": true,
-    "layout": "Spec-aligned [N,D=40]: counts/bytes, four 8-bin histograms, sequentiality, entropy-or-pad.",
+    "feature_weights_by_group": {
+      "intensity": 1.0,
+      "rw_ratio": 1.0,
+      "mean_lba": 1.0,
+      "mean_length": 1.0,
+      "frame_deltas": 0.5,
+      "optional_telemetry": 0.0,
+      "padding": 0.0
+    },
+    "effective_score_weights": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      0.5,
+      0.5,
+      1.0,
+      0.0
+    ],
+    "layout": "Spec-aligned scalar-only [N,D=12]: intensity, ratios, mean LBA/length, deltas, optional telemetry, pad.",
     "config": {
       "window_seconds": 10.0,
       "sequence_length": 3,
       "stride": 1,
-      "bucket_count": 8,
       "logical_block_bytes": 512,
-      "length_bucket_min_log2": 9,
       "include_entropy": true
     }
   },
@@ -145,50 +135,50 @@
     "model": {
       "type": "numpy_mlp",
       "threshold": {
-        "threshold": 12.350579261779785,
+        "threshold": 4226.412109375,
         "quantile": 0.95,
         "calibration_count": 4
       },
       "score_summary": {
         "train": {
           "count": 4,
-          "mean": 0.010583057999610901,
-          "std": 0.0045572868548333645,
-          "min": 0.003875026013702154,
-          "p50": 0.011598041281104088,
-          "p90": 0.014959687367081642,
-          "p99": 0.015230978839099407,
-          "max": 0.015261122025549412
+          "mean": 0.04349922388792038,
+          "std": 0.01168770156800747,
+          "min": 0.02870861627161503,
+          "p50": 0.04226943850517273,
+          "p90": 0.05630878359079361,
+          "p99": 0.060305334627628326,
+          "max": 0.060749396681785583
         },
         "calibration": {
           "count": 4,
-          "mean": 11.132240295410156,
-          "std": 1.1286468505859375,
-          "min": 9.904104232788086,
-          "p50": 11.116476058959961,
-          "p90": 12.309259414672852,
-          "p99": 12.383635520935059,
-          "max": 12.391900062561035
+          "mean": 3334.1923828125,
+          "std": 887.4483642578125,
+          "min": 2291.905517578125,
+          "p50": 3406.58544921875,
+          "p90": 4221.13232421875,
+          "p99": 4230.6357421875,
+          "max": 4231.69189453125
         },
         "test": {
           "count": 8,
-          "mean": 81.40912628173828,
-          "std": 76.31587219238281,
-          "min": 4.774270057678223,
-          "p50": 78.71837615966797,
-          "p90": 161.24237060546875,
-          "p99": 164.52215576171875,
-          "max": 164.88658142089844
+          "mean": 951.5730590820312,
+          "std": 1005.2014770507812,
+          "min": 24.42584991455078,
+          "p50": 607.8868408203125,
+          "p90": 2263.60302734375,
+          "p99": 2683.325927734375,
+          "max": 2729.961669921875
         }
       },
       "metrics_at_threshold": {
-        "threshold": 12.350579261779785,
-        "tp": 4,
+        "threshold": 4226.412109375,
+        "tp": 0,
         "fp": 0,
         "tn": 4,
-        "fn": 0,
-        "precision": 1.0,
-        "recall": 1.0,
+        "fn": 4,
+        "precision": 0.0,
+        "recall": 0.0,
         "false_positive_rate": 0.0,
         "true_negative_rate": 1.0,
         "auroc": 1.0,
@@ -353,6 +343,6 @@
     "scores.csv",
     "model.npz"
   ],
-  "created_at_utc": "2026-05-04T05:17:21.799343+00:00",
+  "created_at_utc": "2026-05-04T07:01:32.410787+00:00",
   "verdict": "INCONCLUSIVE"
 }

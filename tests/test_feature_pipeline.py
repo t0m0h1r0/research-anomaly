@@ -33,16 +33,17 @@ class FeaturePipelineTest(unittest.TestCase):
             self.assertEqual(sources[0].label, "benign")
 
             events = read_trace_events(sources[0])
-            result = build_frames(events, FeatureConfig(sequence_length=2, bucket_count=8))
+            result = build_frames(events, FeatureConfig(sequence_length=2))
             sequences = make_sequences(result.frames, sequence_length=2, stride=1)
 
             self.assertEqual(result.event_count, 5)
             self.assertEqual(result.entropy_event_count, 2)
-            self.assertEqual(sequences.shape[1:], (2, 40))
+            self.assertEqual(sequences.shape[1:], (2, 12))
             self.assertGreater(float(sequences[..., 1].max()), 0.0)
+            self.assertGreater(float(sequences[..., 3].max()), 0.0)
 
     def test_normalizer_round_trip_shape(self) -> None:
-        x = np.arange(2 * 3 * 40, dtype=np.float32).reshape(2, 3, 40)
+        x = np.arange(2 * 3 * 12, dtype=np.float32).reshape(2, 3, 12)
         normalizer = RobustNormalizer().fit(x)
         transformed = normalizer.transform(x)
         self.assertEqual(transformed.shape, x.shape)

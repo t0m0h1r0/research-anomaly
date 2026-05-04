@@ -7,7 +7,7 @@ storage-embedded ransomware anomaly detection.
 
 - Discovers RanSAP-style runs containing `ata_read.csv` and/or `ata_write.csv`.
 - Aggregates I/O events into fixed 10-second frames.
-- Builds sequence tensors with shape `[N, D=40]` using the feature slices in
+- Builds sequence tensors with shape `[N, D=12]` using the scalar-only feature slices in
   `docs/07_ae_implementation_spec.md`.
 - Trains only on benign sequences.
 - Calibrates an anomaly threshold on held-out benign sequences.
@@ -54,3 +54,8 @@ crediting a heavier model. The optional `torch_gru` and `torch_cnn_gru` paths
 implement the proposed temporal AE family when PyTorch is installed on the
 experiment machine. Offline PyTorch results still do not imply MNN readiness;
 MNN conversion, score parity, and 500 KB memory measurement remain later gates.
+
+The current deployable profile is scalar-only. LBA and transfer-size histograms
+are intentionally not part of this runner's default model input after the latest
+main contract update; they should be added only as a separate exploratory
+profile with its own fixed shape and manifest.
