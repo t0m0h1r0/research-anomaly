@@ -19,8 +19,9 @@ AutoEncoder anomaly scores under the active 10-second statistics contract.
 - Split policy: train on benign runs only, calibrate on held-out benign runs,
   test on held-out benign plus attack runs.
 - Default model: memory-first NumPy MLP AutoEncoder over flattened sequences.
-- Optional model code: PyTorch GRU-contextual and tiny CNN-GRU AutoEncoder
-  candidates with explicit Dense bottlenecks.
+- Optional model code: PyTorch two-level dense, GRU-contextual, temporal
+  Conv1D, and tiny CNN-GRU AutoEncoder candidates with explicit Dense
+  bottlenecks.
 - Baselines: write-ratio and mean-write-entropy thresholds calibrated on benign
   data.
 - Evidence outputs: metrics, scores, model summary, run log, and manifest.
@@ -40,8 +41,8 @@ AutoEncoder anomaly scores under the active 10-second statistics contract.
 2. Inspect discovered run labels and add an explicit label map if path inference
    is ambiguous.
 3. Run entropy ablation with `feature.include_entropy=false`.
-4. Compare `numpy_mlp`, `torch_gru`, and `torch_cnn_gru` where PyTorch is
-   available.
+4. Compare `numpy_mlp`, `torch_two_level_dense`, `torch_gru`, `torch_tcn`, and
+   `torch_cnn_gru` where PyTorch is available.
 5. Add benign false-positive traces from UMass or SNIA before any operational
    false-alarm claim.
 6. Promote only audited manifests into research-summary or manuscript claims.

@@ -12,8 +12,10 @@ artifacts are:
 - `docs/07_ae_implementation_spec.md`
 - `docs/02_feature_model_plan.md`
 - `paper/sections/06_autoencoder_candidates.tex`
+- `src/rad_ae/models.py`
 - `src/rad_ae/torch_models.py`
 - `analysis/ae_public_eval/run.py`
+- `analysis/ae_public_eval/results/smoke/manifest.json`
 
 ## Design Rule
 
@@ -55,9 +57,41 @@ Round 3 finding: MINOR. AE-5 parameter estimates and prose still reflected a
 16-channel Conv1D and an older 32 KB estimate.
 
 Resolution: AE-5 is consistently documented as `Conv1D 12 -> 24`, with 8,804
-parameters and roughly 36 KB FP32 weights.
+parameters and 35,216 raw FP32 weight bytes.
 
 Round 4 result: no MAJOR-or-higher findings remain in the reviewed design
 contract. Remaining risk is empirical: whether the added temporal operators
 improve low-false-positive detection enough to justify their conversion and
 scratch-memory costs.
+
+Round 5 finding: MAJOR. The dependency-light `numpy_mlp` experiment path did
+not implement the documented AE-0/AE-1 family. The memo and paper described
+`144 -> hidden -> latent -> hidden -> 144`, while `src/rad_ae/models.py`
+implemented only `input -> latent -> output`. This would make the first
+evaluation result narratively untraceable to the candidate table.
+
+Resolution: `NumpyMLPAutoEncoder` now implements the flattened Dense family with
+`hidden_dim` and `latent_dim`. The default `input_dim=144, hidden_dim=32,
+latent_dim=8` parameter count is 9,944, matching AE-0. The public evaluation
+runner and configs now record `hidden_dim`, and the smoke manifest was
+regenerated.
+
+Round 6 finding: MAJOR. AE-2 and AE-4 were proposed as first-class candidates,
+but the optional PyTorch implementation exposed only GRU and CNN-GRU paths. That
+made the recommended evaluation order impossible to execute from the code path.
+
+Resolution: `torch_two_level_dense` and `torch_tcn` model paths were added,
+alongside shape and parameter-count tests for AE-2, AE-3, AE-4, and AE-5.
+
+Round 7 finding: MAJOR. The AE-2 parameter total was arithmetically wrong:
+the layer details sum to 5,836 parameters, not 5,636. This affected the memo,
+paper summary table, and expected implementation count.
+
+Resolution: AE-2 totals now use 5,836 parameters and 23,344 raw FP32 weight
+bytes. The size columns were changed from rounded KB values to exact raw weight
+bytes to avoid unit-rounding ambiguity.
+
+Round 8 result: no MAJOR-or-higher findings remain in the candidate narrative,
+operator-role contract, parameter arithmetic, model-selection implementation,
+or smoke manifest. Remaining risk is empirical and belongs to future public
+dataset and MNN conversion gates.

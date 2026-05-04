@@ -179,6 +179,71 @@ class AE0LinearTiny(nn.Module):
         return y.reshape(x.shape[0], self.cfg.n_frames, self.cfg.d_features)
 ```
 
+## AE-1: Flat MLP AE
+
+AE-1 uses the same implementation as AE-0 with `hidden_dim=64` and
+`latent_dim=16`. It is a capacity check for the flattened Dense family, not a
+separate temporal hypothesis.
+
+```python
+class AE1FlatMLP(AE0LinearTiny):
+    pass
+```
+
+## AE-2: Two-Level Dense AE
+
+Architecture for `N=12`, `D=12`, frame code `F=8`, and sequence bottleneck
+`z=8`:
+
+```text
+[B,12,12] -> TD Dense 16 -> TD Dense 8 -> flatten [B,96] ->
+Dense 24 -> Dense 8 -> Dense 24 -> Dense 96 ->
+reshape [B,12,8] -> TD Dense 16 -> TD Dense 12 -> [B,12,12]
+```
+
+Both compression steps are Dense layers: first per frame, then over the flattened
+12-frame pattern.
+
+PyTorch skeleton:
+
+```python
+class AE2TwoLevelDense(nn.Module):
+    def __init__(self, cfg: AEConfig):
+        super().__init__()
+        self.cfg = cfg
+        f = cfg.frame_latent_dim
+        seq_width = cfg.n_frames * f
+        self.frame_encoder = nn.Sequential(
+            nn.Linear(cfg.d_features, cfg.frame_embed_dim),
+            make_activation(cfg.activation),
+            nn.Linear(cfg.frame_embed_dim, f),
+            make_activation(cfg.activation),
+        )
+        self.sequence_bottleneck = nn.Sequential(
+            nn.Linear(seq_width, cfg.hidden_dim),
+            make_activation(cfg.activation),
+            nn.Linear(cfg.hidden_dim, cfg.latent_dim),
+            make_activation(cfg.activation),
+            nn.Linear(cfg.latent_dim, cfg.hidden_dim),
+            make_activation(cfg.activation),
+            nn.Linear(cfg.hidden_dim, seq_width),
+            make_activation(cfg.activation),
+        )
+        self.frame_decoder = nn.Sequential(
+            nn.Linear(f, cfg.frame_embed_dim),
+            make_activation(cfg.activation),
+            nn.Linear(cfg.frame_embed_dim, cfg.d_features),
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        assert_3d_input(x, self.cfg.n_frames, self.cfg.d_features)
+        frame_code = self.frame_encoder(x)
+        seq_code = frame_code.reshape(x.shape[0], self.cfg.n_frames * self.cfg.frame_latent_dim)
+        seq_recon = self.sequence_bottleneck(seq_code)
+        frame_recon = seq_recon.reshape(x.shape[0], self.cfg.n_frames, self.cfg.frame_latent_dim)
+        return self.frame_decoder(frame_recon)
+```
+
 ## AE-3: GRU Contextual AE
 
 Architecture for `N=12`, `D=12`, `H=24`:

@@ -12,6 +12,7 @@ import numpy as np
 class NumpyMLPAEConfig:
     input_dim: int
     latent_dim: int = 8
+    hidden_dim: int = 32
     learning_rate: float = 0.001
     epochs: int = 50
     batch_size: int = 64
@@ -22,23 +23,26 @@ class NumpyMLPAEConfig:
 
 
 class NumpyMLPAutoEncoder:
-    """One-hidden-layer bottleneck AE with Adam updates.
+    """Flattened Dense bottleneck AE with Adam updates.
 
-    This is the memory-first baseline from the research plan. The CNN-GRU
-    architecture is implemented separately as an optional PyTorch model; this
-    NumPy model gives the repository a dependency-light path for reproducible
-    smoke checks and baseline public-data runs.
+    This implements the AE-0/AE-1 family from the research plan:
+    input -> hidden -> latent -> hidden -> output. Temporal candidates are
+    implemented separately as optional PyTorch models; this NumPy model gives
+    the repository a dependency-light path for reproducible smoke checks and
+    baseline public-data runs.
     """
 
     def __init__(self, config: NumpyMLPAEConfig) -> None:
         self.config = config
         rng = np.random.default_rng(config.seed)
-        limit1 = np.sqrt(6.0 / (config.input_dim + config.latent_dim))
-        limit2 = np.sqrt(6.0 / (config.latent_dim + config.input_dim))
-        self.w1 = rng.uniform(-limit1, limit1, size=(config.input_dim, config.latent_dim)).astype(np.float32)
-        self.b1 = np.zeros((config.latent_dim,), dtype=np.float32)
-        self.w2 = rng.uniform(-limit2, limit2, size=(config.latent_dim, config.input_dim)).astype(np.float32)
-        self.b2 = np.zeros((config.input_dim,), dtype=np.float32)
+        self.w1 = _xavier_uniform(rng, config.input_dim, config.hidden_dim)
+        self.b1 = np.zeros((config.hidden_dim,), dtype=np.float32)
+        self.w2 = _xavier_uniform(rng, config.hidden_dim, config.latent_dim)
+        self.b2 = np.zeros((config.latent_dim,), dtype=np.float32)
+        self.w3 = _xavier_uniform(rng, config.latent_dim, config.hidden_dim)
+        self.b3 = np.zeros((config.hidden_dim,), dtype=np.float32)
+        self.w4 = _xavier_uniform(rng, config.hidden_dim, config.input_dim)
+        self.b4 = np.zeros((config.input_dim,), dtype=np.float32)
         self.loss_history: list[float] = []
 
     def fit(self, x: np.ndarray, loss_weights: np.ndarray | None = None) -> "NumpyMLPAutoEncoder":
@@ -50,7 +54,7 @@ class NumpyMLPAutoEncoder:
             raise ValueError("loss_weights must have the same shape as x")
 
         rng = np.random.default_rng(self.config.seed)
-        state = _AdamState.for_parameters((self.w1, self.b1, self.w2, self.b2))
+        state = _AdamState.for_parameters(self._parameters())
         for _epoch in range(self.config.epochs):
             order = rng.permutation(x.shape[0])
             epoch_losses: list[float] = []
@@ -66,7 +70,7 @@ class NumpyMLPAutoEncoder:
                 epoch_losses.append(loss)
                 grads = self._backward(batch, recon, latent, batch_weights)
                 state.update(
-                    (self.w1, self.b1, self.w2, self.b2),
+                    self._parameters(),
                     grads,
                     learning_rate=self.config.learning_rate,
                 )
@@ -93,54 +97,85 @@ class NumpyMLPAutoEncoder:
             b1=self.b1,
             w2=self.w2,
             b2=self.b2,
+            w3=self.w3,
+            b3=self.b3,
+            w4=self.w4,
+            b4=self.b4,
             config=np.array([self.config.to_dict()], dtype=object),
             loss_history=np.asarray(self.loss_history, dtype=np.float32),
         )
 
     @property
     def parameter_count(self) -> int:
-        return int(self.w1.size + self.b1.size + self.w2.size + self.b2.size)
+        return int(sum(parameter.size for parameter in self._parameters()))
 
     def memory_estimate(self, dtype_bytes: int = 4) -> dict[str, int]:
         weight_bytes = self.parameter_count * dtype_bytes
         input_bytes = self.config.input_dim * dtype_bytes
         latent_bytes = self.config.latent_dim * dtype_bytes
+        hidden_bytes = self.config.hidden_dim * dtype_bytes
         return {
             "parameter_count": self.parameter_count,
             "weight_bytes_fp32": weight_bytes,
             "weight_bytes_int8": self.parameter_count,
             "single_input_bytes_fp32": input_bytes,
+            "single_hidden_bytes_fp32": hidden_bytes,
             "single_latent_bytes_fp32": latent_bytes,
-            "rough_model_path_bytes_fp32": weight_bytes + (2 * input_bytes) + latent_bytes,
+            "rough_model_path_bytes_fp32": weight_bytes + (2 * input_bytes) + (2 * hidden_bytes) + latent_bytes,
         }
 
-    def _forward(self, x: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-        latent = np.tanh(x @ self.w1 + self.b1)
-        recon = latent @ self.w2 + self.b2
-        return recon.astype(np.float32), latent.astype(np.float32)
+    def _forward(self, x: np.ndarray) -> tuple[np.ndarray, tuple[np.ndarray, np.ndarray, np.ndarray]]:
+        hidden_enc = np.tanh(x @ self.w1 + self.b1)
+        latent = np.tanh(hidden_enc @ self.w2 + self.b2)
+        hidden_dec = np.tanh(latent @ self.w3 + self.b3)
+        recon = hidden_dec @ self.w4 + self.b4
+        return recon.astype(np.float32), (
+            hidden_enc.astype(np.float32),
+            latent.astype(np.float32),
+            hidden_dec.astype(np.float32),
+        )
 
     def _backward(
         self,
         x: np.ndarray,
         recon: np.ndarray,
-        latent: np.ndarray,
+        activations: tuple[np.ndarray, np.ndarray, np.ndarray],
         loss_weights: np.ndarray | None,
     ) -> tuple[np.ndarray, ...]:
+        hidden_enc, latent, hidden_dec = activations
         denominator = _loss_denominator(recon - x, loss_weights)
         d_recon = 2.0 * (recon - x) / denominator
         if loss_weights is not None:
             d_recon *= loss_weights
-        grad_w2 = latent.T @ d_recon
-        grad_b2 = d_recon.sum(axis=0)
-        d_latent = (d_recon @ self.w2.T) * (1.0 - latent * latent)
-        grad_w1 = x.T @ d_latent
-        grad_b1 = d_latent.sum(axis=0)
+        grad_w4 = hidden_dec.T @ d_recon
+        grad_b4 = d_recon.sum(axis=0)
+        d_hidden_dec = (d_recon @ self.w4.T) * (1.0 - hidden_dec * hidden_dec)
+        grad_w3 = latent.T @ d_hidden_dec
+        grad_b3 = d_hidden_dec.sum(axis=0)
+        d_latent = (d_hidden_dec @ self.w3.T) * (1.0 - latent * latent)
+        grad_w2 = hidden_enc.T @ d_latent
+        grad_b2 = d_latent.sum(axis=0)
+        d_hidden_enc = (d_latent @ self.w2.T) * (1.0 - hidden_enc * hidden_enc)
+        grad_w1 = x.T @ d_hidden_enc
+        grad_b1 = d_hidden_enc.sum(axis=0)
         return (
             grad_w1.astype(np.float32),
             grad_b1.astype(np.float32),
             grad_w2.astype(np.float32),
             grad_b2.astype(np.float32),
+            grad_w3.astype(np.float32),
+            grad_b3.astype(np.float32),
+            grad_w4.astype(np.float32),
+            grad_b4.astype(np.float32),
         )
+
+    def _parameters(self) -> tuple[np.ndarray, ...]:
+        return (self.w1, self.b1, self.w2, self.b2, self.w3, self.b3, self.w4, self.b4)
+
+
+def _xavier_uniform(rng: np.random.Generator, fan_in: int, fan_out: int) -> np.ndarray:
+    limit = np.sqrt(6.0 / (fan_in + fan_out))
+    return rng.uniform(-limit, limit, size=(fan_in, fan_out)).astype(np.float32)
 
 
 def _loss_denominator(diff: np.ndarray, loss_weights: np.ndarray | None) -> float:

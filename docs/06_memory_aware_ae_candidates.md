@@ -132,20 +132,21 @@ context happen before the Dense bottleneck; reconstruction happens after it.
 
 The following estimates use `D = 12` and `N = 12`.
 
-| ID | Candidate | Sketch | Params | FP32 weights | FP16 weights | Int8 weights | Main role |
+| ID | Candidate | Sketch | Params | FP32 bytes | FP16 bytes | Int8 bytes | Main role |
 | --- | --- | --- | ---: | ---: | ---: | ---: | --- |
-| AE-0 | Linear tiny AE | `144 -> 32 -> 8 -> 32 -> 144` | 9,944 | 39 KB | 20 KB | 10 KB | smallest useful flattened baseline |
-| AE-1 | Flat MLP AE | `144 -> 64 -> 16 -> 64 -> 144` | 20,768 | 83 KB | 42 KB | 21 KB | stronger flattened capacity check |
-| AE-2 | Two-level dense AE | shared `12 -> 16 -> 8`, sequence `96 -> 24 -> 8`, shared decoder | 5,636 | 23 KB | 12 KB | 6 KB | explicit frame and sequence compression |
-| AE-3a | GRU contextual AE, H=24 | GRU context, per-frame dense `24 -> 8`, GRU decoder | 7,052 | 29 KB | 15 KB | 8 KB | first recurrent context model |
-| AE-3b | GRU contextual AE, H=32 | GRU context, per-frame dense `32 -> 8`, GRU decoder | 11,700 | 47 KB | 24 KB | 12 KB | stronger recurrent context model |
-| AE-4 | Temporal convolution AE | Conv1D temporal feature expansion, per-frame dense `24 -> 8` | 5,684 | 23 KB | 12 KB | 6 KB | predictable MNN-friendly temporal model |
-| AE-5 | Tiny CNN-GRU AE | Conv1D local feature expansion, GRU context, per-frame dense `24 -> 8` | 8,804 | 36 KB | 18 KB | 9 KB | constrained CNN-GRU hypothesis test |
+| AE-0 | Linear tiny AE | `144 -> 32 -> 8 -> 32 -> 144` | 9,944 | 39,776 | 19,888 | 9,944 | smallest useful flattened baseline |
+| AE-1 | Flat MLP AE | `144 -> 64 -> 16 -> 64 -> 144` | 20,768 | 83,072 | 41,536 | 20,768 | stronger flattened capacity check |
+| AE-2 | Two-level dense AE | shared `12 -> 16 -> 8`, sequence `96 -> 24 -> 8`, shared decoder | 5,836 | 23,344 | 11,672 | 5,836 | explicit frame and sequence compression |
+| AE-3a | GRU contextual AE, H=24 | GRU context, per-frame dense `24 -> 8`, GRU decoder | 7,052 | 28,208 | 14,104 | 7,052 | first recurrent context model |
+| AE-3b | GRU contextual AE, H=32 | GRU context, per-frame dense `32 -> 8`, GRU decoder | 11,700 | 46,800 | 23,400 | 11,700 | stronger recurrent context model |
+| AE-4 | Temporal convolution AE | Conv1D temporal feature expansion, per-frame dense `24 -> 8` | 5,684 | 22,736 | 11,368 | 5,684 | predictable MNN-friendly temporal model |
+| AE-5 | Tiny CNN-GRU AE | Conv1D local feature expansion, GRU context, per-frame dense `24 -> 8` | 8,804 | 35,216 | 17,608 | 8,804 | constrained CNN-GRU hypothesis test |
 
-All candidates are far below the 500 KB budget in weights. The actual decision
-therefore depends on retained input-statistics state, score parity,
-low-false-positive detection quality, and the separate MNN transient
-workspace/scheduling check.
+The byte columns are exact raw weight bytes from the parameter count and do not
+include converter metadata or quantization tables. All candidates are far below
+the 500 KB budget in weights. The actual decision therefore depends on retained
+input-statistics state, score parity, low-false-positive detection quality, and
+the separate MNN transient workspace/scheduling check.
 
 ## AE-0: Linear Tiny AE
 
@@ -232,7 +233,7 @@ Parameter detail:
 | Dense 24 -> 96 | 2,400 |
 | shared Dense 8 -> 16 | 144 |
 | shared Dense 16 -> 12 | 204 |
-| total | 5,636 |
+| total | 5,836 |
 
 AE-2 has a clear two-stage meaning. The frame-level Dense encoder compresses each
 10-second frame from raw scalar features to an 8-dimensional frame code. The
@@ -343,7 +344,8 @@ Constraints:
   distribution softmax,
 - output reconstructs the same `[1, N, 12]` scalar sequence.
 
-This stays within roughly 36 KB FP32 weights. The 500 KB question must still be
+This stays within 35,216 raw FP32 weight bytes, before converter metadata. The
+500 KB question must still be
 answered by measuring the converted weight representation together with the
 retained input statistics/state for one volume. Operator workspace and tensor
 buffers remain a separate transient device-fit measurement.

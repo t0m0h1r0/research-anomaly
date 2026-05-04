@@ -72,15 +72,15 @@ flattened 入力を仮定した具体的な小型 AE 例を示す。これは重
   \resizebox{\linewidth}{!}{%
   \begin{tabular}{llrrl}
     \toprule
-    ID & Model sketch & Params & FP32 & Role \\
+    ID & Model sketch & Params & FP32 bytes & Role \\
     \midrule
-    AE-0 & \texttt{144-32-8-32-144} & 9,944 & 39 KB & flat baseline \\
-    AE-1 & \texttt{144-64-16-64-144} & 20,768 & 83 KB & flat capacity check \\
-    AE-2 & two-level dense bottleneck & 5,636 & 23 KB & explicit dense compression \\
-    AE-3a & GRU context + dense bottleneck, hidden 24 & 7,052 & 29 KB & recurrent context AE \\
-    AE-3b & GRU context + dense bottleneck, hidden 32 & 11,700 & 47 KB & stronger recurrent AE \\
-    AE-4 & temporal Conv1D AE, 24 channels & 5,684 & 23 KB & MNN-friendly temporal AE \\
-    AE-5 & Conv1D + GRU context + dense bottleneck & 8,804 & 36 KB & constrained CNN-GRU test \\
+    AE-0 & \texttt{144-32-8-32-144} & 9,944 & 39,776 & flat baseline \\
+    AE-1 & \texttt{144-64-16-64-144} & 20,768 & 83,072 & flat capacity check \\
+    AE-2 & two-level dense bottleneck & 5,836 & 23,344 & explicit dense compression \\
+    AE-3a & GRU context + dense bottleneck, hidden 24 & 7,052 & 28,208 & recurrent context AE \\
+    AE-3b & GRU context + dense bottleneck, hidden 32 & 11,700 & 46,800 & stronger recurrent AE \\
+    AE-4 & temporal Conv1D AE, 24 channels & 5,684 & 22,736 & MNN-friendly temporal AE \\
+    AE-5 & Conv1D + GRU context + dense bottleneck & 8,804 & 35,216 & constrained CNN-GRU test \\
     \bottomrule
   \end{tabular}
   }
@@ -152,7 +152,7 @@ default である \texttt{reset\_after=True} を仮定する。
   AE-2 & \texttt{Reshape((12, 8))} & \texttt{(None, 12, 8)} & 0 \\
   AE-2 & \texttt{TD(Dense(16, activation="relu"))} & \texttt{(None, 12, 16)} & 144 \\
   AE-2 & \texttt{TD(Dense(12, activation="linear"))} & \texttt{(None, 12, 12)} & 204 \\
-  \multicolumn{3}{r}{AE-2 total} & 5,636 \\
+  \multicolumn{3}{r}{AE-2 total} & 5,836 \\
   \midrule
   AE-3a & \texttt{Input(shape=(12, 12))} & \texttt{(None, 12, 12)} & 0 \\
   AE-3a & \texttt{GRU(24, return\_sequences=True)} & \texttt{(None, 12, 24)} & 2,736 \\
@@ -192,7 +192,7 @@ bucket locality を仮定しない。GRU は encoder/decoder とも 1 層、hidd
 情報圧縮は \texttt{TD(Dense(8))} の時系列 bottleneck が担う。Conv1D は特徴抽出、
 Dense は圧縮という役割を分ける。Conv2D、
 transposed convolution、多層 GRU、attention、モデル内 thresholding は使わない。
-この条件では weight は約 36 KB に収まるが、入力統計/state を含む per-volume
+この条件では raw FP32 weight は 35,216 bytes に収まるが、入力統計/state を含む per-volume
 500 KB detector-data 達成と aggregate device-fit は変換後の実測で判定する。
 
 すべての候補は、入力と同じ $[1,N,D]$ の正規化統計列を線形出力として再構成する。

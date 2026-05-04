@@ -8,11 +8,11 @@
 |-------|-------|
 | phase | REVIEW |
 | branch | codex/researcharchitect-500kb-memory |
-| current_objective | Resolve AE candidate operator-role review so Dense owns compression, GRU owns temporal context, and Conv1D owns local feature expansion |
+| current_objective | Complete strict AE candidate review with no MAJOR-or-higher findings in narrative, notation, logic, implementation, or smoke outputs |
 | active_brief | `docs/interface/ResearchBrief.md` |
 | source_artifact | none registered yet |
-| next_action | Verify stale architecture wording, run tests/build, commit; do not merge main until explicitly instructed |
-| updated_at_utc | 2026-05-04T09:42:44Z |
+| next_action | Run final stale searches, tests, and paper build; commit; do not merge main until explicitly instructed |
+| updated_at_utc | 2026-05-04T09:57:56Z |
 
 ## §CHECKLIST
 
@@ -40,6 +40,7 @@
 | CHK-RAD-020 | DONE | M/T/A | `docs/memo/500kb_budget_reconciliation.md`, `docs/interface/ResearchBrief.md`, `docs/04_embedded_constraints.md`, `docs/06_memory_aware_ae_candidates.md`, `paper/sections/` | corrected 500 KB rationale to per-volume detector data from roughly 1 GB over roughly 2000 volumes, excluding shared runtime/library memory and separating transient scratch | 2026-05-04 |
 | CHK-RAD-021 | DONE | M/T/A | `docs/memo/500kb_strict_review_rounds.md`, `docs/04_embedded_constraints.md`, `docs/05_literature_survey.md`, `paper/sections/07_evaluation_plan.tex`, `paper/sections/08_mnn_implementation_plan.tex` | completed strict review rounds; fixed MAJOR issues in aggregate scratch accounting, stale histogram feature contract, and 500 KB unit convention | 2026-05-04 |
 | CHK-RAD-022 | DONE | T/R/A | `docs/memo/ae_candidate_operator_role_review.md`, `docs/06_memory_aware_ae_candidates.md`, `docs/07_ae_implementation_spec.md`, `paper/sections/06_autoencoder_candidates.tex`, `src/rad_ae/torch_models.py` | resolved AE candidate role ambiguity: Dense performs compression, GRU provides temporal context, and Conv1D expands/extracts local temporal features | 2026-05-04 |
+| CHK-RAD-023 | DONE | T/R/A | `src/rad_ae/models.py`, `src/rad_ae/torch_models.py`, `analysis/ae_public_eval/`, `docs/memo/ae_candidate_operator_role_review.md` | completed strict AE candidate re-review; aligned NumPy AE-0, added AE-2/AE-4 PyTorch paths, corrected AE-2 parameter arithmetic, and regenerated smoke outputs | 2026-05-04 |
 
 ## §ASSUMPTIONS
 
