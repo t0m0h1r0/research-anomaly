@@ -32,6 +32,9 @@
 | CHK-RAD-012 | DONE | R | `src/rad_ae/` | added RanSAP-style readers, 10-second feature extraction, NumPy MLP AE baseline, optional PyTorch GRU/CNN-GRU candidates, and metrics | 2026-05-04 |
 | CHK-RAD-013 | DONE | R | `analysis/ae_public_eval/` | added public RanSAP evaluation package with configs, smoke fixture, manifest-backed smoke run, and README | 2026-05-04 |
 | CHK-RAD-014 | DONE | E | `docs/evidence/ransap_public_data_note.md` | recorded public RanSAP access, schema, citation, and license facts for evaluation use | 2026-05-04 |
+| CHK-RAD-015 | DONE | A | `docs/memo/researcharchitect_paper_review.md`, `paper/main.tex` | strict ResearchArchitect review resolved through manuscript narrative, notation, and claim-discipline revision | 2026-05-04 |
+| CHK-RAD-016 | DONE | E/A | `docs/evidence/manuscript_claim_gate_matrix.md`, `paper/main.tex` | added manuscript claim-gate evidence matrix and paper-level evidence gates | 2026-05-04 |
+| CHK-RAD-017 | DONE | T/A | `paper/main.tex`, `docs/01_data_strategy.md`, `docs/02_feature_model_plan.md`, `docs/04_embedded_constraints.md`, `docs/06_memory_aware_ae_candidates.md`, `docs/07_ae_implementation_spec.md` | replaced histogram-first feature contract with scalar-only 10-second summaries and recalculated D=12 AE examples | 2026-05-04 |
 
 ## §ASSUMPTIONS
 
@@ -60,5 +63,5 @@
 
 | ID | Branch | Worktree | Objective | Status | Updated |
 |----|--------|----------|-----------|--------|---------|
-| none | main | n/a | no active branch lock | INACTIVE | 2026-05-04 |
 | BLK-RAD-001 | codex/researcharchitect-ae-public-eval | `/private/tmp/new-project-3-researcharchitect-ae-eval` | implement public-data AE evaluation scaffold; do not merge main until user directs | ACTIVE | 2026-05-04 |
+| RAD-RA-PR | codex/researcharchitect-paper-review | `/private/tmp/new-project-3-researcharchitect-paper-review` | reviewer-grade manuscript audit and root-cause revision | ACTIVE | 2026-05-04 |

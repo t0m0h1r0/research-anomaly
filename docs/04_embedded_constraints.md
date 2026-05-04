@@ -54,8 +54,9 @@ Allowed in the embedded collector:
 
 - incrementing counters,
 - adding transfer lengths,
-- updating a small fixed histogram,
-- comparing current LBA with the previous command for sequentiality,
+- maintaining per-window sums for mean LBA and mean transfer length,
+- deriving read/write ratios from counters,
+- comparing current 10-second scalar summaries with the prior summary,
 - cheap fixed-point scaling,
 - reading existing compression or entropy-like hardware counters.
 
@@ -65,6 +66,7 @@ Avoid in the embedded collector:
 - payload scans,
 - large sort or unique-LBA sets,
 - per-LBA maps,
+- histograms unless the target device already has cheap bucket counters,
 - floating-point-heavy preprocessing,
 - compression trial runs done only for detection.
 
@@ -75,24 +77,25 @@ starting contract is:
 
 ```text
 frame_10s = {
-  read_count,
-  write_count,
-  read_bytes,
-  write_bytes,
-  read_lba_hist[8],
-  write_lba_hist[8],
-  read_len_hist[8],
-  write_len_hist[8],
-  sequential_read_count,
-  sequential_write_count,
-  optional_compression_signal
+  total_count,
+  total_bytes,
+  read_ratio,
+  write_ratio,
+  mean_read_lba,
+  mean_write_lba,
+  mean_read_length,
+  mean_write_length,
+  delta_mean_lba,
+  delta_mean_length,
+  optional_compression_signal,
+  padding
 }
 ```
 
 The model input is `N` consecutive frames, so the temporal context is
 `N * 10` seconds. An initial `N = 12` gives roughly two minutes of context.
-The exact sequence length and bucket counts should be reduced before model work
-if the MNN memory harness shows pressure.
+The exact sequence length, feature count, and hidden size should be reduced
+before model work if the MNN memory harness shows pressure.
 
 ## Model Implications
 

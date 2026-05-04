@@ -30,7 +30,7 @@ Tasks:
 - build the production-shaped 10-second statistics extractor,
 - keep any event-window or sub-10-second feature extraction as exploratory
   scripts outside the final embedded claim,
-- generate per-channel histograms and scalars,
+- generate scalar feature channels and any exploratory histogram profile separately,
 - store normalization parameters from benign training data only,
 - produce visualization notebooks or reports for sanity checks.
 
@@ -87,8 +87,8 @@ workload variation.
 Ablations:
 
 - remove entropy/compression channel,
-- remove LBA channel,
-- remove length channel,
+- remove mean LBA channel,
+- remove mean length channel,
 - replace CNN-GRU with GRU-only AE,
 - replace CNN-GRU with CNN-only AE,
 - vary 10-second sequence length.
