@@ -1,0 +1,242 @@
+\section{AutoEncoder 候補}
+
+\subsection{再構成誤差による検出}
+
+長さ $N$ の入力列 $X_k$ に対して、AE は
+$\hat{X}_k=f_{\theta}(X_k)$ を返す。anomaly score は、特徴群 $g$ ごとの
+重み付き再構成誤差として式 \eqref{eq:score} で定義する。
+
+\begin{equation}
+  s(X_k) = \sum_{g \in G} w_g
+         \frac{1}{N |I_g|}
+         \sum_{i=1}^{N}
+         \sum_{j \in I_g}
+         \ell \left(X_{k,i,j}, \hat{X}_{k,i,j}\right).
+  \label{eq:score}
+\end{equation}
+
+初期実装ではすべての入力が scalar なので、loss は MSE または Huber loss に固定する。
+histogram profile を将来追加する場合だけ、Jensen-Shannon divergence などの
+分布用 loss を別 ablation として導入する。しきい値 $\gamma$ は
+benign calibration split の上位分位点から決め、評価時には
+false alarms per volume per day を主指標にする。
+
+\subsection{候補アーキテクチャ}
+
+ユーザ仮説では、CNN が I/O 情報の相関や局所特徴を抽出し、GRU が時系列特徴へ
+落とし込み、decoder は逆方向に伸長する。これは自然な候補であるが、
+500 KB という制約では小型候補との比較が必須である。
+
+\begin{table}[tb]
+  \centering
+  \caption{評価すべき AE 候補}
+  \label{tab:model-candidates}
+  \begin{tabularx}{\linewidth}{lY Y}
+    \toprule
+    候補 & 利点 & 主なリスク \\
+    \midrule
+    MLP bottleneck AE &
+    最小の operator set で MNN 変換が容易。メモリ見積もりも単純。 &
+    時系列構造を平坦化するため、ゆっくりした攻撃や順序依存を失う可能性。 \\
+    GRU-only AE &
+    小さい hidden state で temporal pattern を扱える。 &
+    recurrent operator の workspace と量子化 drift を要測定。 \\
+    Temporal convolution AE &
+    固定長列に対して計算量と activation memory を制御しやすい。 &
+    長い文脈や不規則な attack rhythm への追従が弱い可能性。 \\
+    Tiny CNN-GRU AE &
+    10 秒フレーム列の局所的な時間変化を Conv1D で圧縮し、GRU で文脈化できる。 &
+    最も複雑で、500 KB と MNN operator support の制約を受けやすい。 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+表 \ref{tab:concrete-models} に、$D=12$、$N=12$、すなわち 144 次元の
+flattened 入力を仮定した具体的な小型 AE 例を示す。これは重みだけの粗い
+見積もりであり、MNN の operator workspace、allocator overhead、input/output
+buffer、score history は別途測定する必要がある。
+
+\begin{table}[tb]
+  \centering
+  \caption{メモリ制約を考慮した具体 AE 例}
+  \label{tab:concrete-models}
+  \small
+  \resizebox{\linewidth}{!}{%
+  \begin{tabular}{llrrl}
+    \toprule
+    ID & Model sketch & Params & FP32 & Role \\
+    \midrule
+    AE-0 & \texttt{144-32-8-32-144} & 9,944 & 39 KB & flat baseline \\
+    AE-1 & \texttt{144-64-16-4-16-64-144} & 20,916 & 82 KB & stronger flat AE \\
+    AE-2 & shared frame + sequence bottleneck & 11,168 & 44 KB & deployable first pick \\
+    AE-3a & GRU seq2seq, hidden 24 & 6,636 & 26 KB & first recurrent AE \\
+    AE-3b & GRU seq2seq, hidden 32 & 11,148 & 44 KB & stronger recurrent AE \\
+    AE-4 & temporal Conv1D AE, 24 channels & 5,684 & 22 KB & MNN-friendly temporal AE \\
+    AE-5 & temporal Conv1D + GRU hidden 24 & 7,516 & 30 KB & constrained CNN-GRU test \\
+    \bottomrule
+  \end{tabular}
+  }
+\end{table}
+
+初期実装では AE-0、AE-2、AE-4、AE-3a の順で評価する。AE-0 は性能を期待する
+本命ではなく、flattened AE の最低線である。AE-2 と AE-4 は 500 KB 制約下で
+最も実装しやすい候補であり、AE-3a は recurrent operator が MNN 上で許容できるかを
+測る候補である。AE-5 は元の CNN-GRU 仮説の検証用として残すが、単純候補が
+十分に弱いことを確認する前に既定解にしない。
+
+表 \ref{tab:model-details} は、初期評価対象を TensorFlow/Keras の
+\texttt{model.summary()} に近い形式で固定したものである。TD は
+\texttt{TimeDistributed}、出力 shape の \texttt{None} は
+\texttt{B\_batch} を表す。GRU の parameter count は TensorFlow/Keras の
+default である \texttt{reset\_after=True} を仮定する。
+
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}p{0.08\linewidth}p{0.45\linewidth}p{0.24\linewidth}r@{}}
+  \caption{主要候補の TensorFlow/Keras 形式 summary}
+  \label{tab:model-details} \\
+  \toprule
+  ID & Layer (Keras syntax) & Output shape & Param \# \\
+  \midrule
+  \endfirsthead
+  \caption[]{主要候補の TensorFlow/Keras 形式 summary（続き）} \\
+  \toprule
+  ID & Layer (Keras syntax) & Output shape & Param \# \\
+  \midrule
+  \endhead
+  \midrule
+  \multicolumn{4}{r}{次ページへ続く} \\
+  \endfoot
+  \bottomrule
+  \endlastfoot
+  AE-0 & \texttt{Input(shape=(12, 12))} & \texttt{(None, 12, 12)} & 0 \\
+  AE-0 & \texttt{Flatten()} & \texttt{(None, 144)} & 0 \\
+  AE-0 & \texttt{Dense(32, activation="relu")} & \texttt{(None, 32)} & 4,640 \\
+  AE-0 & \texttt{Dense(8, activation="relu", name="z")} & \texttt{(None, 8)} & 264 \\
+  AE-0 & \texttt{Dense(32, activation="relu")} & \texttt{(None, 32)} & 288 \\
+  AE-0 & \texttt{Dense(144, activation="linear")} & \texttt{(None, 144)} & 4,752 \\
+  AE-0 & \texttt{Reshape((12, 12))} & \texttt{(None, 12, 12)} & 0 \\
+  \multicolumn{3}{r}{AE-0 total} & 9,944 \\
+  \midrule
+  AE-2 & \texttt{Input(shape=(12, 12))} & \texttt{(None, 12, 12)} & 0 \\
+  AE-2 & \texttt{TD(Dense(24, activation="relu"))} & \texttt{(None, 12, 24)} & 312 \\
+  AE-2 & \texttt{TD(Dense(12, activation="relu"))} & \texttt{(None, 12, 12)} & 300 \\
+  AE-2 & \texttt{Flatten()} & \texttt{(None, 144)} & 0 \\
+  AE-2 & \texttt{Dense(32, activation="relu")} & \texttt{(None, 32)} & 4,640 \\
+  AE-2 & \texttt{Dense(8, activation="relu", name="z")} & \texttt{(None, 8)} & 264 \\
+  AE-2 & \texttt{Dense(32, activation="relu")} & \texttt{(None, 32)} & 288 \\
+  AE-2 & \texttt{Dense(144, activation="relu")} & \texttt{(None, 144)} & 4,752 \\
+  AE-2 & \texttt{Reshape((12, 12))} & \texttt{(None, 12, 12)} & 0 \\
+  AE-2 & \texttt{TD(Dense(24, activation="relu"))} & \texttt{(None, 12, 24)} & 312 \\
+  AE-2 & \texttt{TD(Dense(12, activation="linear"))} & \texttt{(None, 12, 12)} & 300 \\
+  \multicolumn{3}{r}{AE-2 total} & 11,168 \\
+  \midrule
+  AE-3a & \texttt{Input(shape=(12, 12))} & \texttt{(None, 12, 12)} & 0 \\
+  AE-3a & \texttt{GRU(24, return\_sequences=False)} & \texttt{(None, 24)} & 2,736 \\
+  AE-3a & \texttt{RepeatVector(12)} & \texttt{(None, 12, 24)} & 0 \\
+  AE-3a & \texttt{GRU(24, return\_sequences=True)} & \texttt{(None, 12, 24)} & 3,600 \\
+  AE-3a & \texttt{TD(Dense(12, activation="linear"))} & \texttt{(None, 12, 12)} & 300 \\
+  \multicolumn{3}{r}{AE-3a total} & 6,636 \\
+  \midrule
+  AE-4 & \texttt{Input(shape=(12, 12))} & \texttt{(None, 12, 12)} & 0 \\
+  AE-4 & \texttt{Conv1D(24, 3, padding="same", activation="relu")} & \texttt{(None, 12, 24)} & 888 \\
+  AE-4 & \texttt{Conv1D(24, 3, padding="same", activation="relu")} & \texttt{(None, 12, 24)} & 1,752 \\
+  AE-4 & \texttt{Conv1D(8, 1, padding="same", activation="relu", name="z\_seq")} & \texttt{(None, 12, 8)} & 200 \\
+  AE-4 & \texttt{Conv1D(24, 1, padding="same", activation="relu")} & \texttt{(None, 12, 24)} & 216 \\
+  AE-4 & \texttt{Conv1D(24, 3, padding="same", activation="relu")} & \texttt{(None, 12, 24)} & 1,752 \\
+  AE-4 & \texttt{Conv1D(12, 3, padding="same", activation="linear")} & \texttt{(None, 12, 12)} & 876 \\
+  \multicolumn{3}{r}{AE-4 total} & 5,684 \\
+  \midrule
+  AE-5 & \texttt{Input(shape=(12, 12))} & \texttt{(None, 12, 12)} & 0 \\
+  AE-5 & \texttt{Conv1D(16, 3, padding="same", activation="relu")} & \texttt{(None, 12, 16)} & 592 \\
+  AE-5 & \texttt{GRU(24, return\_sequences=False)} & \texttt{(None, 24)} & 3,024 \\
+  AE-5 & \texttt{RepeatVector(12)} & \texttt{(None, 12, 24)} & 0 \\
+  AE-5 & \texttt{GRU(24, return\_sequences=True)} & \texttt{(None, 12, 24)} & 3,600 \\
+  AE-5 & \texttt{TD(Dense(12, activation="linear"))} & \texttt{(None, 12, 12)} & 300 \\
+  \multicolumn{3}{r}{AE-5 total} & 7,516 \\
+\end{longtable}
+\setlength{\tabcolsep}{6pt}
+\normalsize
+
+AE-5 は 500 KB 制約内で CNN-GRU 仮説を試す最小構成として、以下の制約を置く。
+feature layout は scalar-only の $D=12$ に固定し、CNN は feature 方向ではなく
+時間方向の \texttt{Conv1D(16, 3)} として使う。これは 10 秒フレーム列の局所的な
+増減を 1 層で圧縮するためであり、平均値しかない入力に存在しない bucket locality を
+仮定しない。GRU は encoder/decoder とも 1 層、hidden size 24 に固定し、
+decoder は \texttt{RepeatVector(12)} から系列を再生成する。Conv2D、
+transposed convolution、多層 GRU、attention、モデル内 thresholding は使わない。
+この条件では weight は約 30 KB に収まるが、MNN operator workspace と tensor
+buffer を含む 500 KB 達成は変換後の実測で判定する。
+
+すべての候補は、入力と同じ $[1,N,D]$ の正規化統計列を線形出力として再構成する。
+alert 判定、しきい値処理、channel-wise error 集計は MNN graph の外で実行する。
+これにより、モデルを小さく保ちつつ、運用上のしきい値や説明情報を後から変更できる。
+初期実装では分布用 softmax や channel ごとの特殊 head を入れず、正規化済み scalar を
+直接復元する。これにより、入力にない histogram 情報を暗黙に仮定しない。
+
+図 \ref{fig:pipeline} に、最終的な検出 pipeline の概念図を示す。
+
+\begin{figure}[tb]
+  \centering
+  \resizebox{\linewidth}{!}{%
+  \begin{tikzpicture}[
+      node distance=9mm,
+      box/.style={draw, rounded corners=2pt, align=center, minimum height=9mm, minimum width=28mm},
+      small/.style={draw, rounded corners=2pt, align=center, minimum height=8mm, minimum width=24mm},
+      arrow/.style={-Latex, thick}
+    ]
+    \node[box] (io) {SCSI/NVMe\\I/O metadata};
+    \node[box, right=of io] (stats) {10 秒\\統計化};
+    \node[box, right=of stats] (seq) {$N$ frames\\$N \times 10$ s};
+    \node[box, right=of seq] (ae) {tiny AE\\MNN CPU};
+    \node[box, right=of ae] (score) {再構成誤差\\channel breakdown};
+    \node[small, below=of ae] (cal) {benign\\calibration};
+    \node[small, below=of score] (alert) {しきい値\\alert};
+
+    \draw[arrow] (io) -- (stats);
+    \draw[arrow] (stats) -- (seq);
+    \draw[arrow] (seq) -- (ae);
+    \draw[arrow] (ae) -- (score);
+    \draw[arrow] (cal) -- (score);
+    \draw[arrow] (score) -- (alert);
+  \end{tikzpicture}
+  }
+  \caption{ストレージ装置内 AE 検出 pipeline}
+  \label{fig:pipeline}
+\end{figure}
+
+\subsection{500 KB モデルメモリ予算}
+
+本研究では、MNN ランタイム自体は 500 KB 予算から除外する。ただし、モデルファイルが
+RAM にコピーされる場合のモデル表現、weight、input/output tensor、intermediate tensor、
+operator workspace、normalization constant、score history はモデル経路の予算に含める。
+初期の目標配分を表 \ref{tab:memory-budget} に示す。
+
+\begin{table}[tb]
+  \centering
+  \caption{モデル経路の初期メモリ目標}
+  \label{tab:memory-budget}
+  \begin{tabular}{lr}
+    \toprule
+    要素 & 目標 \\
+    \midrule
+    model file and weights & $\leq 240\,\mathrm{KB}$ \\
+    intermediate tensors and operator workspace & $\leq 160\,\mathrm{KB}$ \\
+    input/output sequence buffers & $\leq 32\,\mathrm{KB}$ \\
+    recurrent state and score history & $\leq 24\,\mathrm{KB}$ \\
+    quantization and normalization constants & $\leq 8\,\mathrm{KB}$ \\
+    safety margin & $\geq 36\,\mathrm{KB}$ \\
+    \midrule
+    合計 & $\leq 500\,\mathrm{KB}$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+この配分は仮であり、最終判断は MNN 変換後の実測に基づく。
+特に $N$ は、input/output sequence buffer と recurrent/temporal operator の
+intermediate tensor に直接影響するため、検出性能だけでなく 500 KB 予算との
+trade-off として選ぶ。
+MNN は on-device/embedded inference、CPU backend、ONNX などからの変換、
+MNN-Compress、FP16/Int8 量子化を提供する\cite{mnn}。ただし、runtime の軽量性は
+モデル経路メモリの保証ではないため、変換、量子化、parity、peak memory の
+測定を独立した評価項目にする。

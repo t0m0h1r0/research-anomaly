@@ -1,0 +1,93 @@
+\section{評価計画}
+
+\subsection{データセットと split}
+
+Phase 0 では RanSAP/RanSMAP の schema、license、run 単位、label 意味を監査し、
+10 秒統計へ落とせることを確認する。Phase 1 は監査済み RanSAP を主データセットにし、
+benign run だけで AE を学習する。calibration split も benign から取り、
+ransomware label は評価にのみ使う。split は隣接窓の random split を避け、
+run、ransomware family、storage condition、OS/BitLocker 条件で分ける。
+Phase 2 以降で RanSMAP の storage-only 部分、SNIA IOTTA または UMass の
+benign trace を追加し、false positive と workload shift を評価する。
+
+\begin{table}[tb]
+  \centering
+  \caption{初期データ利用計画}
+  \label{tab:dataset-plan}
+  \begin{tabularx}{\linewidth}{lYYYY}
+    \toprule
+    データ & 攻撃 & benign & entropy & 主用途 \\
+    \midrule
+    RanSAP & yes & yes & write entropy & 初期 feasibility、entropy upper-bound ablation。 \\
+    RanSMAP & yes & yes & storage plus memory context & storage-only 限界分析。 \\
+    SNIA IOTTA & no & yes & usually no & false positive、多様な benign workload。 \\
+    UMass traces & no & yes & no & OLTP/search などの benign stress。 \\
+    NapierOne & no & file corpus & computable offline & 高 entropy benign replay と校正。 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{ベースライン}
+
+AE の価値を評価するには、単純な規則を必ず比較対象にする。baseline は
+同じ科学的問いを答えるものだけを同列に置く。
+
+\begin{itemize}
+  \item Rule baselines: write ratio threshold、write bytes または write IOPS の
+        rolling z-score、平均 LBA/平均転送長 shift、cheap telemetry が
+        ある場合の compression/entropy-like threshold。
+  \item Unsupervised baselines: Isolation Forest、one-class SVM、PCA または
+        robust covariance など、benign training split だけで調整できる手法。
+  \item Supervised reference models: 小型 decision tree、random forest、XGBoost 相当。
+        これらは label を使える場合の参照上限であり、one-class AE の
+        deployment claim と同じ条件の baseline ではない。
+\end{itemize}
+
+AE が単に ``busy workload'' を検出しているだけなら、write throughput rule に
+負けるはずである。AE が supervised reference に負けても、そのこと自体は
+one-class 検出の否定ではないが、ラベル付き storage-level classifier の方が
+組み込み経路に適する可能性を示す。比較表では、feature availability、label 使用、
+threshold tuning split、tuning budget を明示する。
+
+\subsection{主要指標}
+
+AUROC は補助指標に留める。実運用で重要なのは、低 false positive で早く検出できるか
+である。主要指標は以下とする。
+
+\begin{itemize}
+  \item fixed false positive budget における recall。
+  \item false alarms per volume per day。
+  \item attack start から初回 alert までの time to detect。
+  \item alert 前に上書きされた bytes または LBA fraction。
+  \item precision-recall curve と AUPRC。
+  \item channel-wise reconstruction-error contribution。
+  \item MNN 変換後の score parity、model file size、peak model-owned memory。
+\end{itemize}
+
+\subsection{アブレーション}
+
+本研究で最も重要なアブレーションは entropy/compression を外す実験である。
+entropy はランサムウェア検出に強い特徴になり得るが、payload access が必要な場合、
+ブロック装置内で高コストになり、暗号化済みボリュームや圧縮済み benign file では
+識別力が落ちる可能性がある。RanSAP の write entropy を使う結果は、
+cheap device telemetry が確認されるまでは upper-bound result として分離する。
+したがって、表 \ref{tab:ablation} の ablation を必須にする。
+
+\begin{table}[tb]
+  \centering
+  \caption{必須アブレーション}
+  \label{tab:ablation}
+  \begin{tabularx}{\linewidth}{lY}
+    \toprule
+    実験 & 検証する問い \\
+    \midrule
+    entropy/compression なし & metadata-only でも検出可能か。 \\
+    mean LBA なし & 平均アドレス移動に依存しすぎていないか。 \\
+    mean length なし & 平均 I/O サイズの寄与はどれだけか。 \\
+    count/bytes intensity 分離 & 忙しい benign workload を誤検出していないか。 \\
+    CNN-GRU vs GRU-only vs MLP & 複雑な architecture は必要か。 \\
+    $N=6,12,24$ & $N \times 10$ 秒の文脈長と 500 KB 制約の trade-off。 \\
+    quantized MNN vs offline & 量子化と変換で score が崩れないか。 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
