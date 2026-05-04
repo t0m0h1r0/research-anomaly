@@ -29,6 +29,7 @@
 | CHK-RAD-009 | DONE | T | `docs/06_memory_aware_ae_candidates.md`, `paper/main.tex` | proposed concrete memory-aware AE model examples and rough size estimates | 2026-05-04 |
 | CHK-RAD-010 | DONE | T | `docs/06_memory_aware_ae_candidates.md`, `paper/main.tex` | expanded AE candidate internals with layer flow, shapes, decoder behavior, and parameter breakdowns | 2026-05-04 |
 | CHK-RAD-011 | DONE | R | `docs/07_ae_implementation_spec.md` | added code-ready AE tensor contracts, feature slices, PyTorch skeletons, scoring, and ONNX export spec | 2026-05-04 |
+| CHK-RAD-012 | IN_PROGRESS | A | `docs/memo/researcharchitect_paper_review.md`, `paper/main.tex` | strict ResearchArchitect review of manuscript narrative, notation, and claim discipline | 2026-05-04 |
 
 ## §ASSUMPTIONS
 
@@ -57,4 +58,4 @@
 
 | ID | Branch | Worktree | Objective | Status | Updated |
 |----|--------|----------|-----------|--------|---------|
-| none | main | n/a | no active branch lock | INACTIVE | 2026-05-04 |
+| RAD-RA-PR | codex/researcharchitect-paper-review | `/private/tmp/new-project-3-researcharchitect-paper-review` | reviewer-grade manuscript audit and root-cause revision | ACTIVE | 2026-05-04 |
