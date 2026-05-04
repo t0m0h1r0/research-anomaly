@@ -24,8 +24,8 @@ ransomware windows should exceed a threshold calibrated on benign workloads.
 
 A CNN-GRU AutoEncoder remains a candidate architecture because:
 
-- CNN layers can learn local correlations inside per-window feature maps, such
-  as adjacent address buckets, size buckets, and entropy buckets.
+- CNN layers can learn local temporal correlations across neighboring
+  10-second scalar frames.
 - GRU layers can learn temporal transitions between windows without requiring a
   heavy transformer-class model in the storage device.
 - A mirrored decoder gives an interpretable reconstruction-error signal per

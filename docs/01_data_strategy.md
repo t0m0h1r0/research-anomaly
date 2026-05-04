@@ -24,12 +24,15 @@ The deployed feature schema should be cheap to compute:
 
 | Feature | Embedded collection method | Notes |
 | --- | --- | --- |
-| read/write counts | increment counters per command | no division required in device path |
-| read/write bytes | add transfer length per command | saturating counters acceptable |
-| LBA histograms | bucket by high bits or shift-based range mapping | keep bucket count small |
-| length histograms | log2 or fixed transfer-size buckets | can use lookup table |
-| sequentiality estimate | compare current LBA with previous end LBA | optional, cheap |
+| total count and bytes | increment counters and add transfer length per command | no division required in device path |
+| read/write ratio | derive from read/write counters | fixed-point ratio is sufficient |
+| mean LBA | maintain read/write LBA sums and counts | no per-LBA map or sorting |
+| mean transfer length | maintain read/write length sums and counts | log1p scaling can happen after aggregation |
+| frame deltas | compare current 10-second means with previous means | optional, no raw-event retention |
 | entropy/compression | use only if existing hardware telemetry is available | do not require per-block Shannon entropy |
+
+LBA and length histograms are not part of the default deployed schema. They are
+valid only as a separate profile if the target device has cheap bucket counters.
 
 ## Public Dataset Candidates
 

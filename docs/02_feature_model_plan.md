@@ -53,43 +53,46 @@ Recommended starting point:
 
 ## Feature Tensor
 
-Use the user-proposed feature families as the core input:
+Use the deployable 10-second scalar summaries as the core input:
 
-- address distribution,
-- I/O length distribution,
+- total I/O count and total bytes,
 - read/write ratio,
-- entropy or compression-rate distribution, only when cheap telemetry already
-  exists.
+- read/write mean LBA,
+- read/write mean transfer length,
+- frame-to-frame changes derived from those means,
+- entropy or compression-rate scalar, only when cheap telemetry already exists.
 
 Represent each sequence as `N` consecutive 10-second frames:
 
 ```text
-X shape = [N, C, B]
+X shape = [N, D]
 
 N: number of 10-second frames in a sequence
-C: feature channels
-B: histogram buckets or scalar-broadcast width
+D: scalar features per frame, initially 12
 ```
 
-Initial channels:
+Initial feature groups:
 
-| Channel | Construction |
+| Feature group | Construction |
 | --- | --- |
-| read LBA histogram | small fixed bucket count from shifted normalized LBA |
-| write LBA histogram | small fixed bucket count from shifted normalized LBA |
-| read length histogram | log2 or lookup-table transfer length buckets |
-| write length histogram | log2 or lookup-table transfer length buckets |
-| read/write counters | read count, write count, read bytes, write bytes |
-| sequentiality estimate | sequential read/write counts if cheap to track |
-| compression telemetry | optional scalar or buckets only if already available |
+| intensity | total count and total bytes |
+| read/write ratio | ratios derived from read/write counters |
+| mean LBA | read/write mean normalized LBA |
+| mean transfer length | read/write mean length |
+| frame deltas | changes in mean LBA and mean length from the prior frame |
+| compression telemetry | optional scalar only if already available |
 
 Keep I/O intensity separate in analysis because anomaly scores can otherwise
 become "busy workload" detectors.
 
+Histograms require per-I/O bucket counters in the collector. If the deployable
+path only emits averages and ratios, LBA/length histograms must remain an
+exploratory profile rather than the main embedded claim.
+
 ## Normalization
 
-- LBA: normalize by observed or declared namespace size, then histogram.
-- Length: log2 bucket by bytes or logical blocks.
+- LBA: normalize read/write mean LBA by observed or declared namespace size.
+- Length: log1p-scale read/write mean transfer length.
 - Read/write ratio: `writes / max(reads + writes, 1)`.
 - Entropy/compression: use storage-provided compression telemetry if available;
   otherwise omit from the deployed model.
@@ -108,34 +111,30 @@ support decide whether CNN-GRU survives.
 
 Encoder:
 
-1. Per-window CNN over `[C, B]` feature maps.
-2. Flatten or pooled embedding per window.
-3. GRU over the `T` embeddings.
-4. Latent vector or latent sequence.
+1. Optional temporal Conv1D over the `[N, D]` scalar sequence.
+2. GRU over the temporal embeddings.
+3. Latent vector or latent sequence.
 
 Decoder:
 
 1. Repeat or initialize decoder GRU from latent state.
 2. Produce per-window embeddings.
-3. Transposed CNN or MLP heads reconstruct feature channels.
-4. Separate heads for histogram channels and scalar channels if needed.
+3. Dense head reconstructs scalar feature channels.
 
 Starting architecture:
 
 ```text
-Input [T, C, B]
-  -> TimeDistributed Conv1D/Conv2D
-  -> per-window embedding
+Input [N, D]
+  -> temporal Conv1D over 10-second frames
   -> GRU encoder
   -> latent z
   -> GRU decoder
-  -> TimeDistributed decoder heads
-  -> Reconstructed [T, C, B]
+  -> TimeDistributed Dense head
+  -> Reconstructed [N, D]
 ```
 
 Loss:
 
-- histogram channels: MSE or Jensen-Shannon divergence after normalization,
 - scalar channels: Huber or MSE,
 - total loss: weighted sum by feature family,
 - anomaly score: rolling reconstruction error with per-channel breakdown.

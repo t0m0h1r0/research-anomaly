@@ -31,6 +31,7 @@
 | CHK-RAD-011 | DONE | R | `docs/07_ae_implementation_spec.md` | added code-ready AE tensor contracts, feature slices, PyTorch skeletons, scoring, and ONNX export spec | 2026-05-04 |
 | CHK-RAD-012 | DONE | A | `docs/memo/researcharchitect_paper_review.md`, `paper/main.tex` | strict ResearchArchitect review resolved through manuscript narrative, notation, and claim-discipline revision | 2026-05-04 |
 | CHK-RAD-013 | DONE | E/A | `docs/evidence/manuscript_claim_gate_matrix.md`, `paper/main.tex` | added manuscript claim-gate evidence matrix and paper-level evidence gates | 2026-05-04 |
+| CHK-RAD-014 | DONE | T/A | `paper/main.tex`, `docs/01_data_strategy.md`, `docs/02_feature_model_plan.md`, `docs/04_embedded_constraints.md`, `docs/06_memory_aware_ae_candidates.md`, `docs/07_ae_implementation_spec.md` | replaced histogram-first feature contract with scalar-only 10-second summaries and recalculated D=12 AE examples | 2026-05-04 |
 
 ## §ASSUMPTIONS
 
