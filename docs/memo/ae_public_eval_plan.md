@@ -19,7 +19,8 @@ AutoEncoder anomaly scores under the active 10-second statistics contract.
 - Split policy: train on benign runs only, calibrate on held-out benign runs,
   test on held-out benign plus attack runs.
 - Default model: memory-first NumPy MLP AutoEncoder over flattened sequences.
-- Optional model code: PyTorch GRU and tiny CNN-GRU AutoEncoder candidates.
+- Optional model code: PyTorch GRU-contextual and tiny CNN-GRU AutoEncoder
+  candidates with explicit Dense bottlenecks.
 - Baselines: write-ratio and mean-write-entropy thresholds calibrated on benign
   data.
 - Evidence outputs: metrics, scores, model summary, run log, and manifest.

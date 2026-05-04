@@ -15,8 +15,8 @@ class TorchAEConfig:
     model_type: str = "cnn_gru"
     sequence_length: int = 12
     d_features: int = 12
-    latent_dim: int = 16
-    conv_channels: int = 16
+    latent_dim: int = 8
+    conv_channels: int = 24
     hidden_dim: int = 24
 
 
@@ -54,14 +54,20 @@ class _GruAutoEncoder:
             def __init__(self) -> None:
                 super().__init__()
                 self.encoder = nn.GRU(frame_dim, config.hidden_dim, batch_first=True)
+                self.bottleneck = nn.Sequential(
+                    nn.Linear(config.hidden_dim, config.latent_dim),
+                    nn.ReLU(),
+                    nn.Linear(config.latent_dim, config.hidden_dim),
+                    nn.ReLU(),
+                )
                 self.decoder = nn.GRU(config.hidden_dim, config.hidden_dim, batch_first=True)
                 self.head = nn.Linear(config.hidden_dim, frame_dim)
 
             def forward(self, x):
                 batch = x.shape[0]
                 flat = x.reshape(batch, config.sequence_length, frame_dim)
-                _, hidden = self.encoder(flat)
-                seed = hidden[-1].unsqueeze(1).repeat(1, config.sequence_length, 1)
+                context, _ = self.encoder(flat)
+                seed = self.bottleneck(context)
                 decoded, _ = self.decoder(seed)
                 out = self.head(decoded)
                 return out.reshape(batch, config.sequence_length, config.d_features)
@@ -79,14 +85,20 @@ class _TinyCnnGruAutoEncoder:
                     nn.ReLU(),
                 )
                 self.encoder = nn.GRU(config.conv_channels, config.hidden_dim, batch_first=True)
+                self.bottleneck = nn.Sequential(
+                    nn.Linear(config.hidden_dim, config.latent_dim),
+                    nn.ReLU(),
+                    nn.Linear(config.latent_dim, config.hidden_dim),
+                    nn.ReLU(),
+                )
                 self.decoder = nn.GRU(config.hidden_dim, config.hidden_dim, batch_first=True)
                 self.head = nn.Linear(config.hidden_dim, config.d_features)
 
             def forward(self, x):
                 batch = x.shape[0]
                 embedded = self.temporal_cnn(x.transpose(1, 2)).transpose(1, 2)
-                _, hidden = self.encoder(embedded)
-                seed = hidden[-1].unsqueeze(1).repeat(1, config.sequence_length, 1)
+                context, _ = self.encoder(embedded)
+                seed = self.bottleneck(context)
                 decoded, _ = self.decoder(seed)
                 out = self.head(decoded)
                 return out.reshape(batch, config.sequence_length, config.d_features)

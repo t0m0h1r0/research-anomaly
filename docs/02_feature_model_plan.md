@@ -114,14 +114,15 @@ scheduled slot counts, and MNN operator support decide whether CNN-GRU survives.
 
 Encoder:
 
-1. Optional temporal Conv1D over the `[N, D]` scalar sequence.
-2. GRU over the temporal embeddings.
-3. Latent vector or latent sequence.
+1. Optional temporal Conv1D over the `[N, D]` scalar sequence to expand local
+   frame-to-frame patterns into multiple feature views.
+2. GRU over the temporal embeddings, with `return_sequences=True`.
+3. TimeDistributed Dense bottleneck over the contextualized per-frame features.
 
 Decoder:
 
-1. Repeat or initialize decoder GRU from latent state.
-2. Produce per-window embeddings.
+1. TimeDistributed Dense expansion from the bottleneck.
+2. GRU decoder over the expanded sequence.
 3. Dense head reconstructs scalar feature channels.
 
 Starting architecture:
@@ -129,12 +130,18 @@ Starting architecture:
 ```text
 Input [N, D]
   -> temporal Conv1D over 10-second frames
-  -> GRU encoder
-  -> latent z
+  -> GRU temporal context
+  -> TimeDistributed Dense bottleneck z_seq
+  -> TimeDistributed Dense expansion
   -> GRU decoder
   -> TimeDistributed Dense head
   -> Reconstructed [N, D]
 ```
+
+Conv1D is used as a local temporal feature extractor and expander. GRU is used
+as a temporal context extractor. Neither operator is responsible for
+compression. The bottleneck is explicit and dense, so the architecture can
+explain what is compressed and why.
 
 Loss:
 
@@ -147,9 +154,9 @@ Memory-first alternatives to evaluate:
 | Candidate | Why it may fit better |
 | --- | --- |
 | MLP bottleneck AE | smallest operator set, easiest MNN conversion |
-| GRU-only AE | keeps temporal modeling with fewer activation maps |
-| 1D temporal convolution AE | predictable memory, no recurrent state overhead |
-| tiny CNN-GRU AE | preserves original idea if quantized memory fits |
+| GRU contextual AE | keeps temporal modeling with an explicit Dense bottleneck and fewer activation maps |
+| 1D temporal convolution AE | local temporal feature expansion with Dense compression and no recurrent state overhead |
+| tiny CNN-GRU AE | preserves original idea if Conv1D/GRU add quality under the Dense bottleneck budget |
 
 Concrete memory-aware model sketches and rough parameter estimates are recorded
 in [Memory-Aware AutoEncoder Candidate Models](06_memory_aware_ae_candidates.md).

@@ -143,9 +143,10 @@ its place against smaller alternatives.
 Preferred evaluation order:
 
 1. Linear tiny AE as the smallest flattened baseline.
-2. Shared-frame bottleneck AE as the smallest deployable candidate.
-3. 1D temporal convolution AE with fixed sequence length.
-4. GRU-only AE with a small hidden state.
+2. Two-level dense AE as the smallest deployable candidate.
+3. 1D temporal convolution AE that expands local temporal views and compresses
+   only through Dense.
+4. GRU contextual AE with a small hidden state and explicit Dense bottleneck.
 5. Tiny CNN-GRU AE only if the first four are insufficient.
 
 Selection criteria:

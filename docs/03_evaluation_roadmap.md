@@ -68,7 +68,8 @@ Tasks:
 - calibrate threshold on held-out benign data,
 - evaluate ransomware windows and full attack timelines,
 - report reconstruction error per feature family,
-- compare MLP AE, GRU-only AE, temporal convolution AE, and tiny CNN-GRU AE.
+- compare MLP AE, GRU contextual AE with Dense bottleneck, temporal Conv1D
+  feature-expansion AE with Dense bottleneck, and tiny CNN-GRU AE.
 
 Exit criteria:
 
@@ -90,8 +91,8 @@ Ablations:
 - remove entropy/compression channel,
 - remove mean LBA channel,
 - remove mean length channel,
-- replace CNN-GRU with GRU-only AE,
-- replace CNN-GRU with CNN-only AE,
+- replace CNN-GRU with GRU contextual AE,
+- replace CNN-GRU with temporal Conv1D feature-expansion AE,
 - vary 10-second sequence length.
 
 Robustness tests:
@@ -185,7 +186,7 @@ only if false positives are rare and alerts arrive early.
 | storage device lacks payload access | entropy feature may be impractical | use compression telemetry or metadata-only variant |
 | throttled ransomware changes slowly | late detection | evaluate cumulative score and longer temporal horizons |
 | public data is too narrow | weak generalization | treat Phase 1 as feasibility, not proof of deployability |
-| 500 KB detector-data budget is too small for CNN-GRU | original architecture may not deploy | evaluate MLP, GRU-only, and temporal convolution AE |
+| 500 KB detector-data budget is too small for CNN-GRU | original architecture may not deploy | evaluate MLP, GRU contextual, and temporal Conv1D AE candidates with Dense bottlenecks |
 | MNN conversion changes scores | offline results may not transfer | require MNN parity before implementation claims |
 | 10-second statistics hide early signal | detection may arrive too late | measure bytes overwritten before first alert |
 

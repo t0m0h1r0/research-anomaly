@@ -23,13 +23,17 @@ false alarms per volume per day を主指標にする。
 
 \subsection{候補アーキテクチャ}
 
-ユーザ仮説では、CNN が I/O 情報の相関や局所特徴を抽出し、GRU が時系列特徴へ
-落とし込み、decoder は逆方向に伸長する。これは自然な候補であるが、
+ユーザ仮説では、CNN が I/O 情報の相関や局所特徴を抽出し、GRU が時系列文脈を
+付与し、decoder は bottleneck 表現から入力列を再構成する。これは自然な候補であるが、
 本稿で AE を選ぶ理由は、複雑な深層モデルを使いたいからではない。
 教師なしにより未知脅威を正常時系列からの逸脱として扱えること、かつ
 固定 shape の再構成問題として MNN に載せやすいことが主理由である。
 volume あたり 500 KB の detector-data 制約、さらに多数 volume へ同じ検出器を展開する制約では、
 小型候補との比較が必須である。
+本稿では operator の役割を固定する。Dense は情報圧縮、GRU は各 frame への
+時系列文脈付与、Conv1D は scalar 入力を複数の局所時間視点へ展開して短距離
+pattern を抽出する処理とする。したがって、GRU や Conv1D に圧縮責任を曖昧に
+負わせず、圧縮は明示的な Dense bottleneck に置く。
 
 \begin{table}[tb]
   \centering
@@ -42,14 +46,15 @@ volume あたり 500 KB の detector-data 制約、さらに多数 volume へ同
     MLP bottleneck AE &
     最小の operator set で MNN 変換が容易。メモリ見積もりも単純。 &
     時系列構造を平坦化するため、ゆっくりした攻撃や順序依存を失う可能性。 \\
-    GRU-only AE &
-    小さい hidden state で temporal pattern を扱える。 &
+    GRU contextual AE &
+    GRU で各 frame に temporal context を付与し、Dense bottleneck で明示的に圧縮できる。 &
     recurrent operator の workspace と量子化 drift を要測定。 \\
     Temporal convolution AE &
-    固定長列に対して計算量と activation memory を制御しやすい。 &
+    Conv1D で局所時間 pattern を複数チャネルへ展開し、Dense bottleneck で圧縮するため、
+    計算量と activation memory を制御しやすい。 &
     長い文脈や不規則な attack rhythm への追従が弱い可能性。 \\
     Tiny CNN-GRU AE &
-    10 秒フレーム列の局所的な時間変化を Conv1D で圧縮し、GRU で文脈化できる。 &
+    10 秒フレーム列の局所変化を Conv1D で展開・抽出し、GRU で文脈化し、Dense bottleneck で圧縮できる。 &
     最も複雑で、volume あたり 500 KB detector-data と MNN operator support の制約を受けやすい。 \\
     \bottomrule
   \end{tabularx}
@@ -70,12 +75,12 @@ flattened 入力を仮定した具体的な小型 AE 例を示す。これは重
     ID & Model sketch & Params & FP32 & Role \\
     \midrule
     AE-0 & \texttt{144-32-8-32-144} & 9,944 & 39 KB & flat baseline \\
-    AE-1 & \texttt{144-64-16-4-16-64-144} & 20,916 & 82 KB & stronger flat AE \\
-    AE-2 & shared frame + sequence bottleneck & 11,168 & 44 KB & deployable first pick \\
-    AE-3a & GRU seq2seq, hidden 24 & 6,636 & 26 KB & first recurrent AE \\
-    AE-3b & GRU seq2seq, hidden 32 & 11,148 & 44 KB & stronger recurrent AE \\
-    AE-4 & temporal Conv1D AE, 24 channels & 5,684 & 22 KB & MNN-friendly temporal AE \\
-    AE-5 & temporal Conv1D + GRU hidden 24 & 7,516 & 30 KB & constrained CNN-GRU test \\
+    AE-1 & \texttt{144-64-16-64-144} & 20,768 & 83 KB & flat capacity check \\
+    AE-2 & two-level dense bottleneck & 5,636 & 23 KB & explicit dense compression \\
+    AE-3a & GRU context + dense bottleneck, hidden 24 & 7,052 & 29 KB & recurrent context AE \\
+    AE-3b & GRU context + dense bottleneck, hidden 32 & 11,700 & 47 KB & stronger recurrent AE \\
+    AE-4 & temporal Conv1D AE, 24 channels & 5,684 & 23 KB & MNN-friendly temporal AE \\
+    AE-5 & Conv1D + GRU context + dense bottleneck & 8,804 & 36 KB & constrained CNN-GRU test \\
     \bottomrule
   \end{tabular}
   }
@@ -85,7 +90,11 @@ flattened 入力を仮定した具体的な小型 AE 例を示す。これは重
 本命ではなく、教師なし再構成がこの観測境界で最低限の信号を持つかを見る
 flattened AE の最低線である。AE-2 と AE-4 は volume あたり 500 KB detector-data 制約下で
 最も実装しやすく、多数 volume へ複製した場合にも総コストを抑えやすい候補である。
-AE-3a は recurrent operator が MNN 上で許容できるかを測る候補である。
+AE-1 は flatten 系の容量不足を切り分ける候補であり、AE-3a は recurrent operator が
+MNN 上で許容できるかを測る候補である。AE-3 と AE-5 では、GRU は時系列特徴を
+各 frame に付与するために使い、AE-4 と AE-5 では Conv1D は局所時間特徴を
+多チャネルに展開して抽出するために使う。いずれも、情報を減らす処理は
+TimeDistributed Dense bottleneck に明示的に任せる。
 AE-5 は元の CNN-GRU 仮説の検証用として残すが、単純候補が十分に弱いことを
 確認する前に既定解にしない。
 
@@ -123,54 +132,67 @@ default である \texttt{reset\_after=True} を仮定する。
   AE-0 & \texttt{Reshape((12, 12))} & \texttt{(None, 12, 12)} & 0 \\
   \multicolumn{3}{r}{AE-0 total} & 9,944 \\
   \midrule
+  AE-1 & \texttt{Input(shape=(12, 12))} & \texttt{(None, 12, 12)} & 0 \\
+  AE-1 & \texttt{Flatten()} & \texttt{(None, 144)} & 0 \\
+  AE-1 & \texttt{Dense(64, activation="relu")} & \texttt{(None, 64)} & 9,280 \\
+  AE-1 & \texttt{Dense(16, activation="relu", name="z")} & \texttt{(None, 16)} & 1,040 \\
+  AE-1 & \texttt{Dense(64, activation="relu")} & \texttt{(None, 64)} & 1,088 \\
+  AE-1 & \texttt{Dense(144, activation="linear")} & \texttt{(None, 144)} & 9,360 \\
+  AE-1 & \texttt{Reshape((12, 12))} & \texttt{(None, 12, 12)} & 0 \\
+  \multicolumn{3}{r}{AE-1 total} & 20,768 \\
+  \midrule
   AE-2 & \texttt{Input(shape=(12, 12))} & \texttt{(None, 12, 12)} & 0 \\
-  AE-2 & \texttt{TD(Dense(24, activation="relu"))} & \texttt{(None, 12, 24)} & 312 \\
-  AE-2 & \texttt{TD(Dense(12, activation="relu"))} & \texttt{(None, 12, 12)} & 300 \\
-  AE-2 & \texttt{Flatten()} & \texttt{(None, 144)} & 0 \\
-  AE-2 & \texttt{Dense(32, activation="relu")} & \texttt{(None, 32)} & 4,640 \\
-  AE-2 & \texttt{Dense(8, activation="relu", name="z")} & \texttt{(None, 8)} & 264 \\
-  AE-2 & \texttt{Dense(32, activation="relu")} & \texttt{(None, 32)} & 288 \\
-  AE-2 & \texttt{Dense(144, activation="relu")} & \texttt{(None, 144)} & 4,752 \\
-  AE-2 & \texttt{Reshape((12, 12))} & \texttt{(None, 12, 12)} & 0 \\
-  AE-2 & \texttt{TD(Dense(24, activation="relu"))} & \texttt{(None, 12, 24)} & 312 \\
-  AE-2 & \texttt{TD(Dense(12, activation="linear"))} & \texttt{(None, 12, 12)} & 300 \\
-  \multicolumn{3}{r}{AE-2 total} & 11,168 \\
+  AE-2 & \texttt{TD(Dense(16, activation="relu"))} & \texttt{(None, 12, 16)} & 208 \\
+  AE-2 & \texttt{TD(Dense(8, activation="relu"))} & \texttt{(None, 12, 8)} & 136 \\
+  AE-2 & \texttt{Flatten()} & \texttt{(None, 96)} & 0 \\
+  AE-2 & \texttt{Dense(24, activation="relu")} & \texttt{(None, 24)} & 2,328 \\
+  AE-2 & \texttt{Dense(8, activation="relu", name="z")} & \texttt{(None, 8)} & 200 \\
+  AE-2 & \texttt{Dense(24, activation="relu")} & \texttt{(None, 24)} & 216 \\
+  AE-2 & \texttt{Dense(96, activation="relu")} & \texttt{(None, 96)} & 2,400 \\
+  AE-2 & \texttt{Reshape((12, 8))} & \texttt{(None, 12, 8)} & 0 \\
+  AE-2 & \texttt{TD(Dense(16, activation="relu"))} & \texttt{(None, 12, 16)} & 144 \\
+  AE-2 & \texttt{TD(Dense(12, activation="linear"))} & \texttt{(None, 12, 12)} & 204 \\
+  \multicolumn{3}{r}{AE-2 total} & 5,636 \\
   \midrule
   AE-3a & \texttt{Input(shape=(12, 12))} & \texttt{(None, 12, 12)} & 0 \\
-  AE-3a & \texttt{GRU(24, return\_sequences=False)} & \texttt{(None, 24)} & 2,736 \\
-  AE-3a & \texttt{RepeatVector(12)} & \texttt{(None, 12, 24)} & 0 \\
+  AE-3a & \texttt{GRU(24, return\_sequences=True)} & \texttt{(None, 12, 24)} & 2,736 \\
+  AE-3a & \texttt{TD(Dense(8, activation="relu", name="z\_seq"))} & \texttt{(None, 12, 8)} & 200 \\
+  AE-3a & \texttt{TD(Dense(24, activation="relu"))} & \texttt{(None, 12, 24)} & 216 \\
   AE-3a & \texttt{GRU(24, return\_sequences=True)} & \texttt{(None, 12, 24)} & 3,600 \\
   AE-3a & \texttt{TD(Dense(12, activation="linear"))} & \texttt{(None, 12, 12)} & 300 \\
-  \multicolumn{3}{r}{AE-3a total} & 6,636 \\
+  \multicolumn{3}{r}{AE-3a total} & 7,052 \\
   \midrule
   AE-4 & \texttt{Input(shape=(12, 12))} & \texttt{(None, 12, 12)} & 0 \\
   AE-4 & \texttt{Conv1D(24, 3, padding="same", activation="relu")} & \texttt{(None, 12, 24)} & 888 \\
   AE-4 & \texttt{Conv1D(24, 3, padding="same", activation="relu")} & \texttt{(None, 12, 24)} & 1,752 \\
-  AE-4 & \texttt{Conv1D(8, 1, padding="same", activation="relu", name="z\_seq")} & \texttt{(None, 12, 8)} & 200 \\
-  AE-4 & \texttt{Conv1D(24, 1, padding="same", activation="relu")} & \texttt{(None, 12, 24)} & 216 \\
+  AE-4 & \texttt{TD(Dense(8, activation="relu", name="z\_seq"))} & \texttt{(None, 12, 8)} & 200 \\
+  AE-4 & \texttt{TD(Dense(24, activation="relu"))} & \texttt{(None, 12, 24)} & 216 \\
   AE-4 & \texttt{Conv1D(24, 3, padding="same", activation="relu")} & \texttt{(None, 12, 24)} & 1,752 \\
   AE-4 & \texttt{Conv1D(12, 3, padding="same", activation="linear")} & \texttt{(None, 12, 12)} & 876 \\
   \multicolumn{3}{r}{AE-4 total} & 5,684 \\
   \midrule
   AE-5 & \texttt{Input(shape=(12, 12))} & \texttt{(None, 12, 12)} & 0 \\
-  AE-5 & \texttt{Conv1D(16, 3, padding="same", activation="relu")} & \texttt{(None, 12, 16)} & 592 \\
-  AE-5 & \texttt{GRU(24, return\_sequences=False)} & \texttt{(None, 24)} & 3,024 \\
-  AE-5 & \texttt{RepeatVector(12)} & \texttt{(None, 12, 24)} & 0 \\
+  AE-5 & \texttt{Conv1D(24, 3, padding="same", activation="relu")} & \texttt{(None, 12, 24)} & 888 \\
+  AE-5 & \texttt{GRU(24, return\_sequences=True)} & \texttt{(None, 12, 24)} & 3,600 \\
+  AE-5 & \texttt{TD(Dense(8, activation="relu", name="z\_seq"))} & \texttt{(None, 12, 8)} & 200 \\
+  AE-5 & \texttt{TD(Dense(24, activation="relu"))} & \texttt{(None, 12, 24)} & 216 \\
   AE-5 & \texttt{GRU(24, return\_sequences=True)} & \texttt{(None, 12, 24)} & 3,600 \\
   AE-5 & \texttt{TD(Dense(12, activation="linear"))} & \texttt{(None, 12, 12)} & 300 \\
-  \multicolumn{3}{r}{AE-5 total} & 7,516 \\
+  \multicolumn{3}{r}{AE-5 total} & 8,804 \\
 \end{longtable}
 \setlength{\tabcolsep}{6pt}
 \normalsize
 
 AE-5 は volume あたり 500 KB detector-data 制約内で CNN-GRU 仮説を試す最小構成として、以下の制約を置く。
 feature layout は scalar-only の $D=12$ に固定し、CNN は feature 方向ではなく
-時間方向の \texttt{Conv1D(16, 3)} として使う。これは 10 秒フレーム列の局所的な
-増減を 1 層で圧縮するためであり、平均値しかない入力に存在しない bucket locality を
-仮定しない。GRU は encoder/decoder とも 1 層、hidden size 24 に固定し、
-decoder は \texttt{RepeatVector(12)} から系列を再生成する。Conv2D、
+時間方向の \texttt{Conv1D(24, 3)} として使う。これは 10 秒フレーム列の局所的な
+増減を複数チャネルへ展開して抽出するためであり、平均値しかない入力に存在しない
+bucket locality を仮定しない。GRU は encoder/decoder とも 1 層、hidden size 24 に固定するが、
+系列全体を 1 vector に潰すためには使わない。GRU は各 frame へ文脈を付与し、
+情報圧縮は \texttt{TD(Dense(8))} の時系列 bottleneck が担う。Conv1D は特徴抽出、
+Dense は圧縮という役割を分ける。Conv2D、
 transposed convolution、多層 GRU、attention、モデル内 thresholding は使わない。
-この条件では weight は約 30 KB に収まるが、入力統計/state を含む per-volume
+この条件では weight は約 36 KB に収まるが、入力統計/state を含む per-volume
 500 KB detector-data 達成と aggregate device-fit は変換後の実測で判定する。
 
 すべての候補は、入力と同じ $[1,N,D]$ の正規化統計列を線形出力として再構成する。

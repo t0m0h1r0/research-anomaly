@@ -106,8 +106,8 @@ class AEConfig:
     latent_dim: int = 8
     hidden_dim: int = 24
     frame_embed_dim: int = 12
+    frame_latent_dim: int = 8
     conv_channels: int = 24
-    conv_bottleneck_channels: int = 8
     kernel_size: int = 3
     activation: str = "relu"
     output_activation: Optional[str] = None
@@ -117,12 +117,12 @@ Recommended initial configs:
 
 ```python
 AE0 = AEConfig(model_id="ae0_linear_tiny", latent_dim=8, hidden_dim=32)
-AE1 = AEConfig(model_id="ae1_flat_mlp", latent_dim=4, hidden_dim=64)
-AE2 = AEConfig(model_id="ae2_shared_frame", latent_dim=8, frame_embed_dim=12)
+AE1 = AEConfig(model_id="ae1_flat_mlp", latent_dim=16, hidden_dim=64)
+AE2 = AEConfig(model_id="ae2_two_level_dense", latent_dim=8, hidden_dim=24, frame_embed_dim=16, frame_latent_dim=8)
 AE3A = AEConfig(model_id="ae3_gru", hidden_dim=24)
 AE3B = AEConfig(model_id="ae3_gru", hidden_dim=32)
-AE4 = AEConfig(model_id="ae4_tcn", conv_channels=24, conv_bottleneck_channels=8)
-AE5 = AEConfig(model_id="ae5_cnn_gru", conv_channels=16, hidden_dim=24)
+AE4 = AEConfig(model_id="ae4_tcn", conv_channels=24, frame_latent_dim=8)
+AE5 = AEConfig(model_id="ae5_cnn_gru", conv_channels=24, hidden_dim=24, latent_dim=8)
 ```
 
 ## Shared Helpers
@@ -179,19 +179,22 @@ class AE0LinearTiny(nn.Module):
         return y.reshape(x.shape[0], self.cfg.n_frames, self.cfg.d_features)
 ```
 
-## AE-3: GRU Seq2Seq AE
+## AE-3: GRU Contextual AE
 
 Architecture for `N=12`, `D=12`, `H=24`:
 
 ```text
-[B,12,12] -> GRU encoder H -> repeat context -> GRU decoder H ->
-TimeDistributed Dense 12 -> [B,12,12]
+[B,12,12] -> GRU context H -> TD Dense z -> TD Dense H ->
+GRU decoder H -> TimeDistributed Dense 12 -> [B,12,12]
 ```
+
+GRU layers provide temporal context. The information-reducing step is the
+explicit per-frame Dense bottleneck, not the GRU hidden state.
 
 PyTorch skeleton:
 
 ```python
-class AE3GRUSeq2Seq(nn.Module):
+class AE3GRUContextual(nn.Module):
     def __init__(self, cfg: AEConfig):
         super().__init__()
         self.cfg = cfg
@@ -201,6 +204,12 @@ class AE3GRUSeq2Seq(nn.Module):
             hidden_size=h,
             num_layers=1,
             batch_first=True,
+        )
+        self.bottleneck = nn.Sequential(
+            nn.Linear(h, cfg.latent_dim),
+            make_activation(cfg.activation),
+            nn.Linear(cfg.latent_dim, h),
+            make_activation(cfg.activation),
         )
         self.decoder = nn.GRU(
             input_size=h,
@@ -212,9 +221,9 @@ class AE3GRUSeq2Seq(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         assert_3d_input(x, self.cfg.n_frames, self.cfg.d_features)
-        _, h_last = self.encoder(x)
-        context = h_last[-1].unsqueeze(1).repeat(1, self.cfg.n_frames, 1)
-        dec, _ = self.decoder(context)
+        context, _ = self.encoder(x)
+        z = self.bottleneck(context)
+        dec, _ = self.decoder(z)
         return self.output(dec)
 ```
 
@@ -223,9 +232,12 @@ class AE3GRUSeq2Seq(nn.Module):
 Architecture for `N=12`, `D=12`:
 
 ```text
-[B,12,12] -> Conv1D 24 -> Conv1D 24 -> Conv1D 8 ->
-Conv1D 24 -> Conv1D 24 -> Conv1D 12 -> [B,12,12]
+[B,12,12] -> Conv1D 24 -> Conv1D 24 -> TD Dense 8 ->
+TD Dense 24 -> Conv1D 24 -> Conv1D 12 -> [B,12,12]
 ```
+
+Conv1D expands each scalar frame sequence into local temporal feature channels.
+The only intentional compression step is the per-frame Dense bottleneck.
 
 PyTorch skeleton:
 
@@ -235,18 +247,21 @@ class AE4TemporalConv(nn.Module):
         super().__init__()
         self.cfg = cfg
         c = cfg.conv_channels
-        z = cfg.conv_bottleneck_channels
         k = cfg.kernel_size
         p = k // 2
-        self.net = nn.Sequential(
+        self.encoder = nn.Sequential(
             nn.Conv1d(cfg.d_features, c, kernel_size=k, padding=p),
             make_activation(cfg.activation),
             nn.Conv1d(c, c, kernel_size=k, padding=p),
             make_activation(cfg.activation),
-            nn.Conv1d(c, z, kernel_size=1),
+        )
+        self.bottleneck = nn.Sequential(
+            nn.Linear(c, cfg.frame_latent_dim),
             make_activation(cfg.activation),
-            nn.Conv1d(z, c, kernel_size=1),
+            nn.Linear(cfg.frame_latent_dim, c),
             make_activation(cfg.activation),
+        )
+        self.decoder = nn.Sequential(
             nn.Conv1d(c, c, kernel_size=k, padding=p),
             make_activation(cfg.activation),
             nn.Conv1d(c, cfg.d_features, kernel_size=k, padding=p),
@@ -255,7 +270,9 @@ class AE4TemporalConv(nn.Module):
     def forward(self, x: Tensor) -> Tensor:
         assert_3d_input(x, self.cfg.n_frames, self.cfg.d_features)
         y = x.transpose(1, 2)
-        y = self.net(y)
+        y = self.encoder(y).transpose(1, 2)
+        y = self.bottleneck(y)
+        y = self.decoder(y.transpose(1, 2))
         return y.transpose(1, 2)
 ```
 
@@ -269,12 +286,16 @@ Architecture for `N=12`, `D=12`, `H=24`:
 
 ```text
 [B,12,12]
-Conv1D over time, 12 -> 16 channels          [B,12,16]
-GRU encoder hidden H                         [1,B,H]
-repeat context                               [B,12,H]
+Conv1D over time, 12 -> 24 channels          [B,12,24]
+GRU temporal context H                       [B,12,H]
+TimeDistributed Dense H -> z -> H            [B,12,H]
 GRU decoder                                  [B,12,H]
 Dense H -> 12 -> linear                      [B,12,12]
 ```
+
+The Conv1D expands scalar inputs into local temporal feature views, and GRU
+attaches temporal context to each frame. The Dense bottleneck is the only
+intentional information-reducing operation.
 
 PyTorch skeleton:
 
@@ -297,6 +318,12 @@ class AE5TinyCNNGRU(nn.Module):
             num_layers=1,
             batch_first=True,
         )
+        self.bottleneck = nn.Sequential(
+            nn.Linear(h, cfg.latent_dim),
+            make_activation(cfg.activation),
+            nn.Linear(cfg.latent_dim, h),
+            make_activation(cfg.activation),
+        )
         self.decoder = nn.GRU(
             input_size=h,
             hidden_size=h,
@@ -308,16 +335,19 @@ class AE5TinyCNNGRU(nn.Module):
     def forward(self, x: Tensor) -> Tensor:
         assert_3d_input(x, self.cfg.n_frames, self.cfg.d_features)
         y = self.temporal_cnn(x.transpose(1, 2)).transpose(1, 2)
-        _, h_last = self.encoder(y)
-        context = h_last[-1].unsqueeze(1).repeat(1, self.cfg.n_frames, 1)
-        dec, _ = self.decoder(context)
+        context, _ = self.encoder(y)
+        z = self.bottleneck(context)
+        dec, _ = self.decoder(z)
         return self.output(dec)
 ```
 
 Implementation notes:
 
 - This model assumes `D=12` and scalar-only feature slices.
-- The Conv1D captures local changes across neighboring 10-second frames.
+- The Conv1D extracts local changes across neighboring 10-second frames by
+  expanding them into multiple channels.
+- The GRU layers model temporal context; they do not collapse the sequence into
+  the latent representation.
 - Use only after AE-2, AE-3, and AE-4 establish the quality/memory curve.
 
 ## Builder Function
@@ -330,10 +360,10 @@ def build_autoencoder(cfg: AEConfig) -> nn.Module:
         return AE0LinearTiny(cfg)
     if cfg.model_id == "ae1_flat_mlp":
         return AE1FlatMLP(cfg)
-    if cfg.model_id == "ae2_shared_frame":
-        return AE2SharedFrame(cfg)
+    if cfg.model_id == "ae2_two_level_dense":
+        return AE2TwoLevelDense(cfg)
     if cfg.model_id == "ae3_gru":
-        return AE3GRUSeq2Seq(cfg)
+        return AE3GRUContextual(cfg)
     if cfg.model_id == "ae4_tcn":
         return AE4TemporalConv(cfg)
     if cfg.model_id == "ae5_cnn_gru":

@@ -11,7 +11,7 @@ import numpy as np
 @dataclass(frozen=True)
 class NumpyMLPAEConfig:
     input_dim: int
-    latent_dim: int = 16
+    latent_dim: int = 8
     learning_rate: float = 0.001
     epochs: int = 50
     batch_size: int = 64
