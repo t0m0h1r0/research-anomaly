@@ -1,0 +1,304 @@
+{
+  "purpose": "Evaluate memory-aware AutoEncoder candidates on 10-second storage-I/O statistics.",
+  "source_refs": [
+    "https://github.com/manabu-hirano/RanSAP",
+    "https://doi.org/10.1016/j.fsidi.2021.301314",
+    "https://www.kaggle.com/datasets/hiranomanabu/ransap-2022-ransomware-behavioral-features/"
+  ],
+  "dataset_refs": [
+    {
+      "name": "Tiny RanSAP schema fixture",
+      "root": "/private/tmp/new-project-3-researcharchitect-ae-eval/analysis/ae_public_eval/fixtures/tiny_ransap",
+      "mode": "fixture",
+      "license_note": "RanSAP is distributed under CC BY-ND 4.0 per its public README."
+    }
+  ],
+  "command": "python3 analysis/ae_public_eval/run.py --config analysis/ae_public_eval/config_smoke.json",
+  "python_version": "3.12.13",
+  "package_versions": {
+    "numpy": "2.3.5",
+    "torch": null
+  },
+  "parameters": {
+    "dataset_name": "Tiny RanSAP schema fixture",
+    "source_mode": "fixture",
+    "dataset_root": "analysis/ae_public_eval/fixtures/tiny_ransap",
+    "out_dir": "analysis/ae_public_eval/results/smoke",
+    "seed": 7,
+    "train_fraction": 0.34,
+    "calibration_fraction": 0.33,
+    "threshold_quantile": 0.95,
+    "include_unknown": false,
+    "feature": {
+      "window_seconds": 10.0,
+      "sequence_length": 3,
+      "stride": 1,
+      "bucket_count": 8,
+      "logical_block_bytes": 512,
+      "length_bucket_min_log2": 9,
+      "include_entropy": true
+    },
+    "model": {
+      "type": "numpy_mlp",
+      "latent_dim": 6,
+      "epochs": 30,
+      "batch_size": 4,
+      "learning_rate": 0.01
+    }
+  },
+  "random_seed": 7,
+  "split_protocol": "Run-level split: train and calibration use benign runs only; test contains held-out benign runs plus attack runs. No adjacent windows from a run cross train/cal/test unless a user changes the split policy.",
+  "feature_schema": {
+    "input_shape": [
+      3,
+      5,
+      8
+    ],
+    "window_seconds": 10.0,
+    "channel_names": [
+      "read_lba_hist",
+      "write_lba_hist",
+      "read_len_hist",
+      "write_len_hist",
+      "scalar_summary"
+    ],
+    "scalar_channel_positions": [
+      "log_read_count",
+      "log_write_count",
+      "log_read_bytes",
+      "log_write_bytes",
+      "write_ratio",
+      "log_seq_read_count",
+      "log_seq_write_count",
+      "mean_write_entropy"
+    ],
+    "histogram_channels_are_per_frame_normalized": true,
+    "scalar_channel": "log-scaled counts/bytes, write ratio, optional mean write entropy",
+    "config": {
+      "window_seconds": 10.0,
+      "sequence_length": 3,
+      "stride": 1,
+      "bucket_count": 8,
+      "logical_block_bytes": 512,
+      "length_bucket_min_log2": 9,
+      "include_entropy": true
+    }
+  },
+  "metrics": {
+    "verdict": "INCONCLUSIVE",
+    "reason": "Smoke run on a tiny schema fixture; not empirical evidence.",
+    "source_mode": "fixture",
+    "model": {
+      "type": "numpy_mlp",
+      "threshold": {
+        "threshold": 12.20598316192627,
+        "quantile": 0.95,
+        "calibration_count": 4
+      },
+      "score_summary": {
+        "train": {
+          "count": 4,
+          "mean": 0.016795800998806953,
+          "std": 0.006144177168607712,
+          "min": 0.0069884005934000015,
+          "p50": 0.018673740327358246,
+          "p90": 0.02230340987443924,
+          "p99": 0.022792933508753777,
+          "max": 0.02284732460975647
+        },
+        "calibration": {
+          "count": 4,
+          "mean": 11.151304244995117,
+          "std": 0.974926769733429,
+          "min": 10.046274185180664,
+          "p50": 11.157428741455078,
+          "p90": 12.167881965637207,
+          "p99": 12.236464500427246,
+          "max": 12.244085311889648
+        },
+        "test": {
+          "count": 8,
+          "mean": 82.08267974853516,
+          "std": 77.00611877441406,
+          "min": 4.836350440979004,
+          "p50": 79.33003997802734,
+          "p90": 162.45364379882812,
+          "p99": 166.11819458007812,
+          "max": 166.52536010742188
+        }
+      },
+      "metrics_at_threshold": {
+        "threshold": 12.20598316192627,
+        "tp": 4,
+        "fp": 0,
+        "tn": 4,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "false_positive_rate": 0.0,
+        "true_negative_rate": 1.0,
+        "auroc": 1.0,
+        "average_precision": 1.0,
+        "false_alarms_per_day_approx": 0.0
+      }
+    },
+    "baselines": {
+      "write_ratio": {
+        "threshold": {
+          "threshold": 0.3333333432674408,
+          "quantile": 0.95,
+          "calibration_count": 4
+        },
+        "score_summary": {
+          "calibration": {
+            "count": 4,
+            "mean": 0.25,
+            "std": 0.0833333358168602,
+            "min": 0.1666666716337204,
+            "p50": 0.25,
+            "p90": 0.3333333432674408,
+            "p99": 0.3333333432674408,
+            "max": 0.3333333432674408
+          },
+          "test": {
+            "count": 8,
+            "mean": 0.5833333730697632,
+            "std": 0.0833333432674408,
+            "min": 0.5,
+            "p50": 0.5833333730697632,
+            "p90": 0.6666666865348816,
+            "p99": 0.6666666865348816,
+            "max": 0.6666666865348816
+          }
+        },
+        "metrics_at_threshold": {
+          "threshold": 0.3333333432674408,
+          "tp": 4,
+          "fp": 4,
+          "tn": 0,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "false_positive_rate": 1.0,
+          "true_negative_rate": 0.0,
+          "auroc": 1.0,
+          "average_precision": 1.0,
+          "false_alarms_per_day_approx": 8640.0
+        }
+      },
+      "mean_write_entropy": {
+        "threshold": {
+          "threshold": 0.11283333599567413,
+          "quantile": 0.95,
+          "calibration_count": 4
+        },
+        "score_summary": {
+          "calibration": {
+            "count": 4,
+            "mean": 0.0833333358168602,
+            "std": 0.028382308781147003,
+            "min": 0.053333330899477005,
+            "p50": 0.0833333283662796,
+            "p90": 0.11233333498239517,
+            "p99": 0.11323333531618118,
+            "max": 0.1133333370089531
+          },
+          "test": {
+            "count": 8,
+            "mean": 0.51583331823349,
+            "std": 0.4009060859680176,
+            "min": 0.10999999195337296,
+            "p50": 0.512499988079071,
+            "p90": 0.9259999394416809,
+            "p99": 0.9280999302864075,
+            "max": 0.9283332824707031
+          }
+        },
+        "metrics_at_threshold": {
+          "threshold": 0.11283333599567413,
+          "tp": 4,
+          "fp": 3,
+          "tn": 1,
+          "fn": 0,
+          "precision": 0.5714285714285714,
+          "recall": 1.0,
+          "false_positive_rate": 0.75,
+          "true_negative_rate": 0.25,
+          "auroc": 1.0,
+          "average_precision": 1.0,
+          "false_alarms_per_day_approx": 6480.0
+        }
+      }
+    },
+    "splits": {
+      "train": {
+        "run_count": 1,
+        "sequence_count": 4,
+        "run_ids": [
+          "original/win7-120gb-hdd/benign_backup_003"
+        ]
+      },
+      "calibration": {
+        "run_count": 1,
+        "sequence_count": 4,
+        "run_ids": [
+          "original/win7-120gb-hdd/benign_office_002"
+        ]
+      },
+      "test": {
+        "run_count": 2,
+        "sequence_count": 8,
+        "run_ids": [
+          "original/win7-120gb-hdd/benign_browser_001",
+          "original/win7-120gb-hdd/locky_attack_001"
+        ]
+      }
+    },
+    "runs": [
+      {
+        "run_id": "original/win7-120gb-hdd/benign_backup_003",
+        "label": "benign",
+        "source_kind": "directory",
+        "event_count": 12,
+        "entropy_event_count": 6,
+        "frame_count": 6,
+        "sequence_count": 4
+      },
+      {
+        "run_id": "original/win7-120gb-hdd/benign_browser_001",
+        "label": "benign",
+        "source_kind": "directory",
+        "event_count": 12,
+        "entropy_event_count": 6,
+        "frame_count": 6,
+        "sequence_count": 4
+      },
+      {
+        "run_id": "original/win7-120gb-hdd/benign_office_002",
+        "label": "benign",
+        "source_kind": "directory",
+        "event_count": 9,
+        "entropy_event_count": 3,
+        "frame_count": 6,
+        "sequence_count": 4
+      },
+      {
+        "run_id": "original/win7-120gb-hdd/locky_attack_001",
+        "label": "attack",
+        "source_kind": "directory",
+        "event_count": 18,
+        "entropy_event_count": 12,
+        "frame_count": 6,
+        "sequence_count": 4
+      }
+    ]
+  },
+  "output_files": [
+    "metrics.json",
+    "model_summary.json",
+    "scores.csv",
+    "model.npz"
+  ],
+  "created_at_utc": "2026-05-04T05:08:41.045363+00:00",
+  "verdict": "INCONCLUSIVE"
+}

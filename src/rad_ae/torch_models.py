@@ -43,7 +43,7 @@ def build_torch_autoencoder(config: TorchAEConfig):
     raise ValueError(f"unknown torch model_type: {config.model_type}")
 
 
-def _count_parameters(model) -> int:
+def count_torch_parameters(model) -> int:
     return int(sum(parameter.numel() for parameter in model.parameters()))
 
 

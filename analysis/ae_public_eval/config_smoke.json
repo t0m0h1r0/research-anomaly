@@ -1,0 +1,27 @@
+{
+  "dataset_name": "Tiny RanSAP schema fixture",
+  "source_mode": "fixture",
+  "dataset_root": "analysis/ae_public_eval/fixtures/tiny_ransap",
+  "out_dir": "analysis/ae_public_eval/results/smoke",
+  "seed": 7,
+  "train_fraction": 0.34,
+  "calibration_fraction": 0.33,
+  "threshold_quantile": 0.95,
+  "include_unknown": false,
+  "feature": {
+    "window_seconds": 10.0,
+    "sequence_length": 3,
+    "stride": 1,
+    "bucket_count": 8,
+    "logical_block_bytes": 512,
+    "length_bucket_min_log2": 9,
+    "include_entropy": true
+  },
+  "model": {
+    "type": "numpy_mlp",
+    "latent_dim": 6,
+    "epochs": 30,
+    "batch_size": 4,
+    "learning_rate": 0.01
+  }
+}
