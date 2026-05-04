@@ -20,13 +20,15 @@ claim. It exists to keep future manuscript claims traceable.
 | Performance | `analysis/{study}/results/manifest.json` records command, source refs, split protocol, feature schema, parameters, seed, metrics, outputs, timestamp, and verdict. | Non-claim. |
 | Low false positive | Benign workload holdout reports false alarms per volume per day at fixed threshold policy, with tuning split separated from test split. | Non-claim. |
 | Entropy-independent detection | Metadata-only profile is evaluated separately from any dataset-provided write entropy or device compression/entropy telemetry. | Non-claim. |
+| Unknown or variant threat detection | AE training and calibration use benign data only; ransomware family labels are evaluation-only for AE; supervised references use known-family training and held-out-family testing. Results are reported by family, variant, storage condition, and failure mode. | Proxy protocol only. |
 | Architecture choice | AE candidates and rule/classical/supervised references share documented feature availability and tuning budgets. | Protocol only. |
-| MNN deployability | Converted MNN model, offline/MNN score parity, model file size, peak model-owned memory, and operator support are measured under fixed input shapes. | Non-claim. |
+| MNN deployability | Converted MNN model, offline/MNN score parity, model file size, operator support, per-volume peak model-owned memory, shared weight versus per-volume state breakdown, and aggregate memory/CPU curves over volume count `V` are measured under fixed input shapes. | Non-claim. |
 
 ## Current Manuscript Position
 
 The revised manuscript should be read as a falsifiable protocol paper. It may
 claim that the project has a defined observation boundary, feature profile,
 evaluation plan, and device-fit gate. It may not claim that AE detection works,
-outperforms baselines, generalizes, fits 500 KB, or is novel against all prior
-work until the corresponding gates above are satisfied.
+outperforms baselines, generalizes to unknown threats, fits the per-volume
+500 KB budget, satisfies aggregate memory/CPU limits across many volumes, or is
+novel against all prior work until the corresponding gates above are satisfied.

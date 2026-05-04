@@ -14,5 +14,7 @@ aggregate memory/CPU 制約である。
 今後は、RanSAP を用いた feature pipeline と baseline から開始し、
 AE が単純な write/entropy ルールを上回る情報を持つかを検証する。
 その後、RanSMAP、SNIA IOTTA、UMass、controlled replay を用いて false positive と
-汎化性を評価し、最終的に MNN 上の実測メモリ、volume 数 scaling、score parity によって
-組み込み可能性を判断する。
+汎化性を評価する。未知脅威への主張は、AE が攻撃 label なしで calibration された条件と、
+教師あり参照モデルの known-family/held-out-family 条件を分けて検証する。
+最終的に、MNN 上の score parity、volume あたりの実測メモリ、volume 数 scaling による
+aggregate memory/CPU によって組み込み可能性を判断する。

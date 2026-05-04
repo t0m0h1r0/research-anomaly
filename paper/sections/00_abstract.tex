@@ -24,7 +24,7 @@ entropy のような重い特徴量は、組み込み主張の前提にしない
 多数の volume/namespace を定義できるため、単一 volume では軽い検出器でも
 全 volume へ常時適用するとメモリと CPU 時間が累積する。したがってモデル経路に
 使えるメモリは volume あたり MNN ランタイムを除いて 500 KB とし、性能、MNN 変換、
-score parity、per-volume および aggregate peak model-owned memory は、
+score parity、per-volume peak model-owned memory、aggregate memory/CPU は、
 manifest 付き実験と測定が
 揃うまで非主張とする。
 \end{abstract}

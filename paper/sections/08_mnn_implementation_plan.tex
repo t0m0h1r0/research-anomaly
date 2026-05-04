@@ -14,7 +14,7 @@ ONNX などを使ってよいが、論文で実装可能性を主張するには
   \item volume 数 $V$ を変え、共有可能な weight と、volume ごとに複製される
         buffer、state、threshold、normalization を分けて aggregate memory と
         10 秒あたり CPU 時間を測定する。
-  \item peak が 500 KB を超える場合、feature 数、系列長 $N$、hidden size、
+  \item volume あたり peak が 500 KB を超える場合、feature 数、系列長 $N$、hidden size、
         architecture を縮小して再評価する。
 \end{enumerate}
 
@@ -35,3 +35,8 @@ optional slot を zero-fill し、対応する loss weight と score weight を 
 各 volume の入力列、正規化状態、calibration threshold、score history は独立に必要になる
 可能性が高い。したがって ``軽量モデルが 1 個動く'' ことをもって組み込み可能性とはせず、
 想定 volume 数での総メモリと CPU スケジュールを device-fit claim の条件に含める。
+報告では式 \eqref{eq:aggregate-cost} の $M_{\mathrm{shared}}$ と
+$M_{\mathrm{volume}}$ を分け、weight 共有ができる実装とできない実装の両方を
+感度分析する。operator workspace が inference slot の再利用で共有できる場合も、
+同時推論数や 10 秒 frame の締切で必要な slot 数が変わるため、単なる weight size ではなく
+スケジューリング後の peak を測定値として採用する。

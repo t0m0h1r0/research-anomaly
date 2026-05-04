@@ -5,6 +5,13 @@ RanSAP/RanSMAP は初期検証に有用だが、ransomware family、OS、volume 
 benign workload の範囲は限定的である。headline accuracy ではなく、
 family holdout、condition holdout、benign workload holdout を使う必要がある。
 
+\paragraph{未知脅威評価の代理性}
+教師なし AE は攻撃 label を学習に使わないため未知・変種攻撃に対する余地を持つが、
+family holdout は将来の未知脅威そのものではない。held-out family で recall が残っても、
+低速暗号化、部分暗号化、正規管理処理に似た攻撃、または観測できない host-side context に
+依存する攻撃を保証しない。このため、未知脅威 claim は family/variant 別の失敗分析と
+controlled replay による stress test が揃うまで proxy claim に留める。
+
 \paragraph{entropy 依存}
 write entropy が高い ransomware は検出しやすい一方、既に暗号化されたボリューム、
 圧縮済み benign file、backup、deduplication では entropy が信頼できない。
