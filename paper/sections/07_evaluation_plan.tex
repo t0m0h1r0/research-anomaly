@@ -58,7 +58,8 @@ AUROC は補助指標に留める。実運用で重要なのは、低 false posi
   \item fixed false positive budget における recall。
   \item false alarms per volume per day。
   \item attack start から初回 alert までの time to detect。
-  \item alert 前に上書きされた bytes または LBA fraction。
+  \item raw trace と攻撃ラベルから後処理で推定する、alert 前の overwritten bytes
+        または affected LBA fraction。
   \item precision-recall curve と AUPRC。
   \item channel-wise reconstruction-error contribution。
   \item MNN 変換後の score parity、model file size、peak model-owned memory。

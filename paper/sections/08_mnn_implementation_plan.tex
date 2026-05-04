@@ -20,8 +20,8 @@ ONNX などを使ってよいが、論文で実装可能性を主張するには
 $X \in \mathbb{R}^{B_{\mathrm{batch}} \times N \times D}$ を受け取り、
 同じ shape の $\hat{X}$ だけを返す。anomaly score、しきい値判定、
 channel-wise error 集計は MNN graph の外で実装する。feature slice は固定順序とし、
-count/bytes、read/write ratio、mean LBA、mean length、窓間差分、
-optional compression/padding を同じ index に保つ。ONNX/MNN export は
+count/bytes、write ratio、mean LBA、mean length、窓間差分、
+optional telemetry slot、padding を同じ index に保つ。ONNX/MNN export は
 batch size 1、固定 $N$、固定 $D$ とし、動的軸を使わない。metadata-only 実験では
 optional slot を zero-fill し、対応する loss weight と score weight を 0 にする。
 

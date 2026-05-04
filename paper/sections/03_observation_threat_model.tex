@@ -15,9 +15,9 @@
     情報 & 必須 & 収集コスト & 採用方針 \\
     \midrule
     時刻 & yes & 低 & 10 秒窓への集約に用いる。 \\
-    read/write 種別 & yes & 低 & 比率、カウント、バイト数に使う。 \\
-    LBA/offset & yes & 低 & 10 秒窓の read/write 別平均 LBA に集約する。 \\
-    転送長 & yes & 低 & 10 秒窓の read/write 別平均転送長に集約する。 \\
+    read/write 種別 & yes & 低 & write ratio、カウント、バイト数に使う。 \\
+    LBA/offset & yes & 低 & 10 秒窓の平均 LBA に集約する。 \\
+    転送長 & yes & 低 & 10 秒窓の平均転送長に集約する。 \\
     窓間変化 & optional & 低 & 前フレームとの差分だけを保持する。 \\
     圧縮率/entropy 相当 & optional & 中 & 既存の装置カウンタがある場合だけ使う。 \\
     ペイロード走査 & no & 高 & 初期スコープから除外する。 \\
@@ -35,9 +35,11 @@
 
 攻撃者は、保護対象ブロックデバイスへ正規にアクセスできるホスト上で
 ランサムウェアを実行する。ストレージ装置は、プロセス名、ファイル拡張子、
-ユーザ意図、ファイル内容の意味を知らない。検出器が期待する攻撃挙動は、
-多数の LBA への read-modify-write、write-heavy burst、平均 I/O 長の変化、
-平均 LBA の移動、上書き、圧縮率低下または entropy 上昇である。
+ユーザ意図、ファイル内容の意味を知らない。検出器が期待する攻撃時の
+観測変化は、write-heavy burst、write ratio の変化、平均 I/O 長の変化、
+平均 LBA の移動、圧縮率低下または entropy 上昇である。実際の上書き量や
+ファイル単位の暗号化進行は装置内 scalar から直接は観測せず、評価時に
+raw trace と攻撃ラベルから推定する。
 
 表 \ref{tab:anomaly-taxonomy} は、本稿で扱う異常をストレージから見える信号、
 混同しやすい正常処理、必須評価に分解したものである。この分類により、
@@ -54,21 +56,21 @@ ransomware-like storage anomaly の検出であることを明確にする。
     異常型 & 観測信号 & 主な confounder & 必須評価 \\
     \midrule
     write burst &
-    write count/bytes の急増、read/write 比率変化 &
+    write count/bytes の急増、write ratio の変化 &
     backup、database checkpoint、bulk copy &
     write-throughput baseline と false alarms per volume per day。 \\
     LBA locality shift &
-    read/write 別の平均 LBA と窓間移動量 &
+    平均 LBA と窓間移動量 &
     file-system aging、仮想ディスク copy-on-write、defrag &
     LBA ablation、volume condition holdout。 \\
     I/O length shift &
-    read/write 別の平均転送長と窓間変化 &
+    平均転送長と窓間変化 &
     database、log compaction、snapshot merge &
     length ablation、workload-family holdout。 \\
-    overwrite cadence &
-    read-modify-write、上書き、平均 LBA/長さの窓間変化 &
+    overwrite impact &
+    write burst、平均 LBA/長さの窓間変化、alert 時刻 &
     restore、scrub、deduplication、compression job &
-    time to detect と alert 前の overwritten bytes/LBA fraction。 \\
+    raw trace から測る time to detect と alert 前の overwritten bytes/LBA fraction。 \\
     payload randomness proxy &
     圧縮率低下、entropy 相当信号上昇 &
     暗号化済み volume、圧縮済み benign file、高 entropy file &
@@ -82,3 +84,5 @@ ransomware-like storage anomaly の検出であることを明確にする。
 メンテナンス、仮想ディスクの copy-on-write などは、検出困難または
 false positive の主要因になり得る。このため、検出器は単一の anomaly score
 だけでなく、特徴チャネルごとの誤差寄与を出力する必要がある。
+ただし、この誤差寄与は ``どの scalar 統計が外れたか'' を示すものであり、
+どのファイルやどの LBA が暗号化されたかを復元するものではない。
