@@ -9,7 +9,10 @@ $X_k \in \mathbb{R}^{N \times D}$ と書く。$D$ は実装上の固定幅であ
 本稿のモデル例では padding を含む $D=12$ を使う。特徴群の集合を $G$、
 特徴群 $g$ に属する index 集合を $I_g$、AE の再構成出力を
 $\hat{X}_k=f_{\theta}(X_k)$、anomaly score を $s(X_k)$、alert threshold を
-$\gamma$ とする。training batch size は $B_{\mathrm{batch}}$ と書く。
+$\gamma$ とする。score 対象の有効成分を表す mask を
+$m_{k,i,j}\in\{0,1\}$ と書き、padding、未提供 optional telemetry、
+空窓で定義できない ratio/平均値、欠損した先頭差分は mask 0 とする。
+training batch size は $B_{\mathrm{batch}}$ と書く。
 
 \subsection{10 秒フレーム}
 

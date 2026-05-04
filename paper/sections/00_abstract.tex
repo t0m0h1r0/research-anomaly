@@ -22,7 +22,7 @@ entropy のような重い特徴量は、組み込み主張の前提にしない
 入力は 10 秒フレームを $N$ 個束ねた $N \times 10$ 秒の時系列であり、
 最終実装では Alibaba MNN による CPU 推論を想定する。ストレージ装置では
 約 2000 個の volume/namespace を定義し、検出器データに約 1 GB を割り当てる
-構成を想定できるため、volume あたりの持続的な detector data は約 500 KB に
+構成を想定できるため、volume あたりの持続的な detector-data は約 500 KB に
 制限される。1 GiB 表記なら商は約 524 KiB だが、本稿では 500 KB を保守的に丸めた
 engineering target として扱う。この 500 KB は model weight 情報と入力統計/state の
 予算であり、MNN runtime や共有 library は除外する。性能、MNN 変換、
