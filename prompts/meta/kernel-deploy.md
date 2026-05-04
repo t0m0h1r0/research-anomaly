@@ -31,10 +31,10 @@ Also reads `prompts/agents-claude/_base.yaml` and `prompts/agents-codex/_base.ya
 --------------------------------------------------------
 # § ENVIRONMENT PROFILES
 
-| Env | Style |
-|-----|-------|
-| Claude | explicit constraints, role narrative, traceability emphasis |
-| Codex | executable clarity, patch-oriented work, compact invariants |
+| Env | Style | Runtime emphasis |
+|-----|-------|------------------|
+| Claude | explicit constraints, role narrative, traceability emphasis | evidence-rich handoff text and independent audit sessions |
+| Codex | executable clarity, patch-oriented work, compact invariants | worktree-first edits, `rg`-first context, `apply_patch` manual changes, verification before HAND-02, and coherent checkpoint commits |
 
 --------------------------------------------------------
 # § DEPLOYMENT WORKFLOW
@@ -90,6 +90,11 @@ Agent Prompt = Base[env] + Domain[domain] + RoleContract[agent] + RULE_MANIFEST 
 Prompt compression rule: each generated agent prompt contains only role, STOP
 conditions, output contract, and JIT references. Full operation bodies stay in
 `kernel-ops.md` or `prompts/skills/`.
+
+Codex profile rule: shared Codex runtime defaults belong in
+`prompts/agents-codex/_base.yaml` under `runtime_profile`, `git_policy`, or
+`prompt_budget_policy`. Do not copy those defaults into every generated Codex
+agent unless a role needs a stricter override.
 
 ## Stage 4 - Validate
 
