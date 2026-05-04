@@ -7,15 +7,21 @@
 \begin{enumerate}
   \item ストレージ装置内で収集可能な安価な 10 秒 I/O 統計による、
         ransomware anomaly detection の入力契約。
+  \item 未知または変種の ransomware を、教師あり family 識別ではなく
+        正常時系列からの逸脱として扱う教師なし検出プロトコル。
   \item 正常学習 AE の再構成誤差が、write-heavy ルールや entropy ルールを超えて
         どの条件で有効かを示す評価。
   \item entropy/compression なし、暗号化済みボリューム、benign workload shift に対する
         false positive 分析。
-  \item 500 KB モデルメモリ制約下での AE architecture 選択と MNN 変換/parity/peak memory
-        測定手順。
+  \item volume あたり 500 KB モデルメモリ制約と、多数 volume 展開時の
+        aggregate memory/CPU 制約を同時に見る AE architecture 選択と
+        MNN 変換/parity/peak memory 測定手順。
   \item channel-wise error に基づく、ストレージ管理者向け説明可能性の設計。
 \end{enumerate}
 
 逆に、AE が単純 baseline を上回らない場合も重要な結果である。その場合は、
-ストレージ装置内では教師あり軽量分類器またはルールが妥当であり、
-AE は feature discovery または補助 score に限定すべきである、という結論になる。
+未知脅威対応という利点を考慮しても、ストレージ装置内ではルールまたは
+別の教師なし軽量検出器が妥当であり、AE は feature discovery または
+補助 score に限定すべきである、という結論になる。教師あり軽量分類器が
+上回る場合も、それは既知 label が使える運用条件での参照結果として扱い、
+未知 family 対応の主張とは分ける。

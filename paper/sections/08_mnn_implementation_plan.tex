@@ -10,7 +10,10 @@ ONNX などを使ってよいが、論文で実装可能性を主張するには
   \item FP32 と、可能なら Int8/FP16 の MNN model を生成する。
   \item 同一入力で offline framework と MNN の anomaly score を比較し、許容誤差を定義する。
   \item model file、weight、tensor、workspace、I/O buffer、score history を含む
-        model-owned peak memory を測定する。
+        volume あたりの model-owned peak memory を測定する。
+  \item volume 数 $V$ を変え、共有可能な weight と、volume ごとに複製される
+        buffer、state、threshold、normalization を分けて aggregate memory と
+        10 秒あたり CPU 時間を測定する。
   \item peak が 500 KB を超える場合、feature 数、系列長 $N$、hidden size、
         architecture を縮小して再評価する。
 \end{enumerate}
@@ -28,4 +31,7 @@ optional slot を zero-fill し、対応する loss weight と score weight を 
 この手順では、MNN ランタイムのコードサイズや共通 heap は除外する。
 一方で、モデルファイルが flash 上に常駐し RAM に展開されない構成か、
 ロード時に RAM コピーされる構成かは target device に依存するため、
-実装論文では両者を明記する。
+実装論文では両者を明記する。また、多数 volume で同一 model weight を共有できる場合でも、
+各 volume の入力列、正規化状態、calibration threshold、score history は独立に必要になる
+可能性が高い。したがって ``軽量モデルが 1 個動く'' ことをもって組み込み可能性とはせず、
+想定 volume 数での総メモリと CPU スケジュールを device-fit claim の条件に含める。
