@@ -89,9 +89,10 @@ frame_10s = {
 }
 ```
 
-With 12 frames, this gives roughly two minutes of context. The exact bucket
-counts should be reduced before model work if the MNN memory harness shows
-pressure.
+The model input is `N` consecutive frames, so the temporal context is
+`N * 10` seconds. An initial `N = 12` gives roughly two minutes of context.
+The exact sequence length and bucket counts should be reduced before model work
+if the MNN memory harness shows pressure.
 
 ## Model Implications
 
