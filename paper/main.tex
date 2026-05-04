@@ -1,0 +1,677 @@
+\documentclass[xelatex,ja=standard,a4paper,11pt]{bxjsarticle}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!45!black,
+  citecolor=blue!45!black,
+  urlcolor=blue!45!black,
+  pdftitle={Storage-Embedded AutoEncoder Ransomware Detection Draft},
+  pdfauthor={ResearchArchitect}
+}
+\setCJKmonofont{HaranoAjiGothic-Regular.otf}
+\setlist[itemize]{leftmargin=2em}
+\setlist[enumerate]{leftmargin=2em}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\todo}[1]{\textcolor{red!70!black}{[TODO: #1]}}
+
+\title{ストレージ装置組み込み型 AutoEncoder による\\
+ランサムウェア検出の研究構想}
+\author{ResearchArchitect Draft}
+\date{2026年5月4日 v0.1}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+本稿は、ブロックストレージ装置内で観測可能な安価な I/O 統計から、
+ランサムウェア挙動を早期検出できるかを検証するための仮論文である。
+対象装置は SCSI/NVMe 的な read/write コマンド、LBA またはオフセット、
+転送長、時刻、および存在する場合のみ低コストな圧縮率または
+エントロピー相当信号を観測する。提案候補は、10 秒単位の統計列を入力とする
+メモリ制約付き AutoEncoder であり、最終実装では Alibaba MNN による
+CPU 推論を想定する。モデル経路に使えるメモリは MNN ランタイムを除いて
+500KB とし、ペイロード走査や per-block Shannon entropy のような重い特徴量は
+前提にしない。
+
+本稿の主張は、性能を実証済みであるというものではない。むしろ、
+SSD ファームウェア内防御、ブロック I/O 機械学習、公開ランサムウェア
+ストレージトレース、時系列 AutoEncoder 研究を接続し、検証可能な仮説、
+入力契約、評価プロトコル、ベースライン、アブレーション、MNN 変換後の
+メモリ検証手順を明確化することを目的とする。初期の中心仮説は、
+正常時系列を学習した小型 AutoEncoder の再構成誤差が、
+write-heavy burst、LBA 分布変化、I/O 長分布変化、read/write 比率変化、
+および圧縮率/エントロピー相当信号の変化を伴うランサムウェア窓で
+上昇する、というものである。
+\end{abstract}
+
+\section{はじめに}
+
+ランサムウェア対策の多くは、エンドホスト上のプロセス、ファイルパス、
+API 呼び出し、ファイル内容の差分、またはシグネチャを利用する。
+これらは豊かな文脈を得られる反面、ホスト侵害、エージェント停止、
+OS 差異、管理負荷の影響を受ける。これに対し、ストレージ装置は
+ホストの意図を知らないが、永続データに対する read/write の時系列を
+最後の防衛線として観測できる。SSD-Insider は SSD ファームウェア内で
+ブロック I/O ヘッダに基づくランサムウェア検出と復旧を実証し
+\cite{baek2018ssdinsider}、ストレージ内検出が現実的な研究対象であることを
+示した。
+
+本研究の焦点は、ストレージ装置内で動作可能な AutoEncoder (AE) による
+異常検出である。AE は正常な I/O 時系列だけを学習し、入力と再構成出力の
+乖離が大きい窓をアノマリーとして扱う。従来のストレージレベル研究では
+ルール、決定木、ランダムフォレスト、XGBoost などの教師あり分類器が
+有力であり、AE を使う必然性はまだ示されていない。したがって本稿では、
+AE を既定解ではなく検証対象の仮説として位置付ける。
+
+本稿が扱う研究課題は以下である。
+
+\begin{enumerate}
+  \item ブロックストレージから安価に得られる 10 秒統計だけで、
+        ランサムウェアによる I/O 時系列変化を検出できるか。
+  \item 正常学習 AE の再構成誤差は、単純なしきい値、write 比率、
+        エントロピー、LBA 分布、古典的異常検出器を上回る情報を持つか。
+  \item エントロピーまたは圧縮率信号がない場合にも検出性能が残るか。
+  \item MNN CPU 推論に変換したモデルが、MNN ランタイムを除く 500KB の
+        モデルメモリ内に収まるか。
+  \item ファイルシステム、ボリューム利用率、暗号化済みボリューム、
+        バックアップやデータベース処理などの benign workload shift に対し、
+        低 false positive を維持できるか。
+\end{enumerate}
+
+本稿は実験結果を含まない仮論文である。性能値、SOTA、実装完了、
+MNN 適合、500KB 達成は、今後の再現可能な実験とメモリ測定により
+初めて主張可能となる。
+
+\section{観測境界と脅威モデル}
+
+\subsection{観測境界}
+
+対象は SCSI/NVMe 的なブロックストレージである。検出器は装置内、
+または装置に近いストレージ隣接プロセッサ上に配置され、表
+\ref{tab:observable} の情報を集約する。
+
+\begin{table}[tb]
+  \centering
+  \caption{観測可能情報と採用方針}
+  \label{tab:observable}
+  \begin{tabularx}{\linewidth}{lllY}
+    \toprule
+    情報 & 必須 & 収集コスト & 採用方針 \\
+    \midrule
+    時刻 & yes & 低 & 10 秒窓への集約に用いる。 \\
+    read/write 種別 & yes & 低 & 比率、カウント、バイト数に使う。 \\
+    LBA/offset & yes & 低 & 小さい固定ヒストグラムに集約する。 \\
+    転送長 & yes & 低 & log2 近似または表引きで長さ分布を作る。 \\
+    連続性近似 & optional & 低 & 直前 LBA との比較で sequentiality を数える。 \\
+    圧縮率/entropy 相当 & optional & 中 & 既存の装置カウンタがある場合だけ使う。 \\
+    ペイロード走査 & no & 高 & 初期スコープから除外する。 \\
+    ファイル名/プロセス & no & 不可 & ブロック装置単体では観測しない。 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+この境界は、エンドポイント型検出に比べて意図的に情報量が少ない。
+その代わり、ホスト OS、プロセス、ファイルシステムの信頼に依存しない。
+この選択は、強い意味でのランサムウェア分類ではなく、
+``ストレージから見た異常な暗号化・大量書き換え挙動の検出'' を目標にする。
+
+\subsection{脅威モデル}
+
+攻撃者は、保護対象ブロックデバイスへ正規にアクセスできるホスト上で
+ランサムウェアを実行する。ストレージ装置は、プロセス名、ファイル拡張子、
+ユーザ意図、ファイル内容の意味を知らない。検出器が期待する攻撃挙動は、
+多数の LBA への read-modify-write、write-heavy burst、I/O 長分布変化、
+局所性の変化、上書き、圧縮率低下または entropy 上昇である。
+
+一方で、低速に暗号化するランサムウェア、少数ファイルだけを狙う攻撃、
+既に暗号化されたボリューム、バックアップ、圧縮、重複排除、データベース
+メンテナンス、仮想ディスクの copy-on-write などは、検出困難または
+false positive の主要因になり得る。このため、検出器は単一の anomaly score
+だけでなく、特徴チャネルごとの誤差寄与を出力する必要がある。
+
+\section{関連研究}
+
+\subsection{ストレージ内検出とブロック I/O 研究}
+
+ストレージベース IDS は、SAN やブロックストレージ層で侵入やファイルレベル
+変化を検出する研究として始まった\cite{banikazemi2005san,allalouf2010idstor}。
+これらは、ストレージ層がセキュリティ境界になり得ることを示す一方で、
+ファイル意味論を失う問題も明確にした。
+
+SSD-Insider は、SSD ファームウェア内でランサムウェアを検出し、NAND の
+delayed deletion を利用して復旧する代表的な研究である\cite{baek2018ssdinsider}。
+この研究は、I/O リクエストヘッダだけでもランサムウェア検出が可能であること、
+また 10 秒程度の検出窓が実用的な候補になり得ることを示した。ただし、
+提案器は AE ではなく軽量な特徴量と分類器に近い。
+
+IBM Research のストレージシステム内機械学習研究は、計算ストレージ装置や
+コントローラ近傍で I/O 情報からランサムウェアを検出する方向性を示す
+\cite{ibmstorage2023}。また、ブロックストレージにおける汎化性の研究は、
+ファイルシステム、ボリューム状態、暗号化、仮想化、benign database workload が
+検出性能に強く影響することを報告している\cite{reategui2024generalizability}。
+この知見は、本研究において false positive 評価と split hygiene を
+中心課題に置く理由である。
+
+\subsection{公開データセット}
+
+RanSAP は、ランサムウェアと benign software のストレージアクセスパターンを
+含む公開データセットであり、timestamp、LBA、size、read/write、write entropy
+を含むため、初期実験に最も近い\cite{ransap,hirano2021ransap}。
+RanSMAP は後続データセットとして storage access pattern に memory access pattern
+を追加しており、混合実行条件で storage-only 特徴がどこまで崩れるかを調べる
+診断材料になる\cite{ransmap,hirano2024ransmap}。ただし、memory access は
+本研究の装置内観測境界から外れる。
+
+benign false positive の評価には、SNIA IOTTA\cite{sniaiotta} や
+UMass Storage Trace Repository\cite{umass} のブロック I/O トレースが候補になる。
+NapierOne\cite{napierone} はブロック I/O トレースではないが、高 entropy な
+正常ファイル、圧縮済みファイル、暗号化済みファイルを用いた controlled replay
+や圧縮率校正の材料として利用できる。
+
+\subsection{エンドポイントおよびファイルシステム型検出}
+
+UNVEIL\cite{kharraz2016unveil}、CryptoDrop\cite{scaife2016cryptodrop}、
+ShieldFS\cite{continella2016shieldfs}、Redemption\cite{kharraz2017redemption}、
+PayBreak\cite{kolodenker2017paybreak} などは、ランサムウェアの振る舞い検出や
+復旧に関する重要な先行研究である。これらはファイルパス、プロセス、API、
+ファイル内容変化、暗号鍵観測など、ブロックストレージ単体では使えない
+文脈を活用する。したがって本研究の比較対象として直接利用するのではなく、
+false positive、検出遅延、復旧境界、振る舞い特徴の設計に関する参考として扱う。
+
+\subsection{時系列 AutoEncoder 異常検出}
+
+LSTM encoder-decoder\cite{malhotra2016lstm}、spacecraft anomaly detection
+\cite{hundman2018lstm}、USAD\cite{audibert2020usad} などは、
+時系列を再構成し、再構成誤差を anomaly score とする方法の基礎になる。
+しかし、ストレージ装置内、10 秒統計、500KB モデル制約、MNN CPU 推論という
+条件を同時に満たすランサムウェア AE 研究は限定的である。本研究の novelty は
+大規模深層モデルではなく、この狭い制約下での検証可能性に置く。
+
+\section{提案する入力契約}
+
+\subsection{10 秒フレーム}
+
+装置側 collector は、raw I/O を保持せず、10 秒ごとに固定長統計へ集約する。
+初期契約を式 \eqref{eq:frame} に示す。
+
+\begin{align}
+  x_t = [&n^r_t, n^w_t, b^r_t, b^w_t,
+         h^{r,LBA}_t, h^{w,LBA}_t,
+         h^{r,len}_t, h^{w,len}_t, \nonumber \\
+        &q^r_t, q^w_t, c_t] ,
+  \label{eq:frame}
+\end{align}
+
+ここで、$n$ は I/O 数、$b$ はバイト数、$h$ は小さい固定ヒストグラム、
+$q$ は sequentiality 近似、$c$ は optional な圧縮率または entropy 相当信号である。
+最初の実装では LBA と長さの bucket 数をそれぞれ 8 とし、
+sequence length $T=12$、すなわち 2 分の文脈を用いる。
+
+\begin{table}[tb]
+  \centering
+  \caption{初期フレームスキーマ}
+  \label{tab:feature-schema}
+  \begin{tabularx}{\linewidth}{lrlY}
+    \toprule
+    特徴群 & 次元例 & 必須 & 備考 \\
+    \midrule
+    read/write count & 2 & yes & log scaling または robust scaling。 \\
+    read/write bytes & 2 & yes & intensity と anomaly の混同に注意。 \\
+    read LBA histogram & 8 & yes & namespace size で正規化。 \\
+    write LBA histogram & 8 & yes & high bits または shift bucket。 \\
+    read length histogram & 8 & yes & log2 近似 bucket。 \\
+    write length histogram & 8 & yes & log2 近似 bucket。 \\
+    sequentiality counters & 2 & optional & 直前 I/O との比較のみ。 \\
+    compression/entropy signal & 0--1 & optional & 既存装置カウンタがある場合のみ。 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+この入力契約の重要点は、研究用に raw event や高価な特徴を足さないことである。
+公開 trace が per-I/O 情報を持つ場合も、最終主張に使う実験では同じ 10 秒統計へ
+落としてから AE に入力する。
+
+\subsection{正規化}
+
+正規化パラメータは benign training split のみから推定する。LBA は namespace size
+または観測範囲で正規化し、転送長は log2 bucket に入れる。count と byte は
+log1p 後に median と IQR、または訓練 split の percentile で scale する。
+ratio は device 上で浮動小数点除算を必須にせず、offline training と MNN 入力
+直前の固定小数点変換で扱う。
+
+\section{AutoEncoder 候補}
+
+\subsection{再構成誤差による検出}
+
+長さ $T$ の入力列を $X=(x_{t-T+1},\ldots,x_t)$ とし、AE を
+$\hat{X}=f_{\theta}(X)$ と書く。anomaly score は、特徴群 $g$ ごとの重み付き
+再構成誤差として式 \eqref{eq:score} で定義する。
+
+\begin{equation}
+  s(X) = \sum_{g \in G} w_g
+         \frac{1}{T |g|}
+         \sum_{\tau=1}^{T}
+         \sum_{j \in g}
+         \ell \left(X_{\tau,j}, \hat{X}_{\tau,j}\right).
+  \label{eq:score}
+\end{equation}
+
+ヒストグラムは MSE、Huber loss、または Jensen-Shannon divergence を比較し、
+scalar は MSE または Huber loss を使う。しきい値 $\tau$ は benign calibration split
+の上位分位点から決め、評価時には false alarms per volume per day を主指標にする。
+
+\subsection{候補アーキテクチャ}
+
+ユーザ仮説では、CNN が I/O 情報の相関や局所特徴を抽出し、GRU が時系列特徴へ
+落とし込み、decoder は逆方向に伸長する。これは自然な候補であるが、
+500KB という制約では小型候補との比較が必須である。
+
+\begin{table}[tb]
+  \centering
+  \caption{評価すべき AE 候補}
+  \label{tab:model-candidates}
+  \begin{tabularx}{\linewidth}{lY Y}
+    \toprule
+    候補 & 利点 & 主なリスク \\
+    \midrule
+    MLP bottleneck AE &
+    最小の operator set で MNN 変換が容易。メモリ見積もりも単純。 &
+    時系列構造を平坦化するため、ゆっくりした攻撃や順序依存を失う可能性。 \\
+    GRU-only AE &
+    小さい hidden state で temporal pattern を扱える。 &
+    recurrent operator の workspace と量子化 drift を要測定。 \\
+    Temporal convolution AE &
+    固定長列に対して計算量と activation memory を制御しやすい。 &
+    長い文脈や不規則な attack rhythm への追従が弱い可能性。 \\
+    Tiny CNN-GRU AE &
+    per-window feature map の局所相関と時系列を両方扱える。 &
+    最も複雑で、500KB と MNN operator support の制約を受けやすい。 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+図 \ref{fig:pipeline} に、最終的な検出 pipeline の概念図を示す。
+
+\begin{figure}[tb]
+  \centering
+  \resizebox{\linewidth}{!}{%
+  \begin{tikzpicture}[
+      node distance=9mm,
+      box/.style={draw, rounded corners=2pt, align=center, minimum height=9mm, minimum width=28mm},
+      small/.style={draw, rounded corners=2pt, align=center, minimum height=8mm, minimum width=24mm},
+      arrow/.style={-Latex, thick}
+    ]
+    \node[box] (io) {SCSI/NVMe\\I/O metadata};
+    \node[box, right=of io] (stats) {10 秒\\統計化};
+    \node[box, right=of stats] (seq) {$T=12$\\sequence};
+    \node[box, right=of seq] (ae) {tiny AE\\MNN CPU};
+    \node[box, right=of ae] (score) {再構成誤差\\channel breakdown};
+    \node[small, below=of ae] (cal) {benign\\calibration};
+    \node[small, below=of score] (alert) {しきい値\\alert};
+
+    \draw[arrow] (io) -- (stats);
+    \draw[arrow] (stats) -- (seq);
+    \draw[arrow] (seq) -- (ae);
+    \draw[arrow] (ae) -- (score);
+    \draw[arrow] (cal) -- (score);
+    \draw[arrow] (score) -- (alert);
+  \end{tikzpicture}
+  }
+  \caption{ストレージ装置内 AE 検出 pipeline}
+  \label{fig:pipeline}
+\end{figure}
+
+\subsection{500KB モデルメモリ予算}
+
+本研究では、MNN ランタイム自体は 500KB 予算から除外する。ただし、モデルファイルが
+RAM にコピーされる場合のモデル表現、weight、input/output tensor、intermediate tensor、
+operator workspace、normalization constant、score history はモデル経路の予算に含める。
+初期の目標配分を表 \ref{tab:memory-budget} に示す。
+
+\begin{table}[tb]
+  \centering
+  \caption{モデル経路の初期メモリ目標}
+  \label{tab:memory-budget}
+  \begin{tabular}{lr}
+    \toprule
+    要素 & 目標 \\
+    \midrule
+    model file and weights & $\leq 240$KB \\
+    intermediate tensors and operator workspace & $\leq 160$KB \\
+    input/output sequence buffers & $\leq 32$KB \\
+    recurrent state and score history & $\leq 24$KB \\
+    quantization and normalization constants & $\leq 8$KB \\
+    safety margin & $\geq 36$KB \\
+    \midrule
+    合計 & $\leq 500$KB \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+この配分は仮であり、最終判断は MNN 変換後の実測に基づく。
+MNN は on-device/embedded inference、CPU backend、ONNX などからの変換、
+MNN-Compress、FP16/Int8 量子化を提供する\cite{mnn}。ただし、runtime の軽量性は
+モデル経路メモリの保証ではないため、変換、量子化、parity、peak memory の
+測定を独立した評価項目にする。
+
+\section{評価計画}
+
+\subsection{データセットと split}
+
+Phase 1 は RanSAP を主データセットにし、benign run だけで AE を学習する。
+calibration split も benign から取り、ransomware label は評価にのみ使う。
+split は隣接窓の random split を避け、run、ransomware family、storage condition、
+OS/BitLocker 条件で分ける。Phase 2 以降で RanSMAP の storage-only 部分、
+SNIA IOTTA または UMass の benign trace を追加し、false positive と workload shift を
+評価する。
+
+\begin{table}[tb]
+  \centering
+  \caption{初期データ利用計画}
+  \label{tab:dataset-plan}
+  \begin{tabularx}{\linewidth}{lYYYY}
+    \toprule
+    データ & 攻撃 & benign & entropy & 主用途 \\
+    \midrule
+    RanSAP & yes & yes & write entropy & 初期 feasibility、entropy ablation。 \\
+    RanSMAP & yes & yes & storage plus memory context & storage-only 限界分析。 \\
+    SNIA IOTTA & no & yes & usually no & false positive、多様な benign workload。 \\
+    UMass traces & no & yes & no & OLTP/search などの benign stress。 \\
+    NapierOne & no & file corpus & computable offline & 高 entropy benign replay と校正。 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{ベースライン}
+
+AE の価値を評価するには、単純な規則を必ず比較対象にする。最低限の baseline は
+以下である。
+
+\begin{itemize}
+  \item write ratio threshold。
+  \item write bytes または write IOPS の rolling z-score。
+  \item LBA coverage または LBA histogram shift。
+  \item entropy または compression signal threshold。
+  \item write ratio と entropy の二変量ルール。
+  \item Isolation Forest または one-class SVM。
+  \item 小型 decision tree/random forest/XGBoost 相当の supervised classifier。
+\end{itemize}
+
+AE が単に ``busy workload'' を検出しているだけなら、write throughput baseline に
+負けるはずである。この比較により、AE の役割を ransomware 特有の時系列構造の検出に
+限定して検証できる。
+
+\subsection{主要指標}
+
+AUROC は補助指標に留める。実運用で重要なのは、低 false positive で早く検出できるか
+である。主要指標は以下とする。
+
+\begin{itemize}
+  \item fixed false positive budget における recall。
+  \item false alarms per volume per day。
+  \item attack start から初回 alert までの time to detect。
+  \item alert 前に上書きされた bytes または LBA fraction。
+  \item precision-recall curve と AUPRC。
+  \item channel-wise reconstruction-error contribution。
+  \item MNN 変換後の score parity、model file size、peak model-owned memory。
+\end{itemize}
+
+\subsection{アブレーション}
+
+本研究で最も重要なアブレーションは entropy/compression を外す実験である。
+entropy はランサムウェア検出に強い特徴になり得るが、payload access が必要な場合、
+ブロック装置内で高コストになり、暗号化済みボリュームや圧縮済み benign file では
+識別力が落ちる可能性がある。したがって、表 \ref{tab:ablation} の ablation を
+必須にする。
+
+\begin{table}[tb]
+  \centering
+  \caption{必須アブレーション}
+  \label{tab:ablation}
+  \begin{tabularx}{\linewidth}{lY}
+    \toprule
+    実験 & 検証する問い \\
+    \midrule
+    entropy/compression なし & metadata-only でも検出可能か。 \\
+    LBA histogram なし & 空間分布に依存しすぎていないか。 \\
+    length histogram なし & I/O サイズの寄与はどれだけか。 \\
+    count/bytes intensity 分離 & 忙しい benign workload を誤検出していないか。 \\
+    CNN-GRU vs GRU-only vs MLP & 複雑な architecture は必要か。 \\
+    $T=6,12,24$ & 文脈長と 500KB 制約の trade-off。 \\
+    quantized MNN vs offline & 量子化と変換で score が崩れないか。 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{MNN 実装計画}
+
+最終実装は MNN CPU inference を使う。offline training は PyTorch、TensorFlow、
+ONNX などを使ってよいが、論文で実装可能性を主張するには以下が必要である。
+
+\begin{enumerate}
+  \item 入力 tensor shape と 10 秒統計スキーマを固定する。
+  \item benign training split だけから normalization constant を凍結する。
+  \item 候補モデルを ONNX 等へ export し、MNN converter で固定 shape に変換する。
+  \item FP32 と、可能なら Int8/FP16 の MNN model を生成する。
+  \item 同一入力で offline framework と MNN の anomaly score を比較し、許容誤差を定義する。
+  \item model file、weight、tensor、workspace、I/O buffer、score history を含む
+        model-owned peak memory を測定する。
+  \item peak が 500KB を超える場合、bucket 数、sequence length、hidden size、
+        architecture を縮小して再評価する。
+\end{enumerate}
+
+この手順では、MNN ランタイムのコードサイズや共通 heap は除外する。
+一方で、モデルファイルが flash 上に常駐し RAM に展開されない構成か、
+ロード時に RAM コピーされる構成かは target device に依存するため、
+実装論文では両者を明記する。
+
+\section{想定される貢献}
+
+実験が仮説を支持した場合、本研究の貢献は以下になる。
+
+\begin{enumerate}
+  \item ストレージ装置内で収集可能な安価な 10 秒 I/O 統計による、
+        ransomware anomaly detection の入力契約。
+  \item 正常学習 AE の再構成誤差が、write-heavy ルールや entropy ルールを超えて
+        どの条件で有効かを示す評価。
+  \item entropy/compression なし、暗号化済みボリューム、benign workload shift に対する
+        false positive 分析。
+  \item 500KB モデルメモリ制約下での AE architecture 選択と MNN 変換/parity/peak memory
+        測定手順。
+  \item channel-wise error に基づく、ストレージ管理者向け説明可能性の設計。
+\end{enumerate}
+
+逆に、AE が単純 baseline を上回らない場合も重要な結果である。その場合は、
+ストレージ装置内では教師あり軽量分類器またはルールが妥当であり、
+AE は feature discovery または補助 score に限定すべきである、という結論になる。
+
+\section{妥当性への脅威}
+
+\paragraph{公開データの偏り}
+RanSAP/RanSMAP は初期検証に有用だが、ransomware family、OS、volume condition、
+benign workload の範囲は限定的である。headline accuracy ではなく、
+family holdout、condition holdout、benign workload holdout を使う必要がある。
+
+\paragraph{entropy 依存}
+write entropy が高い ransomware は検出しやすい一方、既に暗号化されたボリューム、
+圧縮済み benign file、backup、deduplication では entropy が信頼できない。
+metadata-only variant を主結果として扱えるかが鍵になる。
+
+\paragraph{workload intensity の混同}
+AE は入力分布全体を再構成するため、ransomware ではなく単に write intensive な
+作業を異常とみなす危険がある。これを防ぐには intensity-only baseline と
+channel-wise attribution が必要である。
+
+\paragraph{10 秒窓の遅延}
+10 秒統計は装置負荷を抑えるが、attack start 直後の小さなシグナルを隠す可能性がある。
+time to detect だけでなく、alert 前に失われる LBA fraction を測る。
+
+\paragraph{MNN 変換差}
+offline framework で良好な AE が、MNN 変換や量子化後に score ordering を保つとは
+限らない。MNN parity は研究後半の付録ではなく、実装主張の中心評価項目である。
+
+\section{研究ロードマップ}
+
+\begin{enumerate}
+  \item データセット監査: RanSAP/RanSMAP の schema、license、trace split 単位を確認する。
+  \item 10 秒統計抽出器: raw trace から表 \ref{tab:feature-schema} の tensor を生成する。
+  \item baseline 実験: write ratio、entropy、LBA shift、classical anomaly detector を測る。
+  \item tiny AE 実験: MLP、GRU-only、temporal convolution、tiny CNN-GRU を比較する。
+  \item robustness: entropy なし、BitLocker、family holdout、benign workload holdout を評価する。
+  \item MNN fit study: 変換、量子化、score parity、500KB model-owned memory を測る。
+  \item 論文化: 実験 manifest、source audit、failure mode を対応付けて本文を更新する。
+\end{enumerate}
+
+\section{結論}
+
+本稿は、ストレージ装置組み込み型 AutoEncoder によるランサムウェア検出の
+仮説論文である。中心アイデアは、SCSI/NVMe 的なブロック I/O から得られる
+10 秒統計を正常時系列として学習し、AE の再構成誤差上昇をランサムウェアらしい
+異常として検出することである。研究上の難所は、AE 自体ではなく、
+安価な特徴量、低 false positive、entropy 依存からの脱却、benign workload shift、
+MNN 変換後の score parity、500KB モデルメモリ制約である。
+
+今後は、RanSAP を用いた feature pipeline と baseline から開始し、
+AE が単純な write/entropy ルールを上回る情報を持つかを検証する。
+その後、RanSMAP、SNIA IOTTA、UMass、controlled replay を用いて false positive と
+汎化性を評価し、最終的に MNN 上の実測メモリと score parity によって
+組み込み可能性を判断する。
+
+\begin{thebibliography}{99}
+
+\bibitem{banikazemi2005san}
+M. Banikazemi, D. Poff, and B. Abali.
+Storage-based intrusion detection for Storage Area Networks (SANs).
+MSST, 2005.
+\url{https://research.ibm.com/publications/storage-based-intrusion-detection-for-storage-area-networks-sans}
+
+\bibitem{allalouf2010idstor}
+M. Allalouf et al.
+Block storage listener for detecting file-level intrusions.
+MSST, 2010.
+\url{https://research.ibm.com/publications/block-storage-listener-for-detecting-file-level-intrusions}
+
+\bibitem{baek2018ssdinsider}
+S.-H. Baek et al.
+SSD-Insider: Internal Defense of Solid-State Drive against Ransomware with Perfect Data Recovery.
+ICDCS, 2018.
+\url{https://doi.org/10.1109/ICDCS.2018.00089}
+
+\bibitem{ibmstorage2023}
+IBM Research.
+Efficient ransomware detection with machine learning in storage systems.
+FMS, 2023.
+\url{https://research.ibm.com/publications/efficient-ransomware-detection-with-machine-learning-in-storage-systems}
+
+\bibitem{reategui2024generalizability}
+J. Reategui, R. Pletka, and P. Diamantopoulos.
+On the Generalizability of Machine Learning-based Ransomware Detection in Block Storage.
+arXiv:2412.21084, 2024.
+\url{https://arxiv.org/abs/2412.21084}
+
+\bibitem{ransap}
+M. Hirano.
+RanSAP public repository.
+\url{https://github.com/manabu-hirano/RanSAP}
+
+\bibitem{hirano2021ransap}
+M. Hirano et al.
+RanSAP dataset and storage access pattern study.
+Forensic Science International: Digital Investigation, 2021.
+\url{https://doi.org/10.1016/j.fsidi.2021.301314}
+
+\bibitem{ransmap}
+M. Hirano.
+RanSMAP public repository.
+\url{https://github.com/manabu-hirano/RanSMAP}
+
+\bibitem{hirano2024ransmap}
+M. Hirano et al.
+RanSMAP storage and memory access pattern study.
+Computers \& Security, 2024.
+\url{https://doi.org/10.1016/j.cose.2024.104202}
+
+\bibitem{sniaiotta}
+SNIA.
+IOTTA Repository.
+\url{https://www.snia.org/educational-library/iotta-repository-2019}
+
+\bibitem{umass}
+UMass Trace Repository.
+Storage traces.
+\url{https://traces.cs.umass.edu/docs/traces/storage/}
+
+\bibitem{napierone}
+NapierOne Dataset.
+\url{https://registry.opendata.aws/napierone/}
+
+\bibitem{kharraz2016unveil}
+A. Kharraz et al.
+UNVEIL: A Large-Scale, Automated Approach to Detecting Ransomware.
+USENIX Security, 2016.
+
+\bibitem{scaife2016cryptodrop}
+N. Scaife et al.
+CryptoLock (and Drop It): Stopping Ransomware Attacks on User Data.
+ICDCS, 2016.
+
+\bibitem{continella2016shieldfs}
+A. Continella et al.
+ShieldFS: A Self-healing, Ransomware-aware Filesystem.
+ACSAC, 2016.
+
+\bibitem{kharraz2017redemption}
+A. Kharraz and E. Kirda.
+Redemption: Real-Time Protection Against Ransomware at End-Hosts.
+RAID, 2017.
+
+\bibitem{kolodenker2017paybreak}
+E. Kolodenker et al.
+PayBreak: Defense against cryptographic ransomware.
+AsiaCCS, 2017.
+
+\bibitem{malhotra2016lstm}
+P. Malhotra et al.
+LSTM-based Encoder-Decoder for Multi-sensor Anomaly Detection.
+ICML Workshop on Anomaly Detection, 2016.
+
+\bibitem{hundman2018lstm}
+K. Hundman et al.
+Detecting Spacecraft Anomalies Using LSTMs and Nonparametric Dynamic Thresholding.
+KDD, 2018.
+
+\bibitem{audibert2020usad}
+J. Audibert et al.
+USAD: UnSupervised Anomaly Detection on Multivariate Time Series.
+KDD, 2020.
+
+\bibitem{nvme}
+NVM Express.
+NVM Express specifications.
+\url{https://nvmexpress.org/specifications/}
+
+\bibitem{snia-csd}
+SNIA.
+Computational Storage Technical Work Group.
+\url{https://www.snia.org/computationaltwg}
+
+\bibitem{mnn}
+Alibaba.
+MNN: A lightweight deep neural network inference engine.
+\url{https://github.com/alibaba/MNN}
+
+\end{thebibliography}
+
+\end{document}
