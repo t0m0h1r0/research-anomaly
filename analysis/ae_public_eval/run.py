@@ -23,7 +23,15 @@ import numpy as np
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
-from rad_ae.features import FeatureConfig, RobustNormalizer, build_frames, feature_schema, flatten_sequences, make_sequences
+from rad_ae.features import (
+    FeatureConfig,
+    RobustNormalizer,
+    build_frames,
+    feature_schema,
+    feature_score_weights,
+    flatten_sequences,
+    make_sequences,
+)
 from rad_ae.metrics import average_precision, binary_metrics, calibrate_threshold, false_alarms_per_day, roc_auc, score_summary
 from rad_ae.models import NumpyMLPAEConfig, NumpyMLPAutoEncoder
 from rad_ae.ransap import TraceSource, discover_trace_sources, read_trace_events
@@ -86,6 +94,7 @@ def main() -> None:
     seed = int(config.get("seed", 0))
     rng = np.random.default_rng(seed)
     feature_config = FeatureConfig(**config.get("feature", {}))
+    score_weights = feature_score_weights(feature_config)
     label_rules = config.get("label_rules")
     include_unknown = bool(config.get("include_unknown", False))
 
@@ -129,9 +138,13 @@ def main() -> None:
 
     model_type = str(config.get("model", {}).get("type", "numpy_mlp"))
     if model_type == "numpy_mlp":
-        model, model_scores, model_summary = _train_numpy_mlp(train_norm, cal_norm, test_norm, config, out_dir)
+        model, model_scores, model_summary = _train_numpy_mlp(
+            train_norm, cal_norm, test_norm, score_weights, config, out_dir
+        )
     elif model_type in {"torch_gru", "torch_cnn_gru"}:
-        model, model_scores, model_summary = _train_torch_model(model_type, train_norm, cal_norm, test_norm, config)
+        model, model_scores, model_summary = _train_torch_model(
+            model_type, train_norm, cal_norm, test_norm, score_weights, config
+        )
     else:
         raise ValueError(f"unknown model.type: {model_type}")
 
@@ -259,7 +272,7 @@ def _split_runs(runs: list[RunTensor], rng: np.random.Generator, config: dict[st
 
 def _concat_sequences(runs: list[RunTensor]) -> np.ndarray:
     if not runs:
-        return np.zeros((0, 0, 0, 0), dtype=np.float32)
+        return np.zeros((0, 0, 0), dtype=np.float32)
     return np.concatenate([run.sequences for run in runs], axis=0)
 
 
@@ -277,6 +290,7 @@ def _train_numpy_mlp(
     train_norm: np.ndarray,
     cal_norm: np.ndarray,
     test_norm: np.ndarray,
+    score_weights: np.ndarray,
     config: dict[str, Any],
     out_dir: Path,
 ) -> tuple[NumpyMLPAutoEncoder, dict[str, np.ndarray], dict[str, Any]]:
@@ -293,15 +307,16 @@ def _train_numpy_mlp(
     model = NumpyMLPAutoEncoder(ae_config).fit(flatten_sequences(train_norm))
     model.save(out_dir / "model.npz")
     scores = {
-        "train": model.score(flatten_sequences(train_norm)),
-        "calibration": model.score(flatten_sequences(cal_norm)),
-        "test": model.score(flatten_sequences(test_norm)),
+        "train": _numpy_weighted_score(model, train_norm, score_weights),
+        "calibration": _numpy_weighted_score(model, cal_norm, score_weights),
+        "test": _numpy_weighted_score(model, test_norm, score_weights),
     }
     return model, scores, {
         "type": "numpy_mlp",
         "config": ae_config.to_dict(),
         "loss_history": model.loss_history,
         "memory_estimate": model.memory_estimate(),
+        "score_weights": score_weights.tolist(),
     }
 
 
@@ -310,25 +325,26 @@ def _train_torch_model(
     train_norm: np.ndarray,
     cal_norm: np.ndarray,
     test_norm: np.ndarray,
+    score_weights: np.ndarray,
     config: dict[str, Any],
 ):
     from rad_ae.torch_models import TorchAEConfig, build_torch_autoencoder, count_torch_parameters, require_torch
 
-    torch, nn = require_torch()
+    torch, _nn = require_torch()
     model_config = config.get("model", {})
     torch_config = TorchAEConfig(
         model_type="gru" if model_type == "torch_gru" else "cnn_gru",
         sequence_length=train_norm.shape[1],
         d_features=train_norm.shape[2],
         latent_dim=int(model_config.get("latent_dim", 16)),
-        conv_channels=int(model_config.get("conv_channels", 8)),
-        gru_hidden_dim=int(model_config.get("gru_hidden_dim", 16)),
+        conv_channels=int(model_config.get("conv_channels", 16)),
+        hidden_dim=int(model_config.get("hidden_dim", model_config.get("gru_hidden_dim", 24))),
     )
     torch.manual_seed(int(config.get("seed", 0)))
     model = build_torch_autoencoder(torch_config)
     optimizer = torch.optim.Adam(model.parameters(), lr=float(model_config.get("learning_rate", 0.001)))
-    loss_fn = nn.MSELoss()
     train_tensor = torch.as_tensor(train_norm, dtype=torch.float32)
+    weights_tensor = torch.as_tensor(score_weights, dtype=torch.float32).reshape(1, 1, -1)
     batch_size = int(model_config.get("batch_size", 64))
     losses: list[float] = []
     model.train()
@@ -339,7 +355,7 @@ def _train_torch_model(
             batch = train_tensor[order[start : start + batch_size]]
             optimizer.zero_grad()
             recon = model(batch)
-            loss = loss_fn(recon, batch)
+            loss = _torch_weighted_loss(torch, recon, batch, weights_tensor)
             loss.backward()
             optimizer.step()
             epoch_losses.append(float(loss.detach().cpu()))
@@ -350,7 +366,7 @@ def _train_torch_model(
         with torch.no_grad():
             tensor = torch.as_tensor(x, dtype=torch.float32)
             recon = model(tensor).cpu().numpy()
-        return np.mean((recon - x) ** 2, axis=(1, 2, 3))
+        return _weighted_sequence_score(x, recon, score_weights)
 
     scores = {
         "train": score(train_norm),
@@ -367,6 +383,7 @@ def _train_torch_model(
             "weight_bytes_fp32": parameter_count * 4,
             "weight_bytes_int8": parameter_count,
         },
+        "score_weights": score_weights.tolist(),
     }
 
 
@@ -380,7 +397,7 @@ def _baseline_results(
     quantile = float(config.get("threshold_quantile", 0.99))
     raw_scores = {
         "write_ratio": (_write_ratio_score(cal_x), _write_ratio_score(test_x)),
-        "mean_write_entropy": (_feature_score(cal_x, 38), _feature_score(test_x, 38)),
+        "mean_write_entropy": (_feature_score(cal_x, 10), _feature_score(test_x, 10)),
     }
     metrics: dict[str, Any] = {}
     test_score_columns: dict[str, np.ndarray] = {}
@@ -405,13 +422,33 @@ def _baseline_results(
 
 
 def _write_ratio_score(x: np.ndarray) -> np.ndarray:
-    read_count = np.expm1(x[:, :, 0])
-    write_count = np.expm1(x[:, :, 1])
-    return np.mean(write_count / np.maximum(read_count + write_count, 1.0), axis=1)
+    return np.mean(x[:, :, 3], axis=1)
 
 
 def _feature_score(x: np.ndarray, feature_position: int) -> np.ndarray:
     return np.mean(x[:, :, feature_position], axis=1)
+
+
+def _numpy_weighted_score(
+    model: NumpyMLPAutoEncoder,
+    x: np.ndarray,
+    score_weights: np.ndarray,
+) -> np.ndarray:
+    flat = flatten_sequences(x)
+    recon = model.reconstruct(flat).reshape(x.shape)
+    return _weighted_sequence_score(x, recon, score_weights)
+
+
+def _weighted_sequence_score(x: np.ndarray, recon: np.ndarray, score_weights: np.ndarray) -> np.ndarray:
+    weights = score_weights.reshape(1, 1, -1)
+    weighted_error = ((recon - x) ** 2) * weights
+    denominator = max(float(np.sum(score_weights)), 1.0) * x.shape[1]
+    return np.sum(weighted_error, axis=(1, 2)) / denominator
+
+
+def _torch_weighted_loss(torch, recon, x, weights):
+    active_weight_sum = torch.clamp(weights.sum(), min=1.0)
+    return (((recon - x) ** 2) * weights).sum() / (x.shape[0] * x.shape[1] * active_weight_sum)
 
 
 def _write_scores(
@@ -422,7 +459,7 @@ def _write_scores(
     baseline_results: dict[str, Any],
 ) -> None:
     with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.writer(handle)
+        writer = csv.writer(handle, lineterminator="\n")
         writer.writerow(["run_id", "label", "sequence_index", "ae_score", "write_ratio_score", "entropy_score"])
         write_ratio = baseline_results["test_scores"]["write_ratio"]
         entropy = baseline_results["test_scores"]["mean_write_entropy"]

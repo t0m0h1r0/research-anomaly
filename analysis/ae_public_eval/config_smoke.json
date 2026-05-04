@@ -12,9 +12,7 @@
     "window_seconds": 10.0,
     "sequence_length": 3,
     "stride": 1,
-    "bucket_count": 8,
     "logical_block_bytes": 512,
-    "length_bucket_min_log2": 9,
     "include_entropy": true
   },
   "model": {
