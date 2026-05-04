@@ -167,10 +167,10 @@ def main() -> None:
         "splits": _split_summary(splits),
         "runs": [_run_summary(run) for run in runs],
     }
-    (out_dir / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+    (out_dir / "metrics.json").write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8")
 
     model_summary["normalizer"] = normalizer.to_dict()
-    (out_dir / "model_summary.json").write_text(json.dumps(model_summary, indent=2), encoding="utf-8")
+    (out_dir / "model_summary.json").write_text(json.dumps(model_summary, indent=2) + "\n", encoding="utf-8")
 
     command = " ".join([Path(sys.executable).name, *sys.argv])
     output_files = ["metrics.json", "model_summary.json", "scores.csv"]
@@ -210,7 +210,7 @@ def main() -> None:
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "verdict": metrics["verdict"],
     }
-    (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     (out_dir / "run.log").write_text("\n".join(log_lines) + "\n", encoding="utf-8")
 
 
