@@ -18,7 +18,7 @@ overwritten.
 ## PR-3 - Model and Claim Rigor Gate
 
 Claims about ransomware detectability, anomaly scores, thresholds, calibration,
-robustness, interpretability, MNN conversion, 500 KB memory fit, or deployment
+robustness, interpretability, MNN conversion, 500 KB detector-data fit, or deployment
 readiness require independent checks of definitions, observation boundary,
 assumptions, baselines, metrics, leakage, device fit, uncertainty, and failure
 modes.
@@ -41,5 +41,6 @@ seed, split protocol, feature schema, metrics, outputs, timestamp, and verdict.
 Outputs prioritize problem framing, storage-level ransomware prior work, fair
 baselines, reproducible feature extraction and experiments, leakage and
 false-positive analysis, ablation and robustness checks, honest limitations,
-concise academic prose, MNN parity and 500 KB memory evidence, and redeployable
+concise academic prose, MNN parity, conservative 500 KB per-volume detector-data
+evidence, transient scratch per slot, scheduling evidence, and redeployable
 agent workflow artifacts.

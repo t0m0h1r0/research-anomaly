@@ -52,4 +52,4 @@ in `analysis/ae_public_eval/results/*/manifest.json`.
 
 This note verifies dataset access, schema compatibility, and license handling.
 It does not verify model performance, storage-device deployability, MNN
-conversion, or 500 KB memory fit.
+conversion, or 500 KB per-volume detector-data fit.

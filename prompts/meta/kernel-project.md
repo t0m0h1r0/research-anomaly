@@ -19,7 +19,7 @@
 - MUST treat this repository as AI/ML anomaly detection research for block-storage ransomware behavior, not as a product firmware implementation.
 - MUST preserve source papers, dataset references, raw traces, experiment configs, model code, run logs, metrics, figures, manuscript drafts, and critique artifacts as external memory.
 - MUST NOT promote model-performance, novelty, device-fit, MNN-readiness, or deployment-readiness claims without traceable evidence.
-- MUST keep the deployed detector assumption explicit: 10-second statistics, cheap block-I/O telemetry, and a 500 KB model-side memory budget excluding the MNN runtime.
+- MUST keep the deployed detector assumption explicit: 10-second statistics, cheap block-I/O telemetry, and a conservative rounded 500 KB per-volume detector-data budget for model weights plus input statistics/state, derived from roughly 1 GB across roughly 2000 volumes and excluding shared MNN runtime/library memory.
 </rules>
 <see_also>docs/03_PROJECT_RULES.md, docs/01_PROJECT_MAP.md, docs/interface/ResearchBrief.md</see_also>
 
@@ -36,7 +36,7 @@
 | Deployed input | Fixed-shape sequences of 10-second statistics, not raw per-I/O event streams |
 | Candidate model family | Memory-aware AutoEncoder models: MLP AE, GRU AE, temporal convolution AE, and tiny CNN-GRU AE only if justified |
 | Embedded runtime target | Alibaba MNN CPU inference path, with parity testing against offline scores before implementation claims |
-| Model memory budget | 500 KB peak model-side memory excluding the MNN runtime |
+| Detector-data budget | conservative rounded 500 KB per volume for model weight information plus retained input statistics/state, excluding shared MNN runtime/library memory |
 | Primary datasets | RanSAP first; RanSMAP, SNIA IOTTA, UMass storage traces, and other registered traces as compatibility evidence |
 | Research artifacts | Research brief, literature notes, dataset cards, model specs, code, configs, experiment results, figures, and manuscript drafts |
 | Primary objective | Decide whether storage-local AI anomaly detection for ransomware is credible, reproducible, and device-feasible |
@@ -88,7 +88,8 @@ Allowed source and derived locations:
 | Manuscript sections and figures | `paper/sections/`, `paper/figures/`, `artifacts/A/` |
 | Workflow lessons | `artifacts/M/` and `docs/02_ACTIVE_LEDGER.md` |
 
-Any performance value, table, figure, model-memory estimate, or MNN parity value
+Any performance value, table, figure, detector-data estimate, transient scratch
+estimate, or MNN parity value
 promoted to writing MUST cite dataset version, split protocol, config path,
 command, run log, commit or artifact hash when available, and creation date.
 
@@ -108,7 +109,7 @@ Minimum audit standard:
 | Baselines | write-ratio, entropy/compression, LBA-spread, simple statistical, and classical anomaly baselines are considered before crediting deep models |
 | Metrics | AUROC/AUPRC/F1 or domain metrics are justified; false alarms per volume per day, detection delay, and bytes overwritten before alert are considered when relevant |
 | Leakage | train/validation/test boundaries, temporal leakage, workload/family/device leakage, normalization leakage, and threshold tuning leakage are checked |
-| Device fit | 10-second statistics, cheap feature collection, 500 KB model-side memory, MNN operator support, and score parity are checked before embedded claims |
+| Device fit | 10-second statistics, cheap feature collection, 500 KB per-volume detector data for model weights plus input statistics/state, transient scratch per inference slot, scheduled slot count, MNN operator support, and score parity are checked before embedded claims |
 | Uncertainty | repeated seeds, confidence intervals, sensitivity analysis, or clearly bounded exploratory status are used for material quantitative claims |
 | Failure modes | benign backup/encryption/compression workloads, throttled ransomware, high-entropy benign data, drift, and out-of-distribution behavior are recorded |
 
@@ -186,7 +187,7 @@ Agents MUST prioritize:
 6. ablation and robustness checks across entropy availability, benign workload shifts, ransomware families, and device conditions,
 7. honest limitation and failure-mode reporting,
 8. concise academic prose in the chosen manuscript language,
-9. explicit MNN conversion, parity, and 500 KB model-memory evidence before embedded claims,
+9. explicit MNN conversion, parity, 500 KB per-volume detector-data evidence, transient scratch per slot, and scheduling evidence before embedded claims,
 10. deployable prompts, docs, and workflow artifacts.
 
 Stylistic rewrites that do not improve at least one of these points are out of

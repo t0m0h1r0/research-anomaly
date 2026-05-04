@@ -23,8 +23,8 @@ missing, and what evidence would be strong enough to continue.
   CNN-GRU AutoEncoder architecture, and inference path.
 - [Evaluation Roadmap](docs/03_evaluation_roadmap.md): experiments, baselines,
   metrics, risks, and milestones.
-- [Embedded Constraints](docs/04_embedded_constraints.md): 500 KB model memory
-  budget, 10-second statistics input, and MNN implementation path.
+- [Embedded Constraints](docs/04_embedded_constraints.md): 500 KB per-volume
+  detector-data budget, 10-second statistics input, and MNN implementation path.
 - [Literature Survey](docs/05_literature_survey.md): prior work on
   storage-level, filesystem-level, dynamic-analysis, and AE-based ransomware
   detection.
@@ -45,7 +45,11 @@ missing, and what evidence would be strong enough to continue.
   read/write ratio, and optional entropy-like features.
 - Deployed inputs are 10-second statistics. The device should not depend on
   expensive per-I/O or per-block calculations.
-- The embedded model memory budget is 500 KB, excluding the MNN runtime.
+- The embedded detector-data budget is 500 KB per volume for model weights plus
+  retained input statistics/state. It is derived from a planning assumption of
+  roughly 1 GB across roughly 2000 volumes and excludes shared MNN
+  runtime/library memory. If the target budget is stated as 1 GiB, 500 KB is a
+  conservative rounded target rather than an exact quotient.
 - Alibaba MNN is the target runtime for the final embedded implementation.
   Offline evaluation may use another framework, but MNN conversion and parity
   testing are mandatory before implementation claims.
@@ -65,5 +69,6 @@ missing, and what evidence would be strong enough to continue.
    enterprise, search, and storage-system workloads.
 4. Decide whether entropy/compression signals require controlled replay or
    storage-device instrumentation beyond public trace metadata.
-5. Constrain the final model to 10-second statistics and prove that the MNN
-   model path fits the 500 KB model-memory budget.
+5. Constrain the final model to 10-second statistics and prove that MNN weights
+   plus retained input statistics/state fit the 500 KB per-volume
+   detector-data budget, with transient scratch measured separately.

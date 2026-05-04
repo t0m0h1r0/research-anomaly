@@ -20,8 +20,9 @@ unsupervised candidate, and why per-volume costs matter in storage devices.
 - AE is now justified as an implementation-oriented unsupervised candidate:
   fixed-shape input and output, external reconstruction-error scoring, and a
   path to MNN CPU operators such as Dense, Conv1D, and GRU.
-- The 500 KB budget is now framed as a per-volume model-path budget, not only
-  a single standalone-model budget.
+- The 500 KB budget is now framed as a per-volume detector-data budget for
+  model weights plus retained input statistics/state, not as shared runtime or
+  all transient inference memory.
 - The manuscript now requires aggregate memory and CPU measurement when the
   same detector is applied across many volumes or namespaces, because per-volume
   buffers, thresholds, calibration state, and score history can dominate total

@@ -9,7 +9,7 @@ The generic research-agent kernel was deployed into this repository and
 retargeted to storage-embedded ransomware anomaly detection. The project profile
 now binds agent work to the existing research scaffold: block-I/O observation,
 10-second statistics, memory-aware AutoEncoder candidates, MNN CPU inference,
-and a 500 KB model-side memory budget.
+and a 500 KB per-volume detector-data budget.
 
 ## Produced Artifacts
 

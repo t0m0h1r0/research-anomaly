@@ -35,6 +35,8 @@ offline framework で良好な AE が、MNN 変換や量子化後に score order
 
 \paragraph{多数 volume での累積コスト}
 volume あたりの detector が軽量でも、ストレージ装置内で多数の volume/namespace に
-同時適用すると、入力 buffer、normalization state、threshold、score history、
-inference slot が累積する。単一 volume の 500 KB fit だけでは device-fit claim として
-不十分であり、想定 volume 数での aggregate memory と CPU scheduling を測る必要がある。
+同時適用すると、入力統計、normalization state、threshold、score history、
+inference slot が累積する。単一 volume の 500 KB detector-data fit だけでは
+device-fit claim として不十分であり、想定 volume 数での aggregate memory と
+CPU scheduling を測る必要がある。共有 runtime/library は 500 KB 予算から除外するが、
+総メモリ式では共有項として明示する。

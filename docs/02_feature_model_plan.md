@@ -107,8 +107,10 @@ All normalization parameters must be learned from the training split only.
 ## CNN-GRU AutoEncoder
 
 The original architecture is now a constrained candidate, not a fixed decision.
-The 500 KB model-memory budget, excluding the MNN runtime, and MNN operator
-support decide whether CNN-GRU survives.
+The conservative rounded 500 KB per-volume detector-data budget covers model
+weights plus retained input statistics/state and excludes shared MNN
+runtime/library memory. That budget, separate transient MNN scratch checks with
+scheduled slot counts, and MNN operator support decide whether CNN-GRU survives.
 
 Encoder:
 
@@ -194,7 +196,10 @@ claim deployability until:
 - the selected model is converted to MNN,
 - fixed-shape 10-second statistic tensors are accepted by the MNN model,
 - MNN inference scores match offline-framework scores within a defined tolerance,
-- model-owned memory stays under 500 KB on the target or a faithful harness.
+- model weights plus retained input statistics/state stay under 500 KB per
+  volume on the target or a faithful harness,
+- transient inference scratch per slot and CPU scheduling fit the target
+  many-volume deployment.
 
 ## Explainability Output
 

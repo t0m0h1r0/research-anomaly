@@ -3,14 +3,20 @@
 status: DRAFT
 updated: 2026-05-04
 
-This memo proposes concrete AutoEncoder candidates for the 500 KB model-memory
-budget. The current deployable feature contract is scalar-only: it does not
+This memo proposes concrete AutoEncoder candidates for the 500 KB per-volume
+detector-data budget. The budget is derived from the planning assumption of
+roughly 1 GB available across roughly 2000 protected volumes, and it covers
+model weight information plus the input statistics/state needed to score one
+volume. If the available memory is stated as 1 GiB, the exact quotient is about
+524 KiB per volume, so 500 KB is a conservative rounded engineering target. The
+current deployable feature contract is scalar-only: it does not
 assume LBA or transfer-length histograms unless a target device explicitly
 exposes cheap per-window bucket counters.
 
 The estimates below are planning estimates, not MNN measurements. Final claims
-still require converted MNN models, identical input parity tests, and peak
-model-owned memory measurement.
+still require converted MNN models, identical input parity tests, per-volume
+detector-data measurement, and separate transient inference scratch
+measurement.
 
 ## Sizing Assumptions
 
@@ -36,10 +42,12 @@ FP16 bytes ~= parameter_count * 2
 Int8 bytes ~= parameter_count * 1 + quantization metadata
 ```
 
-These numbers exclude MNN runtime memory. They also exclude MNN allocator
-overhead, operator workspace, input/output buffers, normalization constants,
-and score history. The research target should keep weights well below 240 KB
-so tensor/workspace memory has room inside the 500 KB model-owned peak budget.
+These numbers exclude shared MNN runtime/library memory. They also exclude
+transient activation tensors, operator workspace, output tensors, reusable
+inference slots, normalization constants, input-statistics buffers, and score
+history. The research target should keep weights comfortably below 500 KB so
+retained input statistics and per-volume calibration state fit in the same
+per-volume detector-data budget.
 
 ## Common Model Contract
 
@@ -121,8 +129,9 @@ The following estimates use `D = 12` and `N = 12`.
 | AE-5 | Tiny CNN-GRU AE | temporal Conv1D 16 channels, GRU H=24, per-frame dense decoder | 7,516 | 30 KB | 15 KB | 8 KB | constrained CNN-GRU hypothesis test |
 
 All candidates are far below the 500 KB budget in weights. The actual decision
-therefore depends on MNN operator workspace, tensor buffers, score parity, and
-low-false-positive detection quality.
+therefore depends on retained input-statistics state, score parity,
+low-false-positive detection quality, and the separate MNN transient
+workspace/scheduling check.
 
 ## AE-0: Linear Tiny AE
 
@@ -276,8 +285,9 @@ Constraints:
 - output reconstructs the same `[1, N, 12]` scalar sequence.
 
 This stays within roughly 30 KB FP32 weights. The 500 KB question must still be
-answered by MNN conversion because operator workspace and tensor buffers can
-dominate such a small model.
+answered by measuring the converted weight representation together with the
+retained input statistics/state for one volume. Operator workspace and tensor
+buffers remain a separate transient device-fit measurement.
 
 ## Evaluation Order
 
@@ -296,16 +306,16 @@ rather than promoting a more complex model.
 
 ## Sequence Length Sensitivity
 
-`N` controls context length and memory pressure:
+`N` controls context length and detector-data pressure:
 
 | N | Context | Flattened L | Expected memory effect | Detection trade-off |
 | ---: | ---: | ---: | --- | --- |
-| 6 | 60 s | 72 | lower activations and dense weights | faster, less context |
+| 6 | 60 s | 72 | smaller retained sequence statistics and lower dense weights | faster, less context |
 | 12 | 120 s | 144 | initial reference point | balanced |
-| 24 | 240 s | 288 | roughly double sequence buffers | slower, more context |
+| 24 | 240 s | 288 | roughly double retained sequence statistics | slower, more context |
 
 For GRU and Conv1D models, weights are mostly independent of `N`, but activation
-and input/output buffers grow with `N`.
+scratch and retained input statistics grow with `N`.
 
 ## Output And Scoring Policy
 

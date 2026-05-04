@@ -8,7 +8,8 @@ detector with these constraints:
 - block storage observation boundary: SCSI/NVMe-like I/O metadata;
 - final input: 10-second statistics, not raw event streams;
 - final implementation: Alibaba MNN on CPU;
-- model-side memory budget: 500 KB, excluding the MNN runtime;
+- per-volume detector-data budget: 500 KB for model weights plus retained input
+  statistics/state, excluding shared MNN runtime/library memory;
 - expensive features such as per-block Shannon entropy are not assumed unless
   existing hardware or firmware telemetry already exposes them;
 - target model family: AutoEncoder-based anomaly detection, compared against
@@ -78,8 +79,8 @@ generalization tests.
   generalizability study explicitly discusses 1-60 s window trade-offs. The
   project should still measure bytes overwritten before alert.
 - The novelty claim should be narrow: "storage-device feasible, MNN-convertible,
-  500 KB model-memory AE over cheap 10-second block-I/O statistics." This is
-  distinct from endpoint DL detectors and from storage-level supervised
+  500 KB per-volume detector-data AE over cheap 10-second block-I/O statistics."
+  This is distinct from endpoint DL detectors and from storage-level supervised
   classifiers.
 
 ## Research Line 1: Storage-Level And Block-I/O Detection
@@ -146,7 +147,8 @@ Implication:
 - SSD-Insider should be a primary baseline and discussion point.
 - Our model should include overwrite/write-after-read/sequentiality-like cheap
   features where feasible.
-- If a tiny AE cannot beat or complement a decision tree under 500 KB, the AE
+- If a tiny AE cannot beat or complement a decision tree under the 500 KB
+  detector-data budget, the AE
   hypothesis weakens.
 
 Source:
@@ -561,8 +563,8 @@ lost for crypto ransomware, and around 9.8 MB memory.
 Relevance:
 
 - Shows kernel event sequences are highly informative.
-- Memory footprint is much larger than our 500 KB model budget and the signal is
-  not block-device-local.
+- Memory footprint is much larger than our 500 KB per-volume detector-data
+  budget and the signal is not block-device-local.
 - Good comparison point for "what host-level context buys you."
 
 Source:
@@ -642,7 +644,8 @@ decoder issues with multiresolution ensemble decoding.
 Relevance:
 
 - Supports GRU-only AE as a candidate.
-- A full LSTM/VAE/GAN model is likely too heavy for 500 KB model memory.
+- A full LSTM/VAE/GAN model is likely too heavy for 500 KB per-volume
+  detector-data memory.
 - Threshold selection and reconstruction error calibration must be treated
   carefully.
 
@@ -681,8 +684,8 @@ detection.
 Relevance:
 
 - AE as a ransomware detector is not new in general.
-- AE over cheap block-I/O statistics under a 500 KB model-memory budget appears
-  much less explored.
+- AE over cheap block-I/O statistics under a 500 KB per-volume detector-data
+  budget appears much less explored.
 - This supports a scoped novelty claim rather than a broad "AE detects
   ransomware" claim.
 
@@ -732,26 +735,27 @@ Representative sources:
 - process, API, DLL, Mutex, registry, or kernel event sequences;
 - memory-access patterns from hypervisor SLAT/EPT.
 
-### Compromise Feature Set For 10-Second Frames
+### Production Feature Set For 10-Second Frames
 
-Use this as the first production-shaped frame:
+Use the scalar-only `D = 12` contract as the first production-shaped frame:
 
 ```text
-read_count
-write_count
-read_bytes_log
-write_bytes_log
-read_lba_hist[8]
-write_lba_hist[8]
-read_len_hist[8]
-write_len_hist[8]
-seq_read_count
-seq_write_count
-optional_reducibility_or_compression_signal
+total_count
+total_bytes
+write_ratio
+mean_lba
+mean_length
+delta_mean_lba
+delta_mean_length
+optional_compression_or_entropy_like_signal
+padding[4]
 ```
 
-This yields 38-39 scalar values per 10 seconds. With 12 frames, the MLP input is
-roughly 456-468 scalars before optional channels.
+This yields 12 scalar slots per 10-second frame. Four slots are padding and are
+zero-weighted in loss and score. With 12 frames, the flattened MLP input is
+144 scalars. LBA or transfer-length histograms are no longer part of the first
+embedded contract; they are a separate feature profile only if a target device
+already exposes cheap bucket counters.
 
 ## Evaluation Lessons
 
@@ -767,7 +771,8 @@ Do not accept a result unless it answers:
   MySQL, PostgreSQL, and VM image workloads?
 - How many bytes or LBA buckets are overwritten before alert?
 - Does the converted MNN model preserve anomaly-score ordering?
-- Does model-owned memory stay under 500 KB?
+- Do model weights plus retained input statistics/state stay under the 500 KB
+  per-volume detector-data budget?
 
 ## Gaps And Opportunity
 
