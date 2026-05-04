@@ -450,7 +450,7 @@ buffer、score history は別途測定する必要がある。
     AE-3a & GRU seq2seq, hidden 24 & 9,352 & 37 KB & first recurrent AE \\
     AE-3b & GRU seq2seq, hidden 32 & 14,760 & 58 KB & stronger recurrent AE \\
     AE-4 & temporal Conv1D AE, 24 channels & 9,744 & 38 KB & MNN-friendly temporal AE \\
-    AE-5 & per-frame CNN + GRU hidden 24 & 9k--30k & 35--117 KB & original-hypothesis test \\
+    AE-5 & grouped bucket CNN + GRU hidden 24 & 12,792 & 50 KB & constrained CNN-GRU test \\
     \bottomrule
   \end{tabular}
   }
@@ -524,14 +524,30 @@ default である \texttt{reset\_after=True} を仮定する。
   AE-4 & \texttt{Conv1D(24, 3, padding="same", activation="relu")} & \texttt{(None, 12, 24)} & 1,752 \\
   AE-4 & \texttt{Conv1D(40, 3, padding="same", activation="linear")} & \texttt{(None, 12, 40)} & 2,920 \\
   \multicolumn{3}{r}{AE-4 total} & 9,744 \\
+  \midrule
+  AE-5 & \texttt{Input(shape=(12, 40))} & \texttt{(None, 12, 40)} & 0 \\
+  AE-5 & \texttt{Reshape((12, 5, 8, 1))} & \texttt{(None, 12, 5, 8, 1)} & 0 \\
+  AE-5 & \texttt{TD(TD(Conv1D(8, 3, padding="same", activation="relu")))} & \texttt{(None, 12, 5, 8, 8)} & 32 \\
+  AE-5 & \texttt{TD(Flatten())} & \texttt{(None, 12, 320)} & 0 \\
+  AE-5 & \texttt{TD(Dense(16, activation="relu"))} & \texttt{(None, 12, 16)} & 5,136 \\
+  AE-5 & \texttt{GRU(24, return\_sequences=False)} & \texttt{(None, 24)} & 3,024 \\
+  AE-5 & \texttt{RepeatVector(12)} & \texttt{(None, 12, 24)} & 0 \\
+  AE-5 & \texttt{GRU(24, return\_sequences=True)} & \texttt{(None, 12, 24)} & 3,600 \\
+  AE-5 & \texttt{TD(Dense(40, activation="linear"))} & \texttt{(None, 12, 40)} & 1,000 \\
+  \multicolumn{3}{r}{AE-5 total} & 12,792 \\
 \end{longtable}
 \setlength{\tabcolsep}{6pt}
 \normalsize
 
-AE-5 は feature-family bucket map の reshape と decoder head が未凍結である。
-実装候補に昇格する場合は、表 \ref{tab:model-details} と同じ
-TensorFlow/Keras 形式 summary を追加し、shape と parameter count を固定してから
-比較する。
+AE-5 は 500 KB 制約内で CNN-GRU 仮説を試す最小構成として、以下の制約を置く。
+feature layout は $D=40=5 \times 8$ に固定し、4 つの histogram family と
+1 つの scalar/padding family を同じ bucket 幅に整列する。CNN は
+各 family の 8 bucket 方向に共有 Conv1D を 1 層だけ適用し、filters は 8、
+kernel は 3 とする。GRU は encoder/decoder とも 1 層、hidden size 24 に固定し、
+decoder は \texttt{RepeatVector(12)} から系列を再生成する。Conv2D、
+transposed convolution、多層 GRU、attention、モデル内 thresholding は使わない。
+この条件では weight は約 50 KB に収まるが、MNN operator workspace と tensor
+buffer を含む 500 KB 達成は変換後の実測で判定する。
 
 すべての候補は、入力と同じ $[1,N,D]$ の正規化統計列を線形出力として再構成する。
 alert 判定、しきい値処理、channel-wise error 集計は MNN graph の外で実行する。

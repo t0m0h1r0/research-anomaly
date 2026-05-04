@@ -121,11 +121,12 @@ The following estimates use `D = 40` and `N = 12`.
 | AE-3a | GRU seq2seq AE, H=24 | encoder GRU, decoder GRU, per-frame dense head | 9,352 | 37 KB | 18 KB | 9 KB | first temporal AE candidate |
 | AE-3b | GRU seq2seq AE, H=32 | encoder GRU, decoder GRU, per-frame dense head | 14,760 | 58 KB | 29 KB | 14 KB | stronger temporal AE candidate |
 | AE-4 | Temporal convolution AE | Conv1D temporal encoder/decoder, 24 channels, 8-channel bottleneck | 9,744 | 38 KB | 19 KB | 10 KB | predictable MNN-friendly temporal model |
-| AE-5 | Tiny CNN-GRU AE | per-frame feature CNN, GRU H=24, per-frame dense decoder | 9,000-30,000 | 35-117 KB | 18-59 KB | 9-29 KB | closest to original CNN-GRU hypothesis |
+| AE-5 | Tiny CNN-GRU AE | grouped bucket CNN, GRU H=24, per-frame dense decoder | 12,792 | 50 KB | 25 KB | 13 KB | closest constrained CNN-GRU hypothesis |
 | AE-6 | Split hist/scalar AE | separate histogram and scalar heads with shared temporal trunk | 20,000-50,000 | 78-195 KB | 39-98 KB | 20-49 KB | explainability and loss balancing |
 
-`AE-5` and `AE-6` are ranges because their exact parameter count depends on the
-feature-family reshape and decoder-head choice.
+`AE-5` is now fixed to the constrained first CNN-GRU variant below. `AE-6`
+remains a range because its exact parameter count depends on the split-head
+choice.
 
 ## AE-0: Linear Tiny AE
 
@@ -412,15 +413,31 @@ Layer flow for one concrete variant:
 
 ```text
 Input X                                  [1, 12, 40]
-Reshape per frame                        [1, 12, 5, 8]
-TimeDistributed Conv1D over 8 buckets     [1, 12, 5, 8]
-Flatten per-frame feature map             [1, 12, 40]
+Reshape per frame                        [1, 12, 5, 8, 1]
+Shared Conv1D over each 8-bucket family   [1, 12, 5, 8, 8]
+Flatten per-frame feature map             [1, 12, 320]
 TimeDistributed Dense 16 + ReLU           [1, 12, 16]
 GRU encoder hidden 24                     [1, 24]
 Repeat context N times                    [1, 12, 24]
 GRU decoder hidden 24                     [1, 12, 24]
 TimeDistributed Dense 40 linear           [1, 12, 40]
 ```
+
+Parameter detail under TensorFlow/Keras-style counting:
+
+| Layer | Params |
+| --- | ---: |
+| shared Conv1D K=3, 1 -> 8 | 32 |
+| TimeDistributed Dense 320 -> 16 | 5,136 |
+| GRU encoder, input 16, hidden 24 | 3,024 |
+| GRU decoder, input 24, hidden 24 | 3,600 |
+| TimeDistributed Dense 24 -> 40 | 1,000 |
+| total | 12,792 |
+
+This is about 50 KB of FP32 weights, 25 KB of FP16 weights, or 13 KB of Int8
+weights before converter metadata. It is therefore a plausible 500 KB candidate
+for weights, but MNN operator workspace, tensor buffers, allocator overhead, and
+score history still require converted-model measurement.
 
 Possible feature-family reshape:
 
@@ -454,11 +471,18 @@ Risks:
 - The decoder may become awkward if histograms and scalars need different
   output treatment.
 - It adds more operator types than AE-2/AE-4.
+- GRU and nested TimeDistributed/Conv1D export may create less predictable MNN
+  workspace than AE-2 or AE-4.
 
 Recommendation:
 
 - Do not make this the first implementation.
 - Run it after AE-2, AE-3, and AE-4 define the achievable quality/memory curve.
+- Keep the first AE-5 variant constrained to one shared Conv1D layer, frame
+  embedding 16, one encoder GRU, one decoder GRU, hidden size 24, and linear
+  reconstruction head. Wider CNN filters, multi-layer GRU, Conv2D, transposed
+  convolution, and attention should be rejected unless the MNN memory harness
+  shows large headroom below 500 KB.
 
 ## AE-6: Split Histogram/Scalar AE
 
