@@ -8,11 +8,11 @@
 |-------|-------|
 | phase | REVIEW |
 | branch | codex/researcharchitect-500kb-memory |
-| current_objective | Complete strict AE candidate review with no MAJOR-or-higher findings in narrative, notation, logic, implementation, or smoke outputs |
+| current_objective | Refine AE-5 into pointwise Conv1D feature mixing, pre-GRU Dense frame code, GRU context, and post-GRU Dense bottleneck |
 | active_brief | `docs/interface/ResearchBrief.md` |
 | source_artifact | none registered yet |
-| next_action | Run final stale searches, tests, and paper build; commit; do not merge main until explicitly instructed |
-| updated_at_utc | 2026-05-04T09:57:56Z |
+| next_action | Verify updated AE-5 parameter/story consistency, commit; do not merge main until explicitly instructed |
+| updated_at_utc | 2026-05-04T11:30:52Z |
 
 ## §CHECKLIST
 
@@ -41,6 +41,7 @@
 | CHK-RAD-021 | DONE | M/T/A | `docs/memo/500kb_strict_review_rounds.md`, `docs/04_embedded_constraints.md`, `docs/05_literature_survey.md`, `paper/sections/07_evaluation_plan.tex`, `paper/sections/08_mnn_implementation_plan.tex` | completed strict review rounds; fixed MAJOR issues in aggregate scratch accounting, stale histogram feature contract, and 500 KB unit convention | 2026-05-04 |
 | CHK-RAD-022 | DONE | T/R/A | `docs/memo/ae_candidate_operator_role_review.md`, `docs/06_memory_aware_ae_candidates.md`, `docs/07_ae_implementation_spec.md`, `paper/sections/06_autoencoder_candidates.tex`, `src/rad_ae/torch_models.py` | resolved AE candidate role ambiguity: Dense performs compression, GRU provides temporal context, and Conv1D expands/extracts local temporal features | 2026-05-04 |
 | CHK-RAD-023 | DONE | T/R/A | `src/rad_ae/models.py`, `src/rad_ae/torch_models.py`, `analysis/ae_public_eval/`, `docs/memo/ae_candidate_operator_role_review.md` | completed strict AE candidate re-review; aligned NumPy AE-0, added AE-2/AE-4 PyTorch paths, corrected AE-2 parameter arithmetic, and regenerated smoke outputs | 2026-05-04 |
+| CHK-RAD-024 | DONE | T/R/A | `docs/06_memory_aware_ae_candidates.md`, `docs/07_ae_implementation_spec.md`, `paper/sections/06_autoencoder_candidates.tex`, `src/rad_ae/torch_models.py` | refined AE-5 to use `K=1` Conv1D for cross-feature mixing, pre-GRU TD Dense frame denoising, GRU context, and post-GRU Dense bottleneck selection | 2026-05-04 |
 
 ## §ASSUMPTIONS
 
@@ -52,7 +53,7 @@
 | ASM-RAD-004 | OPEN | MNN conversion and 500 KB detector-data fit are deployment-readiness claims, not assumptions. | R/E |
 | ASM-RAD-005 | OPEN | Existing T/R/E/A domains can route model design, implementation, evaluation, and writing without generic kernel changes. | Q |
 | ASM-RAD-006 | OPEN | The 500 KB budget is a per-volume detector-data target derived from roughly 1 GB over roughly 2000 volumes; it covers model weights plus input statistics/state and excludes shared runtime/library memory. | M/R/E |
-| ASM-RAD-007 | OPEN | AE candidates should keep operator roles explicit: Dense compresses, GRU contextualizes, and Conv1D expands/extracts local temporal features. | T/R/A |
+| ASM-RAD-007 | OPEN | AE candidates should keep operator roles explicit: Dense compresses or denoises, GRU contextualizes, AE-4 Conv1D extracts local temporal features, and AE-5 `K=1` Conv1D mixes heterogeneous per-frame features. | T/R/A |
 
 ## §LESSONS
 

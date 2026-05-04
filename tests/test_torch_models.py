@@ -55,7 +55,7 @@ class TorchModelShapeTest(unittest.TestCase):
         y = model(x)
 
         self.assertEqual(tuple(y.shape), (2, 12, 12))
-        self.assertEqual(count_torch_parameters(model), 8804)
+        self.assertEqual(count_torch_parameters(model), 8052)
 
 
 if __name__ == "__main__":

@@ -122,7 +122,7 @@ AE2 = AEConfig(model_id="ae2_two_level_dense", latent_dim=8, hidden_dim=24, fram
 AE3A = AEConfig(model_id="ae3_gru", hidden_dim=24)
 AE3B = AEConfig(model_id="ae3_gru", hidden_dim=32)
 AE4 = AEConfig(model_id="ae4_tcn", conv_channels=24, frame_latent_dim=8)
-AE5 = AEConfig(model_id="ae5_cnn_gru", conv_channels=24, hidden_dim=24, latent_dim=8)
+AE5 = AEConfig(model_id="ae5_cnn_gru", conv_channels=24, frame_embed_dim=16, hidden_dim=24, latent_dim=8)
 ```
 
 ## Shared Helpers
@@ -344,23 +344,29 @@ class AE4TemporalConv(nn.Module):
 ## AE-5: Tiny CNN-GRU AE
 
 Use this to test the original CNN-GRU hypothesis after simpler candidates. With
-scalar-only inputs, the CNN operates over time. It must not reshape features into
-fake histogram buckets.
+scalar-only inputs, the Conv1D is applied to the fixed `[N,D]` sequence as a
+pointwise channel mixer. It must not reshape features into fake histogram
+buckets.
+
+For AE-5, `kernel_size=1` is deliberate: the convolution mixes heterogeneous
+feature channels within each frame before the GRU sees a denoised frame code.
 
 Architecture for `N=12`, `D=12`, `H=24`:
 
 ```text
 [B,12,12]
-Conv1D over time, 12 -> 24 channels          [B,12,24]
+Pointwise Conv1D K=1, 12 -> 24 channels     [B,12,24]
+TimeDistributed Dense 24 -> 16              [B,12,16]
 GRU temporal context H                       [B,12,H]
 TimeDistributed Dense H -> z -> H            [B,12,H]
 GRU decoder                                  [B,12,H]
 Dense H -> 12 -> linear                      [B,12,12]
 ```
 
-The Conv1D expands scalar inputs into local temporal feature views, and GRU
-attaches temporal context to each frame. The Dense bottleneck is the only
-intentional information-reducing operation.
+The pointwise Conv1D mixes heterogeneous scalar feature channels within each
+frame. The pre-GRU TimeDistributed Dense layer reduces noisy mixtures into a
+macro frame code. GRU attaches temporal context to that code, and the post-GRU
+Dense bottleneck selects the most important contextual components.
 
 PyTorch skeleton:
 
@@ -371,14 +377,16 @@ class AE5TinyCNNGRU(nn.Module):
         self.cfg = cfg
         c = cfg.conv_channels
         h = cfg.hidden_dim
-        k = cfg.kernel_size
-        p = k // 2
         self.temporal_cnn = nn.Sequential(
-            nn.Conv1d(cfg.d_features, c, kernel_size=k, padding=p),
+            nn.Conv1d(cfg.d_features, c, kernel_size=1),
+            make_activation(cfg.activation),
+        )
+        self.frame_code = nn.Sequential(
+            nn.Linear(c, cfg.frame_embed_dim),
             make_activation(cfg.activation),
         )
         self.encoder = nn.GRU(
-            input_size=c,
+            input_size=cfg.frame_embed_dim,
             hidden_size=h,
             num_layers=1,
             batch_first=True,
@@ -386,6 +394,8 @@ class AE5TinyCNNGRU(nn.Module):
         self.bottleneck = nn.Sequential(
             nn.Linear(h, cfg.latent_dim),
             make_activation(cfg.activation),
+        )
+        self.expansion = nn.Sequential(
             nn.Linear(cfg.latent_dim, h),
             make_activation(cfg.activation),
         )
@@ -400,19 +410,23 @@ class AE5TinyCNNGRU(nn.Module):
     def forward(self, x: Tensor) -> Tensor:
         assert_3d_input(x, self.cfg.n_frames, self.cfg.d_features)
         y = self.temporal_cnn(x.transpose(1, 2)).transpose(1, 2)
+        y = self.frame_code(y)
         context, _ = self.encoder(y)
         z = self.bottleneck(context)
-        dec, _ = self.decoder(z)
+        seed = self.expansion(z)
+        dec, _ = self.decoder(seed)
         return self.output(dec)
 ```
 
 Implementation notes:
 
 - This model assumes `D=12` and scalar-only feature slices.
-- The Conv1D extracts local changes across neighboring 10-second frames by
-  expanding them into multiple channels.
+- The `K=1` Conv1D extracts cross-feature interactions inside each 10-second
+  frame; it does not look across neighboring frames.
+- The pre-GRU Dense layer is the frame denoising / macro-code step.
 - The GRU layers model temporal context; they do not collapse the sequence into
   the latent representation.
+- The post-GRU Dense bottleneck is the integrated contextual selection step.
 - Use only after AE-2, AE-3, and AE-4 establish the quality/memory curve.
 
 ## Builder Function

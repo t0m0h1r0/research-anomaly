@@ -161,13 +161,19 @@ class _TinyCnnGruAutoEncoder:
             def __init__(self) -> None:
                 super().__init__()
                 self.temporal_cnn = nn.Sequential(
-                    nn.Conv1d(config.d_features, config.conv_channels, kernel_size=3, padding=1),
+                    nn.Conv1d(config.d_features, config.conv_channels, kernel_size=1),
                     nn.ReLU(),
                 )
-                self.encoder = nn.GRU(config.conv_channels, config.hidden_dim, batch_first=True)
+                self.frame_code = nn.Sequential(
+                    nn.Linear(config.conv_channels, config.frame_embed_dim),
+                    nn.ReLU(),
+                )
+                self.encoder = nn.GRU(config.frame_embed_dim, config.hidden_dim, batch_first=True)
                 self.bottleneck = nn.Sequential(
                     nn.Linear(config.hidden_dim, config.latent_dim),
                     nn.ReLU(),
+                )
+                self.expansion = nn.Sequential(
                     nn.Linear(config.latent_dim, config.hidden_dim),
                     nn.ReLU(),
                 )
@@ -177,8 +183,10 @@ class _TinyCnnGruAutoEncoder:
             def forward(self, x):
                 batch = x.shape[0]
                 embedded = self.temporal_cnn(x.transpose(1, 2)).transpose(1, 2)
-                context, _ = self.encoder(embedded)
-                seed = self.bottleneck(context)
+                frame_code = self.frame_code(embedded)
+                context, _ = self.encoder(frame_code)
+                z = self.bottleneck(context)
+                seed = self.expansion(z)
                 decoded, _ = self.decoder(seed)
                 out = self.head(decoded)
                 return out.reshape(batch, config.sequence_length, config.d_features)
