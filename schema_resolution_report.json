@@ -1,0 +1,40 @@
+{
+  "generated_at_utc": "2026-05-04T04:21:54Z",
+  "status": "PASS",
+  "deployment": {
+    "mode": "manual_bootstrap_from_kernel_files",
+    "project": "storage-embedded ransomware anomaly detection",
+    "repository": "git@github.com:t0m0h1r0/research-anomaly.git"
+  },
+  "kernel_files": [
+    "prompts/meta/kernel-antipatterns.md",
+    "prompts/meta/kernel-constitution.md",
+    "prompts/meta/kernel-deploy.md",
+    "prompts/meta/kernel-domains.md",
+    "prompts/meta/kernel-ops.md",
+    "prompts/meta/kernel-project.md",
+    "prompts/meta/kernel-roles.md",
+    "prompts/meta/kernel-workflow.md"
+  ],
+  "checks": {
+    "meta_section_open_count": 13,
+    "meta_section_close_count": 13,
+    "tag_balance": "PASS",
+    "duplicate_ids": [],
+    "dangling_refs": [],
+    "project_rules_count": 6,
+    "codex_agent_file_count": 23,
+    "claude_agent_file_count": 23,
+    "skill_capsule_count": 5,
+    "handoff_schema_present": true,
+    "source_integrity": {
+      "status": "PASS",
+      "registered_source_files": [],
+      "note": "No source PDF or raw dataset file is registered yet; deployment created source/data directories without modifying research sources."
+    }
+  },
+  "notes": [
+    "Project-specific content is isolated in prompts/meta/kernel-project.md and generated runtime docs.",
+    "Legacy project terms from the source prompt bundle were not found in deployed prompts/docs after retargeting."
+  ]
+}

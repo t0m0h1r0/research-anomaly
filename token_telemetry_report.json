@@ -1,0 +1,27 @@
+{
+  "generated_at_utc": "2026-05-04T04:21:54Z",
+  "status": "PASS",
+  "method": "wc -w word counts as a lightweight prompt-size proxy",
+  "counts": {
+    "codex_agent_files": {
+      "files": 23,
+      "words": 2450
+    },
+    "claude_agent_files": {
+      "files": 23,
+      "words": 7061
+    },
+    "kernel_meta_files": {
+      "files": 8,
+      "words": 17180
+    },
+    "skills_and_runtime_docs": {
+      "words": 3709
+    }
+  },
+  "budget_notes": [
+    "Generated agent prompts are compact role prompts with operation details kept in kernel files or skill capsules.",
+    "Codex prompts are intentionally smaller than Claude prompts for executable clarity.",
+    "Runtime docs summarize project rules and active state; full project-specific authority remains in prompts/meta/kernel-project.md."
+  ]
+}
