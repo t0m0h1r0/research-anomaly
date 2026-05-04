@@ -151,6 +151,9 @@ Memory-first alternatives to evaluate:
 
 Concrete memory-aware model sketches and rough parameter estimates are recorded
 in [Memory-Aware AutoEncoder Candidate Models](06_memory_aware_ae_candidates.md).
+Code-ready tensor contracts, PyTorch skeletons, scoring functions, and ONNX/MNN
+export constraints are recorded in
+[Code-Ready AutoEncoder Implementation Spec](07_ae_implementation_spec.md).
 
 The final candidate should prefer fixed input shapes and MNN-supported
 operators. Quantized Int8 weights should be tested early; however, the anomaly

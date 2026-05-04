@@ -561,6 +561,14 @@ ONNX などを使ってよいが、論文で実装可能性を主張するには
         architecture を縮小して再評価する。
 \end{enumerate}
 
+実装時の model interface は全候補で共通にする。PyTorch 側の `forward` は
+正規化済み 10 秒統計列 $X \in \mathbb{R}^{B \times N \times D}$ を受け取り、
+同じ shape の $\hat{X}$ だけを返す。anomaly score、しきい値判定、
+channel-wise error 集計は MNN graph の外で実装する。feature slice は固定順序とし、
+read/write counter、read/write LBA histogram、read/write length histogram、
+sequentiality、optional compression/padding を同じ index に保つ。ONNX/MNN export は
+batch size 1、固定 $N$、固定 $D$ とし、動的軸を使わない。
+
 この手順では、MNN ランタイムのコードサイズや共通 heap は除外する。
 一方で、モデルファイルが flash 上に常駐し RAM に展開されない構成か、
 ロード時に RAM コピーされる構成かは target device に依存するため、

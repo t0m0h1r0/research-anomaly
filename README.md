@@ -30,6 +30,9 @@ missing, and what evidence would be strong enough to continue.
   detection.
 - [Memory-Aware AE Candidates](docs/06_memory_aware_ae_candidates.md): concrete
   small AutoEncoder examples and rough memory estimates.
+- [AE Implementation Spec](docs/07_ae_implementation_spec.md): code-ready
+  tensor contracts, feature slices, PyTorch skeletons, scoring, and ONNX export
+  constraints.
 
 ## Core Assumptions
 
