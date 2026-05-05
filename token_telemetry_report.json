@@ -1,33 +1,33 @@
 {
-  "generated_at_utc": "2026-05-05T08:07:00Z",
+  "generated_at_utc": "2026-05-05T10:50:00Z",
   "status": "PASS",
   "method": "wc -w word counts as a lightweight prompt-size proxy",
   "upstream": {
     "remote": "git@github.com:t0m0h1r0/research-agent.git",
-    "revision": "4459e3e",
+    "revision": "8abd3a7",
     "project_profile_preserved": true
   },
   "counts": {
     "codex_agent_files": {
       "files": 24,
-      "words": 2790
+      "words": 2809
     },
     "claude_agent_files": {
       "files": 24,
-      "words": 7855
+      "words": 7883
     },
     "kernel_meta_files": {
       "files": 8,
-      "words": 18241
+      "words": 18974
     },
     "skills_and_runtime_docs": {
-      "words": 4521
+      "words": 6137
     }
   },
   "budget_notes": [
     "Generated agent prompts are compact role prompts with operation details kept in kernel files or skill capsules.",
     "Codex prompts are intentionally smaller than Claude prompts for executable clarity.",
     "Runtime docs summarize project rules and active state; full project-specific authority remains in prompts/meta/kernel-project.md.",
-    "PresentationWriter and SKILL-PRESENTATION-DECK are present after upstream sync."
+    "Upstream revision 8abd3a7 is metaprompt-only; generated agents, skill capsules, and helper scripts are project-local outputs."
   ]
 }

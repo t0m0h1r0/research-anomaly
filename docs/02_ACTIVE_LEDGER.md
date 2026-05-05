@@ -6,13 +6,13 @@
 
 | Field | Value |
 |-------|-------|
-| phase | PROMPT_CONFIG |
-| branch | codex/external-research-agent-prompts |
-| current_objective | Adopt upstream research-agent prompt sync while preserving the project-specific profile |
+| phase | PROMPT_DEPLOYED |
+| branch | codex/researcharchitect-prompt-refresh |
+| current_objective | Adopt upstream research-agent metaprompt-only sync and redeploy project-local agents/helpers |
 | active_brief | `docs/interface/ResearchBrief.md` |
-| source_artifact | `git@github.com:t0m0h1r0/research-agent.git` @ `4459e3e` |
-| next_action | Run prompt sync/audit verification, then commit the upstream-sync adaptation |
-| updated_at_utc | 2026-05-05T08:07:00Z |
+| source_artifact | `git@github.com:t0m0h1r0/research-agent.git` @ `8abd3a7` |
+| next_action | Continue `ASM-RAD-001` planning unless the user asks for another prompt-system follow-up |
+| updated_at_utc | 2026-05-05T10:50:00Z |
 
 ## §CHECKLIST
 
@@ -48,6 +48,7 @@
 | CHK-UPPROMPT-001 | DONE | P | `prompts/upstream.toml`, `scripts/sync_research_agent.py`, `prompts/meta/`, `prompts/agents-*`, `prompts/skills/` | synced shared research-agent kernel revision `4459e3e`, added local refresh wrapper, and preserved `prompts/meta/kernel-project.md` by hash | 2026-05-05 |
 | CHK-RAD-026 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `docs/memo/researcharchitect_sponsor_deck_review.md` | created sponsor-facing five-slide research introduction deck; resolved review after 3 rounds with no MAJOR-or-higher findings | 2026-05-05 |
 | CHK-RAD-027 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `docs/memo/researcharchitect_sponsor_deck_revision_review.md` | revised sponsor deck to foreground AE-01..05 overview and evaluation purpose while avoiding an overt support request; addressed all review findings with no MAJOR-or-higher findings after 1 round | 2026-05-05 |
+| CHK-UPPROMPT-002 | DONE | P | `prompts/upstream.toml`, `prompts/upstream-managed.json`, `prompts/meta/`, `prompts/agents-*`, `prompts/skills/`, `scripts/` | synced upstream metaprompt-only revision `8abd3a7`, preserved `kernel-project.md`, redeployed local agents/helpers, and passed prompt audit | 2026-05-05 |
 
 ## §ASSUMPTIONS
 
@@ -68,6 +69,7 @@
 | LES-RAD-001 | ACTIVE | Project retargeting should change `kernel-project.md` and generated runtime docs while keeping the generic kernel stable. | `prompts/meta/kernel-project.md` |
 | LES-RAD-002 | ACTIVE | Storage-ransomware anomaly detection needs explicit gates for observation boundary, leakage, thresholding, benign false positives, MNN parity, and memory fit. | `docs/03_PROJECT_RULES.md` |
 | LES-RAD-003 | ACTIVE | Shared prompt refreshes should come from upstream `research-agent`, with `kernel-project.md` treated as project-local and verified unchanged before accepting sync output. | `scripts/sync_research_agent.py` |
+| LES-RAD-004 | ACTIVE | Upstream now distributes metaprompts only; skills, helper scripts, templates, and agent prompts must be regenerated and audited inside each receiving project. | `prompts/upstream.toml` |
 
 ## §REPLAN_LOG
 
@@ -75,6 +77,7 @@
 |----|------|---------|----------|
 | RPL-RAD-001 | 2026-05-04 | User requested AI anomaly detection research agents and provided `research-anomaly` repository | Deploy generic research agents and retarget project rules to the existing storage-embedded ransomware anomaly-detection scaffold |
 | RPL-RAD-002 | 2026-05-05 | User moved latest meta/agent prompts to `git@github.com:t0m0h1r0/research-agent.git` | Import shared kernel/skills/generated agents from upstream while keeping this project's `kernel-project.md` local |
+| RPL-RAD-003 | 2026-05-05 | Upstream revision `8abd3a7` changed the distribution contract | Import only shared metaprompts from upstream, preserve the local project profile, and regenerate project-local agents, skills, docs, and helper scripts |
 
 ## §4 BRANCH_LOCK_REGISTRY
 
@@ -87,3 +90,4 @@
 | RAD-UPPROMPT | codex/external-research-agent-prompts | `/Users/tomohiro/Documents/research-anomaly` | adapt project to upstream research-agent prompt sync and preserve local project profile | ACTIVE | 2026-05-05 |
 | RAD-RA-SPONSORDECK | codex/researcharchitect-sponsor-deck | `/private/tmp/research-anomaly-sponsor-deck` | create and review sponsor-facing five-slide research introduction deck | ACTIVE | 2026-05-05 |
 | RAD-RA-SPONSORDECK-REV | codex/researcharchitect-sponsor-deck-revision | `/private/tmp/research-anomaly-sponsor-deck-revision` | revise sponsor deck around AE-01..05 candidate overview and review until no MAJOR-or-higher findings remain | ACTIVE | 2026-05-05 |
+| RAD-UPPROMPT2 | codex/researcharchitect-prompt-refresh | `/private/tmp/research-anomaly-prompt-refresh` | sync upstream metaprompt-only revision `8abd3a7` and redeploy local prompt artifacts | ACTIVE | 2026-05-05 |
