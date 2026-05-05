@@ -1,6 +1,6 @@
 # ResearchArchitect Sponsor Deck Review Log
 
-status: IN_PROGRESS
+status: RESOLVED
 created_at: 2026-05-05
 deck: `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`
 audience: non-specialist research sponsors
@@ -62,7 +62,7 @@ Generated deck:
 
 ```text
 paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx
-size: 36100 bytes
+size: 36169 bytes
 slide count: 5
 ```
 
@@ -88,4 +88,15 @@ Accepted layout warnings:
 
 ## Review Rounds
 
-Pending external/second-pass review.
+| Round | Highest severity | Findings | Response | Verdict |
+| --- | --- | --- | --- | --- |
+| 1 | MAJOR | Slide 3 looked like empirical bar-chart evidence; Slide 2 confused `N=12` and `D=12`; Slide 5 sounded like an MNN/500 KB/2000-volume delivery promise; Slide 1 phrasing was too strong; Slide 5 social value was late; small labels were hard to read. | Marked Slide 3 as schematic/non-performance; replaced Slide 2 notation with plain-language frame/context labels; reframed Slide 5 as feasibility audit where failure is also a conclusion; softened Slide 1; mapped Slide 5 phases to sponsor decisions; enlarged/simplified small labels. | MAJOR remained until re-review. |
+| 2 | MINOR | Slide 4 still used dense terms such as `manifest`, `score parity`, `scratch`, `run単位`, and `split可能性`; Slide 5 had awkward `split` wrapping; Slide 2 mixed English/Japanese tightly in `entropy`. | Rewrote Slide 4 evidence conditions in sponsor-readable Japanese; replaced `split` with `同じ分け方`; changed the Slide 2 tag to `重いエントロピー計算` and widened it. | No MAJOR-or-higher issue remained. |
+| 3 | NONE | Final re-check found no MAJOR-or-higher issue and no new actionable MINOR/NIT. | No further changes required. | RESOLVED before the 10-round limit. |
+
+Final review stop condition:
+
+```text
+No MAJOR-or-higher issue remains after 3 rounds.
+Round limit: 10
+```
