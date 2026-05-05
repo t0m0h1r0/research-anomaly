@@ -31,17 +31,19 @@ Also reads `prompts/agents-claude/_base.yaml` and `prompts/agents-codex/_base.ya
 --------------------------------------------------------
 # § ENVIRONMENT PROFILES
 
-| Env | Style | Runtime emphasis |
-|-----|-------|------------------|
-| Claude | explicit constraints, role narrative, traceability emphasis | evidence-rich handoff text and independent audit sessions |
-| Codex | executable clarity, patch-oriented work, compact invariants | worktree-first edits, `rg`-first context, `apply_patch` manual changes, verification before HAND-02, and coherent checkpoint commits |
+| Env | Style |
+|-----|-------|
+| Claude | explicit constraints, role narrative, traceability emphasis |
+| Codex | executable clarity, patch-oriented work, compact invariants, worktree-first commits, user-approved no-ff main merges |
 
 --------------------------------------------------------
 # § DEPLOYMENT WORKFLOW
 
 ## Stage 1 - Parse
 
-Read all kernel files and extract:
+Full bootstrap reads all kernel files and extracts the table below. WARM_BOOT
+reads only changed kernel files plus direct dependencies named by their
+`on_demand` references.
 
 | Source | Extract |
 |--------|---------|
@@ -59,7 +61,7 @@ and source-integrity status.
 ## Stage 2 - Initialize Directories
 
 ```sh
-mkdir -p paper/source paper/sections paper/figures
+mkdir -p paper/source paper/sections paper/figures paper/presentations
 mkdir -p docs/memo docs/evidence docs/interface docs/locks docs/wiki/{theory,analysis,evidence,paper,cross-domain,changelog}
 mkdir -p src analysis notebooks tests data
 mkdir -p artifacts/{M,T,R,E,A,Q,K,P}
@@ -75,7 +77,18 @@ Generated docs:
 | docs/02_ACTIVE_LEDGER.md | live state, checklist, assumptions, lessons, replans |
 | docs/03_PROJECT_RULES.md | generated PR-1..PR-6 from kernel-project.md |
 | prompts/README.md | generated prompt-system guide |
-| AGENTS.md | lightweight external-agent runbook: read order, worktree/commit discipline, source integrity, artifact routing, claim gates, and default planning task |
+| AGENTS.md | lightweight external-agent instructions |
+
+`AGENTS.md` content profile:
+
+- first-read operational contract for external agents;
+- read order for active brief, ledger, project rules, project map, base prompt,
+  and role prompt;
+- source-integrity and output-location map;
+- Codex worktree, coherent-commit, user-change, and user-approved no-ff
+  `main` merge guardrails;
+- anomaly-detection research claim gates and Python experiment standard;
+- prompt-maintenance path back to `prompts/meta/` and `prompts/skills/`.
 
 ## Stage 3 - Generate Agent Prompts
 
@@ -91,15 +104,14 @@ Prompt compression rule: each generated agent prompt contains only role, STOP
 conditions, output contract, and JIT references. Full operation bodies stay in
 `kernel-ops.md` or `prompts/skills/`.
 
-Codex profile rule: shared Codex runtime defaults belong in
-`prompts/agents-codex/_base.yaml` under `runtime_profile`, `git_policy`, or
-`prompt_budget_policy`. Do not copy those defaults into every generated Codex
-agent unless a role needs a stricter override.
+Codex generation invariants:
 
-AGENTS profile rule: `AGENTS.md` is the short entrypoint for humans and external
-agents. Keep it operational, not exhaustive; point to `prompts/meta/`,
-`docs/02_ACTIVE_LEDGER.md`, and `docs/03_PROJECT_RULES.md` instead of
-duplicating full kernel rules.
+- Preserve `prompts/agents-codex/_base.yaml :: codex_runtime`.
+- Generated Codex prompts must not imply unilateral `main` merge authority.
+- Any Codex prompt that mentions a `main` merge must also require explicit user
+  instruction and no-ff merge semantics.
+- Coordinator prompts should say "prepare PR" or "merge eligible" unless the
+  step is explicitly user-approved `main` integration.
 
 ## Stage 4 - Validate
 
@@ -108,13 +120,12 @@ Required checks:
 | # | Check | Method |
 |---|-------|--------|
 | 1 | project rules count | `grep -c '^## PR-' docs/03_PROJECT_RULES.md` equals 6 |
-| 2 | agent count | 23 agent files per environment, excluding `_base.yaml` |
+| 2 | agent count | 24 agent files per environment, excluding `_base.yaml` |
 | 3 | source preserved | source PDF and extracted text exist and are unmodified by deployment |
 | 4 | domain leakage | no project-specific legacy terms outside `kernel-project.md` unless intentional |
 | 5 | handoff schema present | `kernel-roles.md` contains HandoffEnvelope |
-| 6 | prompt skills present | 5 skill capsules exist |
+| 6 | prompt skills present | 6 skill capsules exist |
 | 7 | token report present | `token_telemetry_report.json` exists |
-| 8 | AGENTS runbook present | `AGENTS.md` names read order, source integrity, artifact routing, claim gates, experiment manifest, and main-merge gate |
 
 ## Stage 5 - Register
 

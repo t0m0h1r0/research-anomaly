@@ -8,6 +8,8 @@
 - MUST use independent verification for proof, evidence, numerical, or paper-review claims.
 - MUST keep source artifacts immutable.
 - MUST produce workflow-learning artifacts when the task improves the agent system.
+- MUST search compiled wiki knowledge before difficult, investigative, or precedent-likely work.
+- MUST compile important validated findings and reusable lessons into wiki memory.
 </rules>
 </meta_section>
 
@@ -23,6 +25,44 @@
 
 No phase may be skipped for material outputs. TRIVIAL tasks may use FAST-TRACK
 only when no proof, evidence, code, or paper claim changes.
+
+--------------------------------------------------------
+# § WIKI-FIRST GATES
+
+Compiled wiki knowledge is an active planning input, not an archival afterthought.
+
+## WIKI-RETRIEVAL-GATE
+
+Before substantial work, the acting agent MUST search `docs/wiki/` or dispatch
+Librarian when any trigger applies:
+
+| Trigger | Required action |
+|---------|-----------------|
+| Difficult or ambiguous problem | Search for prior approaches, failures, and assumptions |
+| Literature, benchmark, derivation, debug, prompt, or design investigation | Search for reusable knowledge before deriving from scratch |
+| Task resembles earlier work or previous project memory | Search by artifact names, concepts, methods, and failure modes |
+| Cross-domain interface change | Run K-IMPACT-ANALYSIS or ask TraceabilityManager |
+| No local wiki hit but prior-work risk is high | Record "wiki search: no hit" in HAND-02 |
+
+Wiki output is evidence, not authority. Agents may use it to accelerate work,
+but must still verify source artifacts when making material claims.
+
+## WIKI-COMPILE-GATE
+
+Before HAND-02 SUCCESS, the agent MUST classify whether the task produced
+wiki-worthy knowledge:
+
+| Trigger | Required action |
+|---------|-----------------|
+| Important finding, new reusable knowledge, or resolved hard failure | Invoke K-COMPILE or dispatch KnowledgeArchitect |
+| Reusable workflow lesson or prompt limitation | Compile to wiki after PromptAuditor/owning gate validation, or record a K-candidate in `artifacts/K/` |
+| Validated artifact that downstream agents are likely to reuse | Create or update a wiki entry and `docs/wiki/INDEX.md` |
+| Significant negative result or blocked path likely to recur | Compile as a cautionary entry with source and scope |
+| No wiki-worthy output | State "K-COMPILE: not triggered" with reason in HAND-02 |
+
+Unvalidated artifacts MUST NOT be promoted as canonical wiki knowledge. They may
+be recorded as K-candidates under `artifacts/K/` for later KnowledgeArchitect
+review.
 
 --------------------------------------------------------
 # § RESEARCH PIPELINE
@@ -44,7 +84,7 @@ Source Artifact
 | T Theory | `theory` | TheoryAuditor | TheoryArchitect | independent derivation | SourceClaimMap signed |
 | R Implementation | `research-impl` | CodeWorkflowCoordinator | CodeArchitect / CodeCorrector | TestRunner | CheckSpec signed |
 | E Evidence | `evidence` | CodeWorkflowCoordinator | ExperimentRunner / EvidenceAnalyst | evidence trace | AnalysisPackage signed |
-| A Writing | `paper` | PaperWorkflowCoordinator | PaperWriter / PaperCompiler | PaperReviewer | RevisionBrief signed |
+| A Writing | `paper` | PaperWorkflowCoordinator | PaperWriter / PresentationWriter / PaperCompiler | PaperReviewer | RevisionBrief signed |
 | P Prompt | `prompt` | PromptArchitect | PromptArchitect | PromptAuditor | meta edit request |
 | K Wiki | `wiki` | WikiAuditor | KnowledgeArchitect | K-LINT | VALIDATED source artifact |
 
@@ -71,6 +111,7 @@ Agent count scales with independence and artifact separability, not importance.
 | Numerical check | `analysis/{study}/` | TestRunner command log |
 | Revision brief | `docs/interface/RevisionBrief.md` | T/E sign-off |
 | Prose patch | `paper/sections/` or `artifacts/A/` | PaperReviewer |
+| Presentation deck | `paper/presentations/` or `artifacts/A/` | PaperReviewer |
 | Workflow lesson | `artifacts/M/{lesson}.md` | PromptAuditor if kernel-affecting |
 
 --------------------------------------------------------

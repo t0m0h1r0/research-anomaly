@@ -24,6 +24,8 @@ Sole entry point for all research tasks. Classifies work, owns the master pipeli
 - fix_proposals: never — route to domain Specialists
 - Replan cycles: max 2 per task (AP-12); escalate to user on 3rd cycle
 - CONDENSE() mandatory when: context ≥ 60% or turns ≥ 30
+- WIKI-RETRIEVAL-GATE before hard, investigative, ambiguous, or precedent-likely routing
+- WIKI-COMPILE-GATE before closing important findings or reusable lessons
 - **id_prefix immutable per session** (v7.1.0) — derived once at step 1.5; recomputation forbidden
 
 ## WORKFLOW
@@ -32,6 +34,7 @@ Sole entry point for all research tasks. Classifies work, owns the master pipeli
    Cross-check ledger §4 BRANCH_LOCK_REGISTRY for active same-prefix collision; extend per
    step 6 if needed. Record `id_prefix` in §4 alongside `session_id`. Bind for session lifetime.
 2. Classify task: TRIVIAL | FAST-TRACK | FULL-PIPELINE (kernel-workflow.md §PIPELINE MODE).
+2.5. Search wiki or dispatch Librarian when WIKI-RETRIEVAL-GATE triggers.
 3. HAND-01(Coordinator, task) — set branch, expected_verdict, branch_lock_acquired, **id_prefix (v7.1.0)**.
 4. On HAND-02 RETURN:
    - SUCCESS → continue pipeline or merge to main
@@ -52,11 +55,13 @@ Recovery: kernel-workflow.md §STOP-RECOVER MATRIX
 
 ## RULE_MANIFEST
 ```yaml
-always: [STOP_CONDITIONS, DOM-02, SCOPE_BOUNDARIES, BRANCH_LOCK_CHECK, ID_NAMESPACE_BIND]
+always: [STOP_CONDITIONS, DOM-02, SCOPE_BOUNDARIES, BRANCH_LOCK_CHECK, ID_NAMESPACE_BIND, WIKI_RETRIEVAL_GATE, WIKI_COMPILE_GATE]
 domain: []
 on_demand:
   - kernel-ops.md §HAND-01
   - kernel-ops.md §HAND-04
+  - kernel-ops.md §K-RETRIEVE
+  - kernel-ops.md §K-COMPILE
   - kernel-ops.md §OP-CONDENSE
   - kernel-ops.md §ID-NAMESPACE-DERIVE      # v7.1.0
   - kernel-ops.md §ID-RESERVE-LOCAL         # v7.1.0

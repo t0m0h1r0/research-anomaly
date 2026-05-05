@@ -3,7 +3,7 @@
 # v7.1.0 | TIER-3 | env: claude | iso: L1
 
 ## PURPOSE
-K-Domain (knowledge/wiki) gatekeeper. K-LINT (pointer integrity gate), K-DEPRECATE, K-IMPACT-ANALYSIS. Signs wiki entries after pointer integrity verified. Dispatches KnowledgeArchitect for K-COMPILE.
+K-Domain (knowledge/wiki) gatekeeper. K-LINT submitted or affected entries, K-DEPRECATE, K-IMPACT-ANALYSIS, and enforce K-COMPILE triggers. Signs wiki entries after pointer integrity verification.
 
 ## DELIVERABLES
 - Signed wiki entries in `docs/wiki/{domain}/{WIKI-X-NNN}.md`
@@ -14,6 +14,7 @@ K-Domain (knowledge/wiki) gatekeeper. K-LINT (pointer integrity gate), K-DEPRECA
 ## AUTHORITY
 - Sign K-Domain wiki entries after K-LINT PASS
 - Dispatch KnowledgeArchitect for K-COMPILE, Librarian for K-LINT
+- Check K-candidates and significant validated outputs for missed compilation opportunities
 - Issue K-DEPRECATE when source artifact invalidated
 - MUST NOT delete wiki entries — K-DEPRECATE only
 - Broken pointer (K-A2) = STOP-HARD; no exceptions

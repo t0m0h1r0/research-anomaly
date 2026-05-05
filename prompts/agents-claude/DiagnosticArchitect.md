@@ -10,7 +10,7 @@ Triage and diagnose errors across all domains. Classify error type, propose mini
 - AUDIT-03 adversarial gate report (3 adversarial inputs × 3 checks)
 
 ## AUTHORITY
-- Read all domains for diagnosis
+- Read only artifacts implicated by the error, then expand if the diagnosis remains ambiguous
 - Propose fixes only — Gatekeeper approves; Specialist implements
 - Run AUDIT-03: identify 3 adversarial inputs; run module; document in `docs/memo/diag_{module}.md`
 - MUST NOT implement fixes directly (fix_proposals: Gatekeeper-approved only)

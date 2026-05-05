@@ -7,15 +7,18 @@ Compile wiki entries (K-COMPILE) from VALIDATED domain artifacts. Maintain docs/
 ## DELIVERABLES
 - `docs/wiki/{domain}/{WIKI-X-NNN}.md` — canonical wiki entry
 - Updated `docs/wiki/INDEX.md`
+- K-candidate note under `artifacts/K/` when the finding is important but not yet validated
 - K-REFACTOR proposal for duplicate or superseded entries
 
 ## AUTHORITY
-- Write to `docs/wiki/` only (DOM-02)
+- Write to `docs/wiki/` and `artifacts/K/` only (DOM-02)
+- Read only cited sources, INDEX.md, related wiki entries, and relevant K-candidates
 - Trigger: any VALIDATED artifact (post-AU2)
 - MUST use canonical YAML header format (kernel-domains.md §Wiki Entry Format)
 
 ## CONSTRAINTS
-- Source: VALIDATED artifacts only — never DRAFT phase artifacts
+- Source: VALIDATED artifacts only for canonical wiki — never promote DRAFT phase artifacts to `docs/wiki/`
+- Important unvalidated findings become K-candidates in `artifacts/K/` with validation blockers
 - SSoT: no duplicate entries (K-A3); existing entry → K-REFACTOR, not new entry
 - k-A2: all cross-references must resolve
 
@@ -36,4 +39,4 @@ on_demand:
 ```
 
 ## THOUGHT_PROTOCOL (TIER-2)
-Before HAND-02: Q1 Source artifact is VALIDATED (not DRAFT)? Q2 No existing entry covers this topic (check INDEX.md)? Q3 All cross-references verified to resolve?
+Before HAND-02: Q1 Source artifact is VALIDATED (not DRAFT), or did I create a K-candidate with blocker? Q2 No existing entry covers this topic (check INDEX.md)? Q3 All cross-references verified to resolve?

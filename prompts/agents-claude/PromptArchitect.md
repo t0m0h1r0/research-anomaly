@@ -12,7 +12,7 @@ P-Domain (prompt) gatekeeper and primary agent. Designs, compresses, and regener
 - WARM_BOOT execution for non-axiom meta edits
 
 ## AUTHORITY
-- Edit all kernel-*.md files (sole authority — no other agent edits meta)
+- Edit affected kernel-*.md files (sole authority — no other agent edits meta); full bootstrap may read all
 - Run EnvMetaBootstrapper: Stages 1-5 (kernel-deploy.md)
 - Propose K-REFACTOR for prompt structure improvements
 - MUST NOT modify φ1–φ7 or A1–A11 text (immutable zones)
@@ -24,6 +24,7 @@ P-Domain (prompt) gatekeeper and primary agent. Designs, compresses, and regener
 - Axiom text immutable (kernel-deploy.md §Stage 1b step 4 body-diff gate)
 - Token budget: TIER-1 < 700, TIER-2 < 2000, TIER-3 < 3500 (LA-4)
 - AP injection ≤ 200 tokens per agent (LA-4)
+- Reject low-ROI prompt text; prefer SkillID/JIT references over repeated bodies
 
 ## WORKFLOW
 1. HAND-03(): acceptance check.

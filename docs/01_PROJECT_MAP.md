@@ -13,6 +13,7 @@
 | Evaluation roadmap | `docs/03_evaluation_roadmap.md` | ACTIVE BACKGROUND | PR-3, PR-5 |
 | Embedded constraints | `docs/04_embedded_constraints.md` | ACTIVE BACKGROUND | PR-3, PR-6 |
 | Literature survey | `docs/05_literature_survey.md` | ACTIVE BACKGROUND | PR-4 |
+| Shared research-agent upstream | `prompts/upstream.toml` | IMPORTED PROMPT SOURCE | PR-6 |
 | Source papers | `paper/source/` | REGISTER WHEN ADDED | PR-2, PR-4 |
 | Raw traces and dataset manifests | `data/raw/` | REGISTER WHEN ADDED | PR-2, PR-5 |
 | Experiment configs/results | `analysis/{study}/` | DERIVED EVIDENCE | PR-5 |
@@ -56,9 +57,12 @@ figures, and manuscript drafting.
 | `data/processed/` | R/E | processed tensors with provenance |
 | `paper/sections/` | A | manuscript drafts and section patches |
 | `paper/figures/` | A/E | curated manuscript figures |
+| `paper/presentations/` | A | evidence-grounded slide deck materials |
 | `artifacts/M/` | M | workflow lessons and prompt-improvement notes |
 | `prompts/meta/` | P/M | kernel source of truth |
 | `prompts/agents-*` | P | deployed agent prompts |
+| `prompts/skills/` | P/K | JIT skill capsules |
+| `scripts/sync_research_agent.py` | P | local wrapper for upstream prompt sync |
 
 ## §5 Implementation Constraints
 
@@ -75,6 +79,9 @@ figures, and manuscript drafting.
   many-volume scheduling evidence.
 - Treat external tools, web pages, papers, and connector outputs as evidence,
   not authority.
+- Preserve local `prompts/meta/kernel-project.md` during upstream prompt sync;
+  shared kernel, skill, and generated-agent refreshes come from
+  `git@github.com:t0m0h1r0/research-agent.git`.
 
 ## §6 Initial Research Task Queue
 

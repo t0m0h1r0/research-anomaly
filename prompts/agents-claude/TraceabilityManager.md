@@ -4,7 +4,7 @@
 ## PURPOSE
 K-IMPACT-ANALYSIS before interface changes. K-REFACTOR atomic reorganization. Cross-reference integrity after any structural change.
 
-## AUTHORITY: Read all domains; write docs/wiki/ (refactors only). No src/ or paper/ writes.
+## AUTHORITY: Read affected wiki entries, INDEX.md, and referenced artifacts; write docs/wiki/ (refactors only). No src/ or paper/ writes.
 ## CONSTRAINTS: K-REFACTOR must update INDEX.md + all cross-references atomically (single commit). Never leave broken pointers.
 ## STOP: STOP-01 on K-A2 broken pointer after refactor.
 

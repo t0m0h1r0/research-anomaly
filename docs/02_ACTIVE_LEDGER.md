@@ -7,12 +7,12 @@
 | Field | Value |
 |-------|-------|
 | phase | PROMPT_CONFIG |
-| branch | codex/optimize-codex-config |
-| current_objective | Optimize Codex-side prompt configuration while preserving compact generated agents |
+| branch | codex/external-research-agent-prompts |
+| current_objective | Adopt upstream research-agent prompt sync while preserving the project-specific profile |
 | active_brief | `docs/interface/ResearchBrief.md` |
-| source_artifact | none registered yet |
-| next_action | Commit AGENTS runbook optimization and await explicit user instruction before any main merge |
-| updated_at_utc | 2026-05-04T12:58:55Z |
+| source_artifact | `git@github.com:t0m0h1r0/research-agent.git` @ `4459e3e` |
+| next_action | Run prompt sync/audit verification, then commit the upstream-sync adaptation |
+| updated_at_utc | 2026-05-05T08:07:00Z |
 
 ## §CHECKLIST
 
@@ -45,6 +45,7 @@
 | CHK-RAD-025 | DONE | A/T/R | `docs/memo/ae_operator_narrative_strict_review.md`, `paper/sections/`, `docs/`, `src/rad_ae/torch_models.py`, `tests/test_torch_models.py` | completed strict AE operator-narrative review; resolved pointwise Conv1D axis ambiguity, AE-2 roadmap omission, manuscript notation, and implementation naming consistency | 2026-05-04 |
 | CHK-CODEXOPTI-001 | DONE | P | `prompts/agents-codex/_base.yaml`, `prompts/meta/kernel-deploy.md`, `artifacts/P/codex_config_optimization_audit.md` | optimized Codex shared runtime/git/prompt-budget defaults and recorded prompt audit checks | 2026-05-04 |
 | CHK-CODEXOPTI-002 | DONE | P | `AGENTS.md`, `prompts/README.md`, `prompts/meta/kernel-deploy.md`, `artifacts/P/agents_runbook_optimization_audit.md` | optimized external-agent runbook for read order, source integrity, artifact routing, claim gates, experiments, and merge discipline | 2026-05-04 |
+| CHK-UPPROMPT-001 | DONE | P | `prompts/upstream.toml`, `scripts/sync_research_agent.py`, `prompts/meta/`, `prompts/agents-*`, `prompts/skills/` | synced shared research-agent kernel revision `4459e3e`, added local refresh wrapper, and preserved `prompts/meta/kernel-project.md` by hash | 2026-05-05 |
 
 ## §ASSUMPTIONS
 
@@ -64,12 +65,14 @@
 |----|--------|--------|----------|
 | LES-RAD-001 | ACTIVE | Project retargeting should change `kernel-project.md` and generated runtime docs while keeping the generic kernel stable. | `prompts/meta/kernel-project.md` |
 | LES-RAD-002 | ACTIVE | Storage-ransomware anomaly detection needs explicit gates for observation boundary, leakage, thresholding, benign false positives, MNN parity, and memory fit. | `docs/03_PROJECT_RULES.md` |
+| LES-RAD-003 | ACTIVE | Shared prompt refreshes should come from upstream `research-agent`, with `kernel-project.md` treated as project-local and verified unchanged before accepting sync output. | `scripts/sync_research_agent.py` |
 
 ## §REPLAN_LOG
 
 | ID | Date | Trigger | Decision |
 |----|------|---------|----------|
 | RPL-RAD-001 | 2026-05-04 | User requested AI anomaly detection research agents and provided `research-anomaly` repository | Deploy generic research agents and retarget project rules to the existing storage-embedded ransomware anomaly-detection scaffold |
+| RPL-RAD-002 | 2026-05-05 | User moved latest meta/agent prompts to `git@github.com:t0m0h1r0/research-agent.git` | Import shared kernel/skills/generated agents from upstream while keeping this project's `kernel-project.md` local |
 
 ## §4 BRANCH_LOCK_REGISTRY
 
@@ -79,3 +82,4 @@
 | RAD-RA-PR | codex/researcharchitect-paper-review | `/private/tmp/new-project-3-researcharchitect-paper-review` | reviewer-grade manuscript/code audit and root-cause revision | ACTIVE | 2026-05-04 |
 | RAD-RA-500KB | codex/researcharchitect-500kb-memory | `/private/tmp/new-project-3-researcharchitect-500kb-memory` | correct 500 KB detector-data budget rationale and align docs/manuscript gates | ACTIVE | 2026-05-04 |
 | RAD-CODEXCFG | codex/optimize-codex-config | `/private/tmp/research-anomaly-codex-config` | optimize Codex prompt configuration and audit compactness/trust boundaries | ACTIVE | 2026-05-04 |
+| RAD-UPPROMPT | codex/external-research-agent-prompts | `/Users/tomohiro/Documents/research-anomaly` | adapt project to upstream research-agent prompt sync and preserve local project profile | ACTIVE | 2026-05-05 |
