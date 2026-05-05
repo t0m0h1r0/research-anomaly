@@ -1,8 +1,8 @@
 # ResearchArchitect Sponsor Deck Revision Review Log
 
-status: IN_REVIEW
+status: RESOLVED
 created_at: 2026-05-05
-updated_at_utc: 2026-05-05T09:30:40Z
+updated_at_utc: 2026-05-05T09:38:06Z
 deck: `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`
 audience: non-specialist research sponsors
 worktree: `/private/tmp/research-anomaly-sponsor-deck-revision`
@@ -24,6 +24,8 @@ funding ask or deployment promise.
 - `docs/01_PROJECT_MAP.md`
 - `prompts/agents-codex/ResearchArchitect.md`
 - `docs/06_memory_aware_ae_candidates.md`
+- `paper/sections/01_introduction.tex`
+- `paper/sections/03_observation_threat_model.tex`
 - `paper/sections/05_input_contract.tex`
 - `paper/sections/06_autoencoder_candidates.tex`
 - `paper/sections/07_evaluation_plan.tex`
@@ -66,7 +68,7 @@ Generated deck:
 
 ```text
 paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx
-size: 36511 bytes
+size: 36573 bytes
 slide count: 5
 ```
 
@@ -86,11 +88,18 @@ Mechanical checks:
 
 | Round | Highest severity | Findings | Response | Verdict |
 | --- | --- | --- | --- | --- |
-| 1 | PENDING | External review requested after revised deck generation. | Pending. | Pending. |
+| 1 | MINOR | Slide 4/5 still used sponsor-facing jargon (`training / calibration`, `Isolation Forest`, `channel-wise error`, `MNN変換後score`, `baseline / ablation / claim gate`, `MNN parityと500KB/device-fit`); Slide 4 wrapped `Isolation Forest`; review log omitted Slide 1 footer sources. | Replaced the Slide 4/5 labels with plain Japanese, including `学習・しきい値決め`, `単純比較`, `古典的な異常検出`, `どの特徴がズレたか`, `装置用変換後も同じ点数`, `装置制約への収まり`, and `単純比較・外して試す項目・主張の証拠条件`; removed the awkward `Isolation Forest` wrap; added `paper/sections/01_introduction.tex` and `paper/sections/03_observation_threat_model.tex` to Source Basis. | All findings addressed; no MAJOR-or-higher issue remained. |
 
 Stop condition:
 
 ```text
 Repeat review and fixes until no MAJOR-or-higher issue remains, or until more
 than 10 rounds have been attempted.
+```
+
+Final verdict:
+
+```text
+No MAJOR-or-higher issue remained after Round 1. All review findings were
+addressed before final commit.
 ```
