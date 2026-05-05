@@ -47,6 +47,7 @@
 | CHK-CODEXOPTI-002 | DONE | P | `AGENTS.md`, `prompts/README.md`, `prompts/meta/kernel-deploy.md`, `artifacts/P/agents_runbook_optimization_audit.md` | optimized external-agent runbook for read order, source integrity, artifact routing, claim gates, experiments, and merge discipline | 2026-05-04 |
 | CHK-UPPROMPT-001 | DONE | P | `prompts/upstream.toml`, `scripts/sync_research_agent.py`, `prompts/meta/`, `prompts/agents-*`, `prompts/skills/` | synced shared research-agent kernel revision `4459e3e`, added local refresh wrapper, and preserved `prompts/meta/kernel-project.md` by hash | 2026-05-05 |
 | CHK-RAD-026 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `docs/memo/researcharchitect_sponsor_deck_review.md` | created sponsor-facing five-slide research introduction deck; resolved review after 3 rounds with no MAJOR-or-higher findings | 2026-05-05 |
+| CHK-RAD-027 | ACTIVE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `docs/memo/researcharchitect_sponsor_deck_revision_review.md` | revising sponsor deck to foreground AE-01..05 overview and evaluation purpose while avoiding an overt support request; review pending | 2026-05-05 |
 
 ## §ASSUMPTIONS
 
@@ -85,3 +86,4 @@
 | RAD-CODEXCFG | codex/optimize-codex-config | `/private/tmp/research-anomaly-codex-config` | optimize Codex prompt configuration and audit compactness/trust boundaries | ACTIVE | 2026-05-04 |
 | RAD-UPPROMPT | codex/external-research-agent-prompts | `/Users/tomohiro/Documents/research-anomaly` | adapt project to upstream research-agent prompt sync and preserve local project profile | ACTIVE | 2026-05-05 |
 | RAD-RA-SPONSORDECK | codex/researcharchitect-sponsor-deck | `/private/tmp/research-anomaly-sponsor-deck` | create and review sponsor-facing five-slide research introduction deck | ACTIVE | 2026-05-05 |
+| RAD-RA-SPONSORDECK-REV | codex/researcharchitect-sponsor-deck-revision | `/private/tmp/research-anomaly-sponsor-deck-revision` | revise sponsor deck around AE-01..05 candidate overview and review until no MAJOR-or-higher findings remain | ACTIVE | 2026-05-05 |
