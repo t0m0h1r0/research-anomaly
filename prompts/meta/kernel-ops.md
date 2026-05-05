@@ -64,10 +64,11 @@ AUTH levels: ROOT > GATE > SPEC > any.
 | ExperimentRunner | Spec | E | HAND-02,03; EXP-01,02; GIT-SP |
 | EvidenceAnalyst | Spec | E | HAND-02,03; GIT-SP; K-COMPILE |
 | PaperWriter | Spec | A | HAND-02,03; GIT-SP |
+| PresentationWriter | Spec | A | HAND-02,03; GIT-SP |
 | PaperReviewer | Spec | A | HAND-02,03; AUDIT-01,02 |
 | PaperCompiler | Spec | A | HAND-02,03; BUILD-01,02; GIT-SP |
 | KnowledgeArchitect | Spec | K | HAND-02,03; K-COMPILE,REFACTOR; GIT-SP |
-| Librarian | Spec | K | HAND-02,03; K-LINT,DEPRECATE |
+| Librarian | Spec | K | HAND-02,03; K-RETRIEVE,K-LINT,DEPRECATE |
 | TraceabilityManager | Spec | K | HAND-02,03; K-IMPACT-ANALYSIS |
 | DevOpsArchitect | Spec | L | HAND-02,03; GIT-WORKTREE-ADD; LOCK |
 | DiagnosticArchitect | Spec | any | HAND-02,03; AUDIT-03 |
@@ -627,9 +628,21 @@ For any new numerical module, DiagnosticArchitect runs:
 # § KNOWLEDGE OPERATIONS
 
 ## K-COMPILE
-Create or update wiki entry after any significant finding.
+Create or update wiki entry after any significant validated finding or reusable
+lesson.
 Format: canonical YAML header + content per `kernel-domains.md §Wiki Entry Format`.
 Target: `docs/wiki/{domain}/{WIKI-X-NNN}.md`; register in `docs/wiki/INDEX.md`.
+Mandatory trigger check before HAND-02 SUCCESS: important finding, new reusable
+knowledge, resolved hard failure, significant negative result, or downstream
+reuse likely. If triggered and source is VALIDATED, compile or dispatch
+KnowledgeArchitect. If triggered but source is not validated, record a
+K-candidate under `artifacts/K/` and cite the validation blocker.
+
+## K-RETRIEVE
+Search compiled wiki knowledge before difficult, investigative, ambiguous, or
+precedent-likely work. Minimum method: search `docs/wiki/` by artifact names,
+concepts, methods, failure modes, and task terms; for broad searches dispatch
+Librarian. Record hits used, or "no hit", in HAND-02.
 
 ## K-LINT
 Check wiki entries for:

@@ -24,14 +24,14 @@
 **detect:** Reviewer cites a specific line/equation but has NOT read the file in the current turn; uses "likely", "probably", "I recall" without file evidence.
 **mitigate:** Read the actual file in same turn; quote exact text being criticized; every error = file path + line + quote.
 **severity:** HIGH
-**inject:** PaperReviewer, ConsistencyAuditor, TheoryAuditor, PromptAuditor
+**inject:** PaperReviewer, PresentationWriter, ConsistencyAuditor, TheoryAuditor, PromptAuditor
 
 ────────────────────────────────────────────────────────
 ## AP-02: Scope Creep Through Helpfulness
 **detect:** About to modify a file not listed in DISPATCH scope_out; thinking "while I'm here, I should also…"; diff contains changes to lines unrelated to dispatched task.
 **mitigate:** Before every file write: check DISPATCH scope. Adjacent issue → log in RETURN issues[], do NOT fix.
 **severity:** MEDIUM
-**inject:** CodeArchitect, CodeCorrector, PaperWriter
+**inject:** CodeArchitect, CodeCorrector, PaperWriter, PresentationWriter
 
 ────────────────────────────────────────────────────────
 ## AP-03: Verification Theater *(CRITICAL)*
@@ -61,7 +61,7 @@
 **detect:** First action after HAND-03 is NOT reading the artifact file; basing work on conversation description rather than file; DISPATCH inputs contains prose descriptions not file paths; agent says "based on the above" or "as described earlier".
 **mitigate:** First action: read artifact file(s) from DISPATCH inputs. Ignore conversation text describing artifact. No artifact path → request it; do NOT proceed on summaries. Isolation ≥ L1.
 **severity:** HIGH
-**inject:** ConsistencyAuditor, TheoryAuditor, PaperReviewer, CodeWorkflowCoordinator, PaperWorkflowCoordinator
+**inject:** ConsistencyAuditor, TheoryAuditor, PaperReviewer, PresentationWriter, CodeWorkflowCoordinator, PaperWorkflowCoordinator
 
 ────────────────────────────────────────────────────────
 ## AP-07: Premature Classification

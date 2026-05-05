@@ -17,6 +17,10 @@ max_replan_cycles: 2         # AP-12: 3rd cycle → mandatory user escalation
 # v7.1.0 feature flags
 id_namespace_binding: true   # CHK/ASM/KL IDs use {family}-{id_prefix}-NNN form (kernel-ops.md §ID NAMESPACE OPERATIONS)
 
+wiki_memory:
+  retrieval_gate: "Hard/investigative/precedent-likely? Search docs/wiki/ or ask Librarian; record hit/no-hit."
+  compile_gate: "Before SUCCESS, K-COMPILE important validated findings; unvalidated findings become artifacts/K candidates."
+
 axioms: "A1–A11 unconditional (docs/00_GLOBAL_RULES.md §A) — SSoT: kernel-constitution.md"
 project_rules: "PR-1–PR-6 (docs/03_PROJECT_RULES.md — SSoT: kernel-project.md)"
 
@@ -44,6 +48,8 @@ rules_always:
   - SCOPE_BOUNDARIES
   - BRANCH_LOCK_CHECK         # read ACTIVE_LEDGER §4 + docs/locks/ before any write
   - ID_NAMESPACE_BIND         # v7.1.0: derive id_prefix once at session start; carry in all HAND-01 dispatches; immutable thereafter
+  - WIKI_RETRIEVAL_GATE       # search docs/wiki/ before difficult/investigative/precedent-likely work
+  - WIKI_COMPILE_GATE         # compile significant validated findings or reusable lessons
 
 on_demand_common:
   HAND-01:           "kernel-ops.md §HAND-01"
@@ -61,6 +67,7 @@ on_demand_common:
   ID-COLLISION-CHECK:  "kernel-ops.md §ID-COLLISION-CHECK"   # v7.1.0
   HAND_SCHEMA:       "kernel-roles.md §SCHEMA-IN-CODE"
   HAND_SCHEMA_V710:  "kernel-roles.md §SCHEMA EXTENSIONS v7.1.0"  # v7.1.0
+  K-RETRIEVE:        "kernel-ops.md §K-RETRIEVE"
   K-COMPILE:         "kernel-ops.md §K-COMPILE"
   K-LINT:            "kernel-ops.md §K-LINT"
 
