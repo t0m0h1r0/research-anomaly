@@ -46,6 +46,7 @@
 | CHK-CODEXOPTI-001 | DONE | P | `prompts/agents-codex/_base.yaml`, `prompts/meta/kernel-deploy.md`, `artifacts/P/codex_config_optimization_audit.md` | optimized Codex shared runtime/git/prompt-budget defaults and recorded prompt audit checks | 2026-05-04 |
 | CHK-CODEXOPTI-002 | DONE | P | `AGENTS.md`, `prompts/README.md`, `prompts/meta/kernel-deploy.md`, `artifacts/P/agents_runbook_optimization_audit.md` | optimized external-agent runbook for read order, source integrity, artifact routing, claim gates, experiments, and merge discipline | 2026-05-04 |
 | CHK-UPPROMPT-001 | DONE | P | `prompts/upstream.toml`, `scripts/sync_research_agent.py`, `prompts/meta/`, `prompts/agents-*`, `prompts/skills/` | synced shared research-agent kernel revision `4459e3e`, added local refresh wrapper, and preserved `prompts/meta/kernel-project.md` by hash | 2026-05-05 |
+| CHK-RAD-026 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `docs/memo/researcharchitect_sponsor_deck_review.md` | created sponsor-facing five-slide research introduction deck; resolved review after 3 rounds with no MAJOR-or-higher findings | 2026-05-05 |
 
 ## §ASSUMPTIONS
 
@@ -83,3 +84,4 @@
 | RAD-RA-500KB | codex/researcharchitect-500kb-memory | `/private/tmp/new-project-3-researcharchitect-500kb-memory` | correct 500 KB detector-data budget rationale and align docs/manuscript gates | ACTIVE | 2026-05-04 |
 | RAD-CODEXCFG | codex/optimize-codex-config | `/private/tmp/research-anomaly-codex-config` | optimize Codex prompt configuration and audit compactness/trust boundaries | ACTIVE | 2026-05-04 |
 | RAD-UPPROMPT | codex/external-research-agent-prompts | `/Users/tomohiro/Documents/research-anomaly` | adapt project to upstream research-agent prompt sync and preserve local project profile | ACTIVE | 2026-05-05 |
+| RAD-RA-SPONSORDECK | codex/researcharchitect-sponsor-deck | `/private/tmp/research-anomaly-sponsor-deck` | create and review sponsor-facing five-slide research introduction deck | ACTIVE | 2026-05-05 |
