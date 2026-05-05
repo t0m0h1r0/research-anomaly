@@ -1,12 +1,12 @@
 {
-  "generated_at_utc": "2026-05-05T08:07:00Z",
+  "generated_at_utc": "2026-05-05T10:50:00Z",
   "status": "PASS",
   "deployment": {
     "mode": "upstream_sync_from_research_agent",
     "project": "storage-embedded ransomware anomaly detection",
     "repository": "git@github.com:t0m0h1r0/research-anomaly.git",
     "upstream": "git@github.com:t0m0h1r0/research-agent.git",
-    "upstream_revision": "4459e3e",
+    "upstream_revision": "8abd3a7",
     "preserved_project_profile": true
   },
   "kernel_files": [
@@ -29,6 +29,18 @@
     "codex_agent_file_count": 24,
     "claude_agent_file_count": 24,
     "skill_capsule_count": 6,
+    "local_helper_scripts": [
+      "scripts/lock.py",
+      "scripts/atomic_push.py",
+      "scripts/validate_prompt_deployment.py"
+    ],
+    "upstream_distribution_boundary": {
+      "status": "PASS",
+      "mode": "metaprompt-only",
+      "generated_agent_prompts": "project-local",
+      "generated_skill_capsules": "project-local",
+      "generated_project_scripts": "project-local"
+    },
     "handoff_schema_present": true,
     "source_integrity": {
       "status": "PASS",
@@ -39,6 +51,7 @@
   "notes": [
     "Project-specific content is isolated in prompts/meta/kernel-project.md and generated runtime docs.",
     "prompts/meta/kernel-project.md SHA-256 remained 420eeca84c8d959a733312a33f725f279dbb291e9597b72bfec46ed753b43fa7 across upstream sync.",
-    "PresentationWriter and SKILL-PRESENTATION-DECK are expected upstream additions."
+    "Upstream revision 8abd3a7 distributes metaprompts only; project-local agents, skills, and helper scripts were redeployed locally.",
+    "prompts/REDEPLOY_REQUIRED.md was removed only after local prompt audit passed."
   ]
 }

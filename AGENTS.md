@@ -18,10 +18,12 @@ Prompt source of truth is `prompts/meta/`. Generated runtime docs are working
 memory; if a rule conflict appears, fix the owning source or record an audit
 finding instead of silently patching derivatives.
 
-Shared meta prompts, skill capsules, and generated agent prompts are imported
-from `git@github.com:t0m0h1r0/research-agent.git`; the imported revision is
-recorded in `prompts/upstream.toml`. Use `make prompt-sync-dry-run` before
-`make prompt-sync` for refreshes. The project profile
+Shared metaprompts are pulled from
+`git@github.com:t0m0h1r0/research-agent.git`; the imported revision is recorded
+in `prompts/upstream.toml`. Generated skill capsules, helper scripts, templates,
+and agent prompts are project-local derived outputs. Use
+`make prompt-sync-dry-run` before `make prompt-sync`, then regenerate/audit local
+agents and run `make prompt-audit`. The project profile
 `prompts/meta/kernel-project.md` is local and must be preserved unless the user
 explicitly asks to retarget this project.
 
@@ -34,8 +36,9 @@ explicitly asks to retarget this project.
 - Do not merge to `main` unless the user explicitly instructs it.
 - If `main` merge is requested, use no-ff and continue work in the same
   worktree afterward.
-- For shared prompt refreshes, sync from upstream and then audit local generated
-  docs and prompt counts before using changed agents.
+- For shared prompt refreshes, sync upstream metaprompts only, then audit local
+  generated docs, skill capsules, helper scripts, and prompt counts before using
+  changed agents.
 - If sync creates `prompts/REDEPLOY_REQUIRED.md`, leave it until local prompt
   audit passes, then remove it in the same commit as the audit record.
 

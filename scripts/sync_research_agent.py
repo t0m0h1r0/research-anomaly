@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fetch and sync the shared research-agent prompt kernel into this project."""
+"""Fetch and sync the shared research-agent metaprompt kernel into this project."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_REMOTE = "git@github.com:t0m0h1r0/research-agent.git"
 DEFAULT_UPSTREAM_DIR = Path("/private/tmp/research-agent-upstream")
-DEFAULT_GROUPS = "kernel,skills,agents-codex,agents-claude"
+DEFAULT_GROUPS = "kernel"
 PROJECT_PROFILE = Path("prompts/meta/kernel-project.md")
 
 
@@ -61,8 +61,9 @@ def ensure_upstream(
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Sync shared research-agent kernel, skill, and generated-agent assets "
-            "while preserving prompts/meta/kernel-project.md."
+            "Sync shared research-agent metaprompt assets while preserving "
+            "prompts/meta/kernel-project.md. Generated skills, templates, scripts, "
+            "and agent prompts are project-local derived outputs."
         )
     )
     parser.add_argument("--target", type=Path, default=PROJECT_ROOT)
