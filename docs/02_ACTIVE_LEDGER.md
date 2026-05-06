@@ -51,6 +51,7 @@
 | CHK-UPPROMPT-002 | DONE | P | `prompts/upstream.toml`, `prompts/upstream-managed.json`, `prompts/meta/`, `prompts/agents-*`, `prompts/skills/`, `scripts/` | synced upstream metaprompt-only revision `8abd3a7`, preserved `kernel-project.md`, redeployed local agents/helpers, and passed prompt audit | 2026-05-05 |
 | CHK-UPPROMPT-003 | DONE | P | `prompts/upstream.toml`, `prompts/upstream-managed.json`, `prompts/meta/`, `prompts/agents-*`, `prompts/skills/`, `scripts/validate_prompt_deployment.py`, `artifacts/P/research_agent_upstream_sync_audit_c985b65.md` | synced upstream metaprompt-only revision `c985b65`, preserved `kernel-project.md`, redeployed 24 Codex + 24 Claude prompts and 9 local skill capsules, removed redeploy marker after prompt audit PASS | 2026-05-06 |
 | CHK-RAD-028 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `docs/memo/researcharchitect_sponsor_deck_review_20260506.md` | completed strict sponsor deck review in a new worktree; addressed 5 MAJOR, 5 MINOR, and 1 NIT finding, then re-reviewed with no MAJOR-or-higher findings after 2 rounds | 2026-05-06 |
+| CHK-RAD-029 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `docs/memo/researcharchitect_sponsor_deck_zero_base_review_20260506.md` | recreated sponsor deck from a blank narrative; addressed 6 MAJOR, 5 MINOR, and 1 NIT finding, then re-reviewed with no MAJOR-or-higher findings after 2 rounds | 2026-05-06 |
 
 ## §ASSUMPTIONS
 
@@ -96,4 +97,4 @@
 | RAD-RA-SPONSORDECK-REV | codex/researcharchitect-sponsor-deck-revision | `/private/tmp/research-anomaly-sponsor-deck-revision` | revise sponsor deck around AE-01..05 candidate overview and review until no MAJOR-or-higher findings remain | ACTIVE | 2026-05-05 |
 | RAD-UPPROMPT2 | codex/researcharchitect-prompt-refresh | `/private/tmp/research-anomaly-prompt-refresh` | sync upstream metaprompt-only revision `8abd3a7` and redeploy local prompt artifacts | ACTIVE | 2026-05-05 |
 | RAD-UPPROMPT3 | codex/researcharchitect-prompt-refresh-20260506 | `/private/tmp/research-anomaly-prompt-refresh-20260506` | sync upstream metaprompt-only revision `c985b65` and redeploy local prompt artifacts | ACTIVE | 2026-05-06 |
-| RAD-RA-SPONSORDECK-REVIEW-20260506 | codex/researcharchitect-sponsor-deck-review-20260506 | `/private/tmp/research-anomaly-sponsor-deck-review-20260506` | strict review and revision of sponsor deck until no MAJOR-or-higher findings remain | ACTIVE | 2026-05-06 |
+| RAD-RA-SPONSORDECK-REVIEW-20260506 | codex/researcharchitect-sponsor-deck-review-20260506 | `/private/tmp/research-anomaly-sponsor-deck-review-20260506` | strict review and zero-base revision of sponsor deck until no MAJOR-or-higher findings remain | ACTIVE | 2026-05-06 |
