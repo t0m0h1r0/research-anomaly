@@ -1,33 +1,48 @@
 {
-  "generated_at_utc": "2026-05-05T10:50:00Z",
+  "generated_at_utc": "2026-05-06T03:52:42Z",
   "status": "PASS",
-  "method": "wc -w word counts as a lightweight prompt-size proxy",
+  "method": "wc-style word counts as a lightweight prompt-size proxy",
   "upstream": {
     "remote": "git@github.com:t0m0h1r0/research-agent.git",
-    "revision": "8abd3a7",
+    "revision": "c985b65",
     "project_profile_preserved": true
+  },
+  "q3b": {
+    "static_prompt_tokens": 11471,
+    "loaded_rule_tokens": 21657,
+    "skill_trigger_tokens": 1501,
+    "artifact_tokens": 4305,
+    "tool_result_tokens": 0,
+    "handoff_tokens": 0,
+    "proxy_unit": "words",
+    "verdict": "PASS"
   },
   "counts": {
     "codex_agent_files": {
       "files": 24,
-      "words": 2809
+      "words": 3056
     },
     "claude_agent_files": {
       "files": 24,
-      "words": 7883
+      "words": 8415
     },
     "kernel_meta_files": {
       "files": 8,
-      "words": 18974
+      "words": 21657
     },
-    "skills_and_runtime_docs": {
-      "words": 6137
+    "skill_capsules": {
+      "files": 9,
+      "words": 1501
+    },
+    "runtime_docs": {
+      "files": 6,
+      "words": 4305
     }
   },
   "budget_notes": [
-    "Generated agent prompts are compact role prompts with operation details kept in kernel files or skill capsules.",
+    "Generated agent prompts are compact role prompts with operation details kept in kernel files or role-triggered skill capsules.",
     "Codex prompts are intentionally smaller than Claude prompts for executable clarity.",
-    "Runtime docs summarize project rules and active state; full project-specific authority remains in prompts/meta/kernel-project.md.",
-    "Upstream revision 8abd3a7 is metaprompt-only; generated agents, skill capsules, and helper scripts are project-local outputs."
+    "Skill trigger tokens are tracked separately for Q3b because skill bodies are JIT-loaded only when triggered.",
+    "Upstream revision c985b65 is metaprompt-only; generated agents, skill capsules, and helper scripts are project-local outputs."
   ]
 }

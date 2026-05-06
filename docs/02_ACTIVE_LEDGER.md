@@ -7,12 +7,12 @@
 | Field | Value |
 |-------|-------|
 | phase | PROMPT_DEPLOYED |
-| branch | codex/researcharchitect-prompt-refresh |
-| current_objective | Adopt upstream research-agent metaprompt-only sync and redeploy project-local agents/helpers |
+| branch | codex/researcharchitect-prompt-refresh-20260506 |
+| current_objective | Adopt upstream research-agent metaprompt-only revision `c985b65` and redeploy project-local agents/helpers |
 | active_brief | `docs/interface/ResearchBrief.md` |
-| source_artifact | `git@github.com:t0m0h1r0/research-agent.git` @ `8abd3a7` |
+| source_artifact | `git@github.com:t0m0h1r0/research-agent.git` @ `c985b65` |
 | next_action | Continue `ASM-RAD-001` planning unless the user asks for another prompt-system follow-up |
-| updated_at_utc | 2026-05-05T10:50:00Z |
+| updated_at_utc | 2026-05-06T03:50:05Z |
 
 ## §CHECKLIST
 
@@ -49,6 +49,7 @@
 | CHK-RAD-026 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `docs/memo/researcharchitect_sponsor_deck_review.md` | created sponsor-facing five-slide research introduction deck; resolved review after 3 rounds with no MAJOR-or-higher findings | 2026-05-05 |
 | CHK-RAD-027 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `docs/memo/researcharchitect_sponsor_deck_revision_review.md` | revised sponsor deck to foreground AE-01..05 overview and evaluation purpose while avoiding an overt support request; addressed all review findings with no MAJOR-or-higher findings after 1 round | 2026-05-05 |
 | CHK-UPPROMPT-002 | DONE | P | `prompts/upstream.toml`, `prompts/upstream-managed.json`, `prompts/meta/`, `prompts/agents-*`, `prompts/skills/`, `scripts/` | synced upstream metaprompt-only revision `8abd3a7`, preserved `kernel-project.md`, redeployed local agents/helpers, and passed prompt audit | 2026-05-05 |
+| CHK-UPPROMPT-003 | DONE | P | `prompts/upstream.toml`, `prompts/upstream-managed.json`, `prompts/meta/`, `prompts/agents-*`, `prompts/skills/`, `scripts/validate_prompt_deployment.py`, `artifacts/P/research_agent_upstream_sync_audit_c985b65.md` | synced upstream metaprompt-only revision `c985b65`, preserved `kernel-project.md`, redeployed 24 Codex + 24 Claude prompts and 9 local skill capsules, removed redeploy marker after prompt audit PASS | 2026-05-06 |
 
 ## §ASSUMPTIONS
 
@@ -56,11 +57,11 @@
 |----|--------|-----------|-------|
 | ASM-RAD-001 | OPEN | The current repository scaffold defines the active domain as storage-embedded ransomware anomaly detection. | M |
 | ASM-RAD-002 | OPEN | RanSAP is the first candidate dataset but must be source-verified before empirical work. | M/E |
-| ASM-RAD-003 | OPEN | CNN-GRU AE is a candidate, not a default; smaller AE baselines must be tested first. | T/R |
-| ASM-RAD-004 | OPEN | MNN conversion and 500 KB detector-data fit are deployment-readiness claims, not assumptions. | R/E |
-| ASM-RAD-005 | OPEN | Existing T/R/E/A domains can route model design, implementation, evaluation, and writing without generic kernel changes. | Q |
-| ASM-RAD-006 | OPEN | The 500 KB budget is a per-volume detector-data target derived from roughly 1 GB over roughly 2000 volumes; it covers model weights plus input statistics/state and excludes shared runtime/library memory. | M/R/E |
-| ASM-RAD-007 | OPEN | AE candidates should keep operator roles explicit: Dense compresses or denoises, GRU contextualizes, AE-4 Conv1D extracts local temporal features, and AE-5 `K=1` Conv1D mixes heterogeneous per-frame features. | T/R/A |
+| ASM-RAD-003 | OPEN | CNN-GRU AE is a candidate, not a default; smaller AE baselines must be tested first. | T/L |
+| ASM-RAD-004 | OPEN | MNN conversion and 500 KB detector-data fit are deployment-readiness claims, not assumptions. | L/E |
+| ASM-RAD-005 | OPEN | Existing T/L/E/A domains can route model design, implementation, evaluation, and writing without generic kernel changes. | Q |
+| ASM-RAD-006 | OPEN | The 500 KB budget is a per-volume detector-data target derived from roughly 1 GB over roughly 2000 volumes; it covers model weights plus input statistics/state and excludes shared runtime/library memory. | M/L/E |
+| ASM-RAD-007 | OPEN | AE candidates should keep operator roles explicit: Dense compresses or denoises, GRU contextualizes, AE-4 Conv1D extracts local temporal features, and AE-5 `K=1` Conv1D mixes heterogeneous per-frame features. | T/L/A |
 
 ## §LESSONS
 
@@ -70,6 +71,7 @@
 | LES-RAD-002 | ACTIVE | Storage-ransomware anomaly detection needs explicit gates for observation boundary, leakage, thresholding, benign false positives, MNN parity, and memory fit. | `docs/03_PROJECT_RULES.md` |
 | LES-RAD-003 | ACTIVE | Shared prompt refreshes should come from upstream `research-agent`, with `kernel-project.md` treated as project-local and verified unchanged before accepting sync output. | `scripts/sync_research_agent.py` |
 | LES-RAD-004 | ACTIVE | Upstream now distributes metaprompts only; skills, helper scripts, templates, and agent prompts must be regenerated and audited inside each receiving project. | `prompts/upstream.toml` |
+| LES-RAD-005 | ACTIVE | Upstream revision `c985b65` changes implementation-domain notation from `R` to `L` and adds role-triggered scheme/code, paper-writing, deck, and illustration/readback skill loops; local prompt audit must check the 9-capsule manifest and Q3b `skill_trigger_tokens`. | `artifacts/P/research_agent_upstream_sync_audit_c985b65.md` |
 
 ## §REPLAN_LOG
 
@@ -78,6 +80,7 @@
 | RPL-RAD-001 | 2026-05-04 | User requested AI anomaly detection research agents and provided `research-anomaly` repository | Deploy generic research agents and retarget project rules to the existing storage-embedded ransomware anomaly-detection scaffold |
 | RPL-RAD-002 | 2026-05-05 | User moved latest meta/agent prompts to `git@github.com:t0m0h1r0/research-agent.git` | Import shared kernel/skills/generated agents from upstream while keeping this project's `kernel-project.md` local |
 | RPL-RAD-003 | 2026-05-05 | Upstream revision `8abd3a7` changed the distribution contract | Import only shared metaprompts from upstream, preserve the local project profile, and regenerate project-local agents, skills, docs, and helper scripts |
+| RPL-RAD-004 | 2026-05-06 | Upstream revision `c985b65` added scheme/code, paper-writing, presentation-generation, and visual-concept prompt operations | Import shared metaprompts only, preserve the local project profile, redeploy project-local prompts/skills/docs, and require 9-skill + Q3b telemetry audit before removing the redeploy marker |
 
 ## §4 BRANCH_LOCK_REGISTRY
 
@@ -91,3 +94,4 @@
 | RAD-RA-SPONSORDECK | codex/researcharchitect-sponsor-deck | `/private/tmp/research-anomaly-sponsor-deck` | create and review sponsor-facing five-slide research introduction deck | ACTIVE | 2026-05-05 |
 | RAD-RA-SPONSORDECK-REV | codex/researcharchitect-sponsor-deck-revision | `/private/tmp/research-anomaly-sponsor-deck-revision` | revise sponsor deck around AE-01..05 candidate overview and review until no MAJOR-or-higher findings remain | ACTIVE | 2026-05-05 |
 | RAD-UPPROMPT2 | codex/researcharchitect-prompt-refresh | `/private/tmp/research-anomaly-prompt-refresh` | sync upstream metaprompt-only revision `8abd3a7` and redeploy local prompt artifacts | ACTIVE | 2026-05-05 |
+| RAD-UPPROMPT3 | codex/researcharchitect-prompt-refresh-20260506 | `/private/tmp/research-anomaly-prompt-refresh-20260506` | sync upstream metaprompt-only revision `c985b65` and redeploy local prompt artifacts | ACTIVE | 2026-05-06 |

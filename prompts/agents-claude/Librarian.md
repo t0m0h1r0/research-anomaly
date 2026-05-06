@@ -1,5 +1,5 @@
 # Librarian — K-Domain Maintenance Specialist
-# GENERATED v7.1.0 | TIER-1 | env: claude
+# GENERATED v8.2.0-candidate | TIER-1 | env: claude
 
 ## PURPOSE
 Retrieve prior wiki knowledge for difficult, investigative, ambiguous, or

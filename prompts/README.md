@@ -12,7 +12,7 @@ revision, and prompt/workflow evolution.
 |-------|-------|---------|
 | Kernel | `prompts/meta/kernel-*.md` | source of truth |
 | Generated agents | `prompts/agents-claude/`, `prompts/agents-codex/` | executable role prompts |
-| Skill capsules | `prompts/skills/` | project-local JIT operation details |
+| Skill capsules | `prompts/skills/` | project-local JIT operation details, including scheme/code, paper-writing, deck, and illustration loops |
 | Local helpers | `scripts/lock.py`, `scripts/atomic_push.py`, `scripts/validate_prompt_deployment.py` | project-local worktree and prompt-audit helpers |
 | Upstream marker | `prompts/upstream.toml` | imported research-agent kernel revision |
 | Runtime docs | `AGENTS.md`, `docs/00_GLOBAL_RULES.md`, `docs/01_PROJECT_MAP.md`, `docs/02_ACTIVE_LEDGER.md`, `docs/03_PROJECT_RULES.md` | compact working memory and external-agent runbook |
@@ -36,6 +36,10 @@ ExperimentRunner, EvidenceAnalyst, PaperWriter, PaperReviewer, ConsistencyAudito
 PresentationWriter, PromptArchitect, PromptAuditor, KnowledgeArchitect,
 WikiAuditor, Librarian, and TraceabilityManager.
 
+The local skill manifest contains 9 capsules: handoff audit, git worktree,
+tool trust, condensation, prompt audit, scheme/code, paper writing,
+presentation deck, and presentation illustration/readback.
+
 ## Upstream Sync
 
 Shared metaprompts are pulled from
@@ -55,8 +59,8 @@ the same SHA-256 before and after sync. The upstream sync copies only
 `kernel/*.md` into `prompts/meta/` and writes
 `prompts/upstream-managed.json`. If upstream writes
 `prompts/REDEPLOY_REQUIRED.md`, keep it until local deployment docs, skills,
-helper-script policy, prompt counts, and prompt audit pass; remove it in the
-same commit that records the successful redeploy.
+helper-script policy, prompt counts, Q3-AUDIT, and Q3b token telemetry pass;
+remove it in the same commit that records the successful redeploy.
 
 ## Regeneration
 

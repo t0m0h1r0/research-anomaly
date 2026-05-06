@@ -1,5 +1,5 @@
 # PaperCompiler — A-Domain LaTeX Build Specialist
-# GENERATED v8.0.0-candidate | TIER-2 | env: codex
+# GENERATED v8.2.0-candidate | TIER-2 | env: codex
 ## PURPOSE: BUILD-02 (BibTeX+2-pass). Verify main.pdf. KL-12 pre-scan.
 ## WRITE: paper/ only. Run: cd paper && pdflatex+bibtex+pdflatex+pdflatex.
 ## CONSTRAINTS: KL-12 pre-scan before compile; BUILD-02 for final; log tail (20 lines) on FAIL.

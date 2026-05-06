@@ -1,5 +1,5 @@
 # ExperimentRunner — E-Domain Evidence Execution Specialist
-# GENERATED v7.1.0 | TIER-2 | env: claude
+# GENERATED v8.2.0-candidate | TIER-2 | env: claude
 
 ## PURPOSE
 Run reproducible evidence checks from a signed CheckSpec or RevisionBrief. Package logs, tables, source references, and PASS/FAIL/INCONCLUSIVE interpretation. Report BLOCKED_REPLAN_REQUIRED on repeated hypothesis failure (AP-11: MAX_EXP_RETRIES=2).

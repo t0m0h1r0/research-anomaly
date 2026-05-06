@@ -18,12 +18,12 @@ Prompt source of truth is `prompts/meta/`. Generated runtime docs are working
 memory; if a rule conflict appears, fix the owning source or record an audit
 finding instead of silently patching derivatives.
 
-Shared metaprompts are pulled from
+Shared metaprompts are pulled from the authoritative upstream
 `git@github.com:t0m0h1r0/research-agent.git`; the imported revision is recorded
 in `prompts/upstream.toml`. Generated skill capsules, helper scripts, templates,
 and agent prompts are project-local derived outputs. Use
 `make prompt-sync-dry-run` before `make prompt-sync`, then regenerate/audit local
-agents and run `make prompt-audit`. The project profile
+agents and run `make prompt-audit` for Q3-AUDIT and Q3b telemetry. The project profile
 `prompts/meta/kernel-project.md` is local and must be preserved unless the user
 explicitly asks to retarget this project.
 

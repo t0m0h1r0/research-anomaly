@@ -1,13 +1,14 @@
 {
-  "generated_at_utc": "2026-05-05T10:50:00Z",
+  "generated_at_utc": "2026-05-06T03:52:42Z",
   "status": "PASS",
   "deployment": {
     "mode": "upstream_sync_from_research_agent",
     "project": "storage-embedded ransomware anomaly detection",
     "repository": "git@github.com:t0m0h1r0/research-anomaly.git",
     "upstream": "git@github.com:t0m0h1r0/research-agent.git",
-    "upstream_revision": "8abd3a7",
-    "preserved_project_profile": true
+    "upstream_revision": "c985b65",
+    "preserved_project_profile": true,
+    "local_redeploy": "project-local generated prompts, skills, runtime docs, and audit reports refreshed after metaprompt-only sync"
   },
   "kernel_files": [
     "prompts/meta/kernel-antipatterns.md",
@@ -20,19 +21,31 @@
     "prompts/meta/kernel-workflow.md"
   ],
   "checks": {
-    "meta_section_open_count": 13,
-    "meta_section_close_count": 13,
+    "meta_section_open_count": 17,
+    "meta_section_close_count": 17,
     "tag_balance": "PASS",
     "duplicate_ids": [],
     "dangling_refs": [],
     "project_rules_count": 6,
     "codex_agent_file_count": 24,
     "claude_agent_file_count": 24,
-    "skill_capsule_count": 6,
+    "skill_capsule_count": 9,
+    "skill_capsules": [
+      "prompts/skills/SKILL-CONDENSE-V2.md",
+      "prompts/skills/SKILL-GIT-WORKTREE.md",
+      "prompts/skills/SKILL-HANDOFF-AUDIT.md",
+      "prompts/skills/SKILL-PAPER-WRITING.md",
+      "prompts/skills/SKILL-PRESENTATION-DECK.md",
+      "prompts/skills/SKILL-PRESENTATION-ILLUSTRATION.md",
+      "prompts/skills/SKILL-PROMPT-AUDIT.md",
+      "prompts/skills/SKILL-SCHEME-CODE.md",
+      "prompts/skills/SKILL-TOOL-TRUST.md"
+    ],
     "local_helper_scripts": [
       "scripts/lock.py",
       "scripts/atomic_push.py",
-      "scripts/validate_prompt_deployment.py"
+      "scripts/validate_prompt_deployment.py",
+      "scripts/sync_research_agent.py"
     ],
     "upstream_distribution_boundary": {
       "status": "PASS",
@@ -45,13 +58,14 @@
     "source_integrity": {
       "status": "PASS",
       "registered_source_files": [],
-      "note": "No source PDF or raw dataset file is registered yet; deployment created source/data directories without modifying research sources."
+      "note": "No source PDF or raw dataset file is registered yet; deployment created no changes under paper/source/ or data/raw/."
     }
   },
   "notes": [
     "Project-specific content is isolated in prompts/meta/kernel-project.md and generated runtime docs.",
     "prompts/meta/kernel-project.md SHA-256 remained 420eeca84c8d959a733312a33f725f279dbb291e9597b72bfec46ed753b43fa7 across upstream sync.",
-    "Upstream revision 8abd3a7 distributes metaprompts only; project-local agents, skills, and helper scripts were redeployed locally.",
+    "Upstream revision c985b65 distributes metaprompts only; project-local agents, skills, and helper scripts were redeployed locally.",
+    "Q3-AUDIT skill manifest now contains 9 local capsules, including scheme/code, paper-writing, deck, and presentation-illustration loops.",
     "prompts/REDEPLOY_REQUIRED.md was removed only after local prompt audit passed."
   ]
 }
