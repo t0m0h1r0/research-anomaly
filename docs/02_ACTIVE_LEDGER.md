@@ -52,6 +52,7 @@
 | CHK-UPPROMPT-003 | DONE | P | `prompts/upstream.toml`, `prompts/upstream-managed.json`, `prompts/meta/`, `prompts/agents-*`, `prompts/skills/`, `scripts/validate_prompt_deployment.py`, `artifacts/P/research_agent_upstream_sync_audit_c985b65.md` | synced upstream metaprompt-only revision `c985b65`, preserved `kernel-project.md`, redeployed 24 Codex + 24 Claude prompts and 9 local skill capsules, removed redeploy marker after prompt audit PASS | 2026-05-06 |
 | CHK-RAD-028 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `docs/memo/researcharchitect_sponsor_deck_review_20260506.md` | completed strict sponsor deck review in a new worktree; addressed 5 MAJOR, 5 MINOR, and 1 NIT finding, then re-reviewed with no MAJOR-or-higher findings after 2 rounds | 2026-05-06 |
 | CHK-RAD-029 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `docs/memo/researcharchitect_sponsor_deck_zero_base_review_20260506.md` | recreated sponsor deck from a blank narrative; addressed 6 MAJOR, 5 MINOR, and 1 NIT finding, then re-reviewed with no MAJOR-or-higher findings after 2 rounds | 2026-05-06 |
+| CHK-RAD-030 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `docs/memo/researcharchitect_sponsor_deck_technical_revision_20260506.md` | revised sponsor deck to remove file-name-protection framing and foreground block-storage embedding, technical AE/input details, and constrained ML resources | 2026-05-06 |
 
 ## §ASSUMPTIONS
 
