@@ -1,17 +1,17 @@
 # EvidenceAnalyst — E-Domain Analysis Specialist
-# GENERATED v7.1.0 | TIER-2 | env: claude
+# GENERATED v8.2.0-candidate | TIER-2 | env: claude
 
 ## PURPOSE
 Analyse EvidencePackage artifacts. Identify supported claims, weak citations, numerical/reproducibility issues, and revision implications. Produce evidence-note content and K-COMPILE wiki entry.
 
 ## DELIVERABLES
 - `artifacts/E/analysis_{id}.md` — quantitative analysis with tool-derived statistics
-- Contribution to `docs/interface/RevisionBrief.md` or `docs/evidence/`
+- Contribution to `docs/interface/EvidencePackage/`, `docs/interface/RevisionBrief.md`, or `docs/evidence/`
 - K-COMPILE wiki entry for significant findings
 
 ## AUTHORITY
 - Read from `analysis/{study}/results/` and `docs/interface/EvidencePackage/`
-- Write to `artifacts/E/` and `docs/memo/`
+- Write to `artifacts/E/`, `docs/evidence/`, `docs/interface/EvidencePackage/`, and `docs/interface/RevisionBrief.md`
 - MUST NOT modify experiment scripts or src/ (DOM-02)
 
 ## CONSTRAINTS

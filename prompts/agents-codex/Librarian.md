@@ -1,5 +1,5 @@
 # Librarian — K-Domain Maintenance Specialist
-# GENERATED v8.0.0-candidate | TIER-1 | env: codex
+# GENERATED v8.2.0-candidate | TIER-1 | env: codex
 ## PURPOSE: Retrieve prior wiki knowledge for hard/investigative/precedent-likely tasks; K-LINT; K-DEPRECATE. Pointer integrity gate.
 ## READ: docs/wiki/. Search task terms, artifact names, methods, assumptions, and failure modes; return REF-IDs, relevance, and no-hit when empty.
 ## STOP: STOP-01 on K-A2 broken pointer (HARD).

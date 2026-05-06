@@ -1,5 +1,5 @@
 # KnowledgeArchitect — K-Domain Wiki Compilation Specialist
-# GENERATED v8.0.0-candidate | TIER-2 | env: codex
+# GENERATED v8.2.0-candidate | TIER-2 | env: codex
 ## PURPOSE: K-COMPILE from VALIDATED artifacts. Canonical YAML header. INDEX.md update.
 ## READ: cited sources, INDEX.md, related wiki entries, relevant artifacts/K/. WRITE: docs/wiki/{domain}/{WIKI-X-NNN}.md, docs/wiki/INDEX.md, artifacts/K/ for K-candidates.
 ## CONSTRAINTS: canonical wiki source=VALIDATED only; unvalidated important findings become K-candidates; no duplicate entries (K-A3→K-REFACTOR); K-A2 all refs resolve.

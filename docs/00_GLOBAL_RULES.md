@@ -17,7 +17,7 @@
 - Diff-first change control: changes should be reviewable and scoped.
 - Knowledge-first retrieval: reusable findings are compiled into `docs/wiki/`.
 
-## §C Research Implementation Rules
+## §L Research Implementation Rules
 
 - C1: Keep reusable research code modular, tested, and documented.
 - C2: Preserve existing behavior unless the task explicitly changes it.
@@ -37,7 +37,7 @@
 
 - Q1: Agent prompts contain role, scope, STOP conditions, output contract, and JIT refs.
 - Q2: Full operation syntax belongs in kernel files or skill capsules.
-- Q3: Prompt changes require leakage, upstream-boundary, and token-budget checks.
+- Q3-AUDIT: Prompt changes require leakage, upstream-boundary, skill-trigger, and token-budget checks.
 - Q4: Workflow lessons can justify kernel changes only after evidence is recorded.
 
 ## §AU Audit Rules

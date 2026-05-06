@@ -24,6 +24,18 @@ REQUIRED_SKILL_FIELDS = {
     "token_target",
 }
 
+EXPECTED_SKILLS = {
+    "SKILL-CONDENSE-V2.md",
+    "SKILL-GIT-WORKTREE.md",
+    "SKILL-HANDOFF-AUDIT.md",
+    "SKILL-PAPER-WRITING.md",
+    "SKILL-PRESENTATION-DECK.md",
+    "SKILL-PRESENTATION-ILLUSTRATION.md",
+    "SKILL-PROMPT-AUDIT.md",
+    "SKILL-SCHEME-CODE.md",
+    "SKILL-TOOL-TRUST.md",
+}
+
 
 def git_changed(path: str) -> bool:
     result = subprocess.run(
@@ -80,7 +92,16 @@ def main() -> int:
     check(len(project_rules) == 6, "project_rules_count", f"found {len(project_rules)} PR rules", results)
     check(codex_agents == 24, "codex_agent_count", f"found {codex_agents}", results)
     check(claude_agents == 24, "claude_agent_count", f"found {claude_agents}", results)
-    check(len(skill_paths) == 6, "skill_capsule_count", f"found {len(skill_paths)}", results)
+    skill_names = {path.name for path in skill_paths}
+    missing_skills = sorted(EXPECTED_SKILLS - skill_names)
+    unexpected_skills = sorted(skill_names - EXPECTED_SKILLS)
+    check(len(skill_paths) == len(EXPECTED_SKILLS), "skill_capsule_count", f"found {len(skill_paths)}", results)
+    check(
+        not missing_skills and not unexpected_skills,
+        "skill_capsule_manifest",
+        json.dumps({"missing": missing_skills, "unexpected": unexpected_skills}, sort_keys=True),
+        results,
+    )
     missing_fields = {
         str(path.relative_to(ROOT)): sorted(REQUIRED_SKILL_FIELDS - skill_fields(path))
         for path in skill_paths
@@ -104,6 +125,15 @@ def main() -> int:
     )
     check((ROOT / "schema_resolution_report.json").exists(), "schema_report_present", "schema_resolution_report.json", results)
     check((ROOT / "token_telemetry_report.json").exists(), "token_report_present", "token_telemetry_report.json", results)
+    if (ROOT / "token_telemetry_report.json").exists():
+        telemetry = json.loads(text(ROOT / "token_telemetry_report.json"))
+        q3b = telemetry.get("q3b", {})
+        check(
+            "skill_trigger_tokens" in q3b or "skill_trigger_tokens" in telemetry,
+            "token_skill_trigger_tokens",
+            "present" if ("skill_trigger_tokens" in q3b or "skill_trigger_tokens" in telemetry) else "missing",
+            results,
+        )
 
     status = "PASS" if all(item["status"] == "PASS" for item in results) else "FAIL"
     print(json.dumps({"status": status, "checks": results}, indent=2))

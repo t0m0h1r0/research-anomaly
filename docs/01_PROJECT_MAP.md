@@ -36,10 +36,10 @@ figures, and manuscript drafting.
 
 | Contract | Producer | Consumer | Purpose |
 |----------|----------|----------|---------|
-| `docs/interface/ResearchBrief.md` | M | T/R/E/A | initial scope from user request and repository scaffold |
-| `docs/interface/SourceClaimMap.md` | T/E | T/R/E/A | map research claims to sources once sources exist |
-| `docs/interface/CheckSpec.md` | T | R/E | define model, metric, leakage, memory, and experiment checks |
-| `docs/interface/AnalysisPackage/` | R | E/A | reproducible code, configs, and run outputs |
+| `docs/interface/ResearchBrief.md` | M | T/L/E/A | initial scope from user request and repository scaffold |
+| `docs/interface/SourceClaimMap.md` | T/E | T/L/E/A | map research claims to sources once sources exist |
+| `docs/interface/CheckSpec.md` | T | L/E | define model, metric, leakage, memory, and experiment checks |
+| `docs/interface/AnalysisPackage/` | L | E/A | reproducible code, configs, and run outputs |
 | `docs/interface/EvidencePackage/` | E | A | literature, benchmark, dataset, empirical, and memory evidence |
 | `docs/interface/RevisionBrief.md` | T/E | A | signed basis for manuscript edits |
 
@@ -49,16 +49,17 @@ figures, and manuscript drafting.
 |-----------|-------|-----|
 | `docs/memo/` | T/M | research questions, model specs, theory/claim audits |
 | `docs/evidence/` | E | literature, benchmark, dataset, citation, and source notes |
-| `docs/interface/` | M/T/R/E/A | signed handoff contracts |
-| `src/` | R | reusable feature, dataset, model, memory, and evaluation code |
-| `analysis/` | R/E | reproducible experiment studies and outputs |
-| `notebooks/` | R/E | exploratory work promoted only through scripts |
-| `data/raw/` | E/R | immutable traces or dataset manifests |
-| `data/processed/` | R/E | processed tensors with provenance |
+| `docs/interface/` | M/T/L/E/A | signed handoff contracts |
+| `src/` | L | reusable feature, dataset, model, memory, and evaluation code |
+| `analysis/` | L/E | reproducible experiment studies and outputs |
+| `notebooks/` | L/E | exploratory work promoted only through scripts |
+| `data/raw/` | E/L | immutable traces or dataset manifests |
+| `data/processed/` | L/E | processed tensors with provenance |
 | `paper/sections/` | A | manuscript drafts and section patches |
 | `paper/figures/` | A/E | curated manuscript figures |
 | `paper/presentations/` | A | evidence-grounded slide deck materials |
 | `artifacts/M/` | M | workflow lessons and prompt-improvement notes |
+| `artifacts/L/` | L | implementation plans, SchemeCodePlan drafts, and verification notes |
 | `prompts/meta/` | P/M | kernel source of truth |
 | `prompts/agents-*` | P | project-local deployed agent prompts |
 | `prompts/skills/` | P/K | project-local JIT skill capsules |
@@ -121,4 +122,4 @@ metrics, and exact command.
 
 ## §8 Matrix Domain Map
 
-Use `prompts/meta/kernel-domains.md` as the authority for T/R/E/A/M/P/Q/K ownership.
+Use `prompts/meta/kernel-domains.md` as the authority for T/L/E/A/M/P/Q/K ownership.
