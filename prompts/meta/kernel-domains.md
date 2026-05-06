@@ -20,7 +20,7 @@
 | ID | Domain | Truth Type | Dir | Specialist | Gatekeeper |
 |----|--------|------------|-----|------------|------------|
 | T | Theory & Claims | Logical/mathematical | docs/memo/ | TheoryArchitect | TheoryAuditor |
-| R | Research Implementation | Computational/functional | src/, analysis/, notebooks/ | CodeArchitect, CodeCorrector, TestRunner | CodeWorkflowCoordinator |
+| L | Research Implementation | Computational/functional | src/, analysis/, notebooks/ | CodeArchitect, CodeCorrector, TestRunner | CodeWorkflowCoordinator |
 | E | Evidence & Evaluation | Empirical/bibliographic | docs/evidence/, data/ | ExperimentRunner, EvidenceAnalyst | CodeWorkflowCoordinator |
 | A | Academic Writing | Manuscript/narrative/presentation | paper/ | PaperWriter, PresentationWriter, PaperCompiler, PaperReviewer | PaperWorkflowCoordinator |
 
@@ -45,8 +45,8 @@ K-domain memory before closing the task.
 | Transfer | Contract Artifact | Precondition |
 |----------|-------------------|--------------|
 | Source -> T | `docs/interface/SourceClaimMap.md` | Source artifact registered |
-| T -> R | `docs/interface/CheckSpec.md` | TheoryAuditor PASS |
-| R -> E | `docs/interface/AnalysisPackage/` | TestRunner PASS |
+| T -> L | `docs/interface/CheckSpec.md` | TheoryAuditor PASS |
+| L -> E | `docs/interface/AnalysisPackage/` | TestRunner PASS |
 | E -> A | `docs/interface/EvidencePackage/` | Evidence gate PASS |
 | T/E -> A | `docs/interface/RevisionBrief.md` | Theory and evidence checks signed |
 | Any -> K | `docs/wiki/{category}/{REF-ID}.md` | Owning Gatekeeper PASS; VALIDATED |
@@ -70,18 +70,18 @@ domain: T
 branch: theory
 coordinator: TheoryAuditor
 specialists: [TheoryArchitect, PaperWriter(math exposition)]
-write: [docs/memo/, docs/interface/SourceClaimMap.md, docs/02_ACTIVE_LEDGER.md]
+write: [docs/memo/, artifacts/T/, docs/interface/SourceClaimMap.md, docs/interface/CheckSpec.md, docs/interface/RevisionBrief.md, docs/02_ACTIVE_LEDGER.md]
 read: [paper/source/, paper/sections/, docs/01_PROJECT_MAP.md]
-forbidden: [src/, analysis/, notebooks/, data/, prompts/meta/]
+forbidden: [src/, analysis/, notebooks/, data/, prompts/meta/, docs/interface/ without IF-COMMIT]
 produces: [docs/interface/CheckSpec.md, docs/interface/RevisionBrief.md]
 rules: [A3, AU1-AU3, PR-3]
 lifecycle: DRAFT -> REVIEWED(Independent derivation) -> VALIDATED(AU2 PASS)
 
-domain: R
+domain: L
 branch: research-impl
 coordinator: CodeWorkflowCoordinator
 specialists: [CodeArchitect, CodeCorrector, TestRunner]
-write: [src/, analysis/, notebooks/, tests/, docs/02_ACTIVE_LEDGER.md]
+write: [src/, analysis/, notebooks/, tests/, docs/interface/AnalysisPackage/, docs/02_ACTIVE_LEDGER.md]
 read: [docs/interface/CheckSpec.md, paper/source/, docs/memo/]
 forbidden: [paper/sections/, paper/presentations/, prompts/meta/, docs/interface/ without IF-COMMIT]
 produces: docs/interface/AnalysisPackage/
@@ -92,9 +92,9 @@ domain: E
 branch: evidence
 coordinator: CodeWorkflowCoordinator
 specialists: [ExperimentRunner, EvidenceAnalyst]
-write: [docs/evidence/, data/, artifacts/E/, docs/02_ACTIVE_LEDGER.md]
+write: [docs/evidence/, data/, artifacts/E/, docs/interface/EvidencePackage/, docs/interface/RevisionBrief.md, docs/02_ACTIVE_LEDGER.md]
 read: [paper/source/, docs/interface/AnalysisPackage/, docs/memo/]
-forbidden: [src/ except invocation, paper/sections/, paper/presentations/, prompts/meta/]
+forbidden: [src/ except invocation, paper/sections/, paper/presentations/, prompts/meta/, docs/interface/ without IF-COMMIT]
 produces: [docs/interface/EvidencePackage/, docs/interface/RevisionBrief.md]
 rules: [PR-4, PR-5]
 lifecycle: DRAFT -> REVIEWED(Evidence trace) -> VALIDATED(AU2 PASS)
@@ -103,7 +103,7 @@ domain: A
 branch: paper
 coordinator: PaperWorkflowCoordinator
 specialists: [PaperWriter, PresentationWriter, PaperCompiler, PaperReviewer]
-write: [paper/sections/, paper/figures/, paper/presentations/, paper/bibliography.bib, artifacts/A/, docs/02_ACTIVE_LEDGER.md]
+write: [paper/sections/, paper/figures/, paper/presentations/, paper/main.tex, paper/*.sty, paper/*.cls, paper/bibliography.bib, artifacts/A/, docs/interface/, docs/02_ACTIVE_LEDGER.md]
 read: [paper/source/, docs/interface/RevisionBrief.md, docs/interface/EvidencePackage/, docs/memo/]
 forbidden: [src/, analysis/, notebooks/, data/, prompts/meta/, docs/interface/ without IF-COMMIT]
 produces: [paper/sections/, paper/presentations/, artifacts/A/revision_notes.md]
@@ -114,7 +114,7 @@ domain: M
 branch: meta
 coordinator: ResearchArchitect
 specialists: [TaskPlanner, DiagnosticArchitect, DevOpsArchitect]
-write: [artifacts/M/, docs/02_ACTIVE_LEDGER.md]
+write: [artifacts/M/, docs/01_PROJECT_MAP.md, docs/02_ACTIVE_LEDGER.md, Dockerfile, docker-compose.yml, .github/workflows/, Makefile, requirements*.txt, pyproject.toml]
 read: ALL
 forbidden: [paper/source/ overwrite, prompts/meta/ without explicit prompt task]
 rules: [A1-A11, PR-1]
@@ -123,11 +123,11 @@ domain: P
 branch: prompt
 coordinator: PromptArchitect
 specialists: [PromptAuditor]
-write: [prompts/agents-claude/, prompts/agents-codex/, prompts/skills/, artifacts/P/]
+write: [prompts/agents-claude/, prompts/agents-codex/, prompts/skills/, prompts/README.md, AGENTS.md, docs/00_GLOBAL_RULES.md, docs/03_PROJECT_RULES.md, artifacts/P/, docs/interface/]
 read: [prompts/meta/kernel-*.md, prompts/meta/kernel-project.md, docs/02_ACTIVE_LEDGER.md]
-forbidden: [paper/source/, src/, analysis/, paper/sections/, paper/presentations/]
-rules: [Q1-Q4, PR-1]
-lifecycle: DRAFT -> REVIEWED(PromptAuditor Q3 PASS) -> VALIDATED
+forbidden: [paper/source/, src/, analysis/, paper/sections/, paper/presentations/, docs/interface/ without IF-COMMIT]
+rules: [Q1-TEMPLATE, Q2-SOURCE-TRACE, Q3-AUDIT, Q4-COMPRESSION, PR-1]
+lifecycle: DRAFT -> REVIEWED(PromptAuditor Q3-AUDIT PASS) -> VALIDATED
 
 domain: Q
 branch: audit
@@ -166,7 +166,7 @@ analysis/          Reproducible scripts and outputs
 notebooks/         Reproducible exploratory notebooks promoted to artifacts
 src/               Reusable research code
 data/              Local data inputs with provenance
-artifacts/{M,T,R,E,A,Q,K,P}/  Agent intermediate artifacts
+artifacts/{M,T,L,E,A,Q,K,P}/  Agent intermediate artifacts
 prompts/meta/      Local materialization of pulled metaprompt source plus kernel-project.md
 prompts/agents-*/  Project-local generated executable agent prompts
 prompts/skills/    Project-local generated JIT skill capsules
@@ -190,7 +190,7 @@ prompts/skills/    Project-local generated JIT skill capsules
 WIKI-ENTRY:
   ref_id:         {e.g., WIKI-T-001}
   title:          {concise title}
-  domain:         {T | R | E | A | M | cross-domain}
+  domain:         {T | L | E | A | M | cross-domain}
   status:         {ACTIVE | DEPRECATED | SUPERSEDED}
   superseded_by:  {[[REF-ID]] or null}
   sources:
