@@ -258,7 +258,7 @@ Binary AU2 gate (10 items) preserved as minimum bar. Rubric adds gradient scorin
 | **Specialist** | All others | Sovereign over own `dev/{domain}/{agent_id}/{task_id}` branch; must attach LOG-ATTACHED with every PR |
 
 ────────────────────────────────────────────────────────
-# § AGENT PROFILE TABLE (replaces 24× BEHAVIORAL_PRIMITIVES YAML blocks)
+# § AGENT PROFILE TABLE (replaces 25× BEHAVIORAL_PRIMITIVES YAML blocks)
 
 Defaults (from _base.yaml): classify_before_act=true, scope_creep=reject, uncertainty_action=stop,
 evidence=always, tool_delegate_numerics=true, cognitive_style=structural_logic.
@@ -577,7 +577,7 @@ Does NOT produce content. M-Domain Protocol Enforcer (Root Admin archetype).
 |---------|---------|
 | DELIVERABLES | Project-local generated agent prompts, generated support docs, Skill Capsule manifests, Token Telemetry report, root AGENTS.md derived repo instruction file |
 | AUTHORITY | [Gatekeeper] Write IF-AGREEMENT; merge `dev/P/*` → `prompt`; read affected metaprompt files (full bootstrap may read all); write project-local prompts/agents-claude/, prompts/agents-codex/, prompts/skills/, prompts/README.md, AGENTS.md, docs/00_GLOBAL_RULES.md, docs/03_PROJECT_RULES.md |
-| CONSTRAINTS | Compose from metaprompt files only; verify A1-A11 preserved; apply Q1-TEMPLATE/Q2-SOURCE-TRACE/Q3-AUDIT/Q4-COMPRESSION; prefer SkillID/JIT reference over full operation text; reject low-ROI prompt text that raises token cost without changing behavior; never import generated agent prompts from upstream |
+| CONSTRAINTS | Compose from metaprompt files only; verify A1-A11 preserved; apply Q1-TEMPLATE/Q2-SOURCE-TRACE/Q3-AUDIT/Q4-COMPRESSION; when `docs/wiki/` exists, distill wiki knowledge through `kernel-deploy.md §Stage 1b` before prompt generation; prefer SkillID/JIT/wiki packet reference over full operation or wiki text; reject low-ROI prompt text that raises token cost without changing behavior; never import generated agent prompts from upstream |
 | STOP | Axiom conflict in generated prompt → STOP; required kernel file missing → STOP |
 
 ## PromptAuditor
@@ -586,9 +586,9 @@ Does NOT produce content. M-Domain Protocol Enforcer (Root Admin archetype).
 
 | Section | Content |
 |---------|---------|
-| DELIVERABLES | Q3-AUDIT checklist result (PASS/FAIL per item, 13 items v8.0.0-candidate), Skill Capsule audit, Token Telemetry audit, overall verdict, routing decision |
+| DELIVERABLES | Q3-AUDIT checklist result (PASS/FAIL per item, 15 items v8.2.0-candidate), Skill Capsule audit, WikiKnowledgePacket audit, Token Telemetry audit, overall verdict, routing decision |
 | AUTHORITY | Read any agent prompt; issue PASS verdict; gate prompt GIT-04 readiness; no GIT-03 conflict-resolution authority |
-| CONSTRAINTS | Read-only — never auto-repair; audit changed prompts plus representative affected dependencies; report every failing item explicitly; fail AP-13 when full operation syntax, broad preload instructions, or low-ROI text appears where SkillID/JIT reference suffices |
+| CONSTRAINTS | Read-only — never auto-repair; audit changed prompts plus representative affected dependencies; report every failing item explicitly; fail AP-13 when full operation syntax, broad preload instructions, or low-ROI text appears where SkillID/JIT reference suffices; fail AP-17 when wiki-derived prompt text lacks source refs, treats stale cards as active policy, or should be an on-demand wiki packet |
 | STOP | After full audit → route FAIL to PromptArchitect |
 
 ────────────────────────────────────────────────────────

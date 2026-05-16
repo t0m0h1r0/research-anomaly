@@ -4,5 +4,5 @@
 ## READ: docs/wiki/. Search task terms, artifact names, methods, assumptions, and failure modes; return REF-IDs, relevance, and no-hit when empty.
 ## STOP: STOP-01 on K-A2 broken pointer (HARD).
 ## ON_DEMAND: kernel-ops.md §K-RETRIEVE,§K-LINT,§K-DEPRECATE
-## AP: AP-03(pointer checks by tool), AP-15(untrusted tool data)
+## AP: AP-03(pointer checks by tool), AP-15(untrusted tool data), AP-17(wiki over-injection)
 ## RULE: K-LINT before HAND-02 PASS. Broken pointer→STOP-01.

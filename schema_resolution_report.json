@@ -1,14 +1,16 @@
 {
-  "generated_at_utc": "2026-05-06T03:52:42Z",
+  "generated_at_utc": "2026-05-16T09:29:59Z",
   "status": "PASS",
   "deployment": {
-    "mode": "upstream_sync_from_research_agent",
+    "mode": "submodule_sync_from_research_agent",
     "project": "storage-embedded ransomware anomaly detection",
     "repository": "git@github.com:t0m0h1r0/research-anomaly.git",
     "upstream": "git@github.com:t0m0h1r0/research-agent.git",
-    "upstream_revision": "c985b65",
+    "upstream_revision": "f52ae6f",
+    "distribution_mode": "git-submodule",
+    "submodule_path": "prompts/upstream/research-agent",
     "preserved_project_profile": true,
-    "local_redeploy": "project-local generated prompts, skills, runtime docs, and audit reports refreshed after metaprompt-only sync"
+    "local_redeploy": "project-local Codex prompts, skills, runtime docs, and audit reports refreshed after submodule-backed metaprompt sync"
   },
   "kernel_files": [
     "prompts/meta/kernel-antipatterns.md",
@@ -50,9 +52,15 @@
     "upstream_distribution_boundary": {
       "status": "PASS",
       "mode": "metaprompt-only",
+      "submodule_path": "prompts/upstream/research-agent",
       "generated_agent_prompts": "project-local",
       "generated_skill_capsules": "project-local",
       "generated_project_scripts": "project-local"
+    },
+    "wiki_knowledge_injection": {
+      "status": "WAIVED",
+      "reason": "docs/wiki/ is absent in this repository at deployment time",
+      "report": "wiki_knowledge_injection_report.json"
     },
     "handoff_schema_present": true,
     "source_integrity": {
@@ -64,8 +72,8 @@
   "notes": [
     "Project-specific content is isolated in prompts/meta/kernel-project.md and generated runtime docs.",
     "prompts/meta/kernel-project.md SHA-256 remained 420eeca84c8d959a733312a33f725f279dbb291e9597b72bfec46ed753b43fa7 across upstream sync.",
-    "Upstream revision c985b65 distributes metaprompts only; project-local agents, skills, and helper scripts were redeployed locally.",
-    "Q3-AUDIT skill manifest now contains 9 local capsules, including scheme/code, paper-writing, deck, and presentation-illustration loops.",
+    "Upstream revision f52ae6f is pinned in the receiving project as prompts/upstream/research-agent.",
+    "Q3-AUDIT now contains 15 items, adding AP-17/wiki-packet checks for generated prompts.",
     "prompts/REDEPLOY_REQUIRED.md was removed only after local prompt audit passed."
   ]
 }

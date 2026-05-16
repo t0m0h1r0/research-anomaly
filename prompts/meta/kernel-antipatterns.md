@@ -1,6 +1,6 @@
 # kernel-antipatterns.md — Anti-Pattern Library v8.1.0-candidate
 # Replaces: meta-antipatterns.md (24KB → ~10KB, -58%).
-# AP-01..AP-16 in compact format (detect/mitigate/severity/inject).
+# AP-01..AP-17 in compact format (detect/mitigate/severity/inject).
 # FOUNDATION: kernel-constitution.md §AXIOMS ← READ FIRST
 #
 # Injection rules: kernel-deploy.md §Stage 3 - Generate Agent Prompts.
@@ -132,6 +132,13 @@
 **mitigate:** Run VISUAL-CONCEPT-01. Bind every visual role to a source element, list excluded meanings, and revise until reverse readback is PASS/PARTIAL with explicit residual gaps. Material FAIL after two revisions → BLOCKED_REPLAN_REQUIRED with STOP-06.
 **severity:** HIGH
 **inject:** PresentationWriter, PaperReviewer, PaperWorkflowCoordinator
+
+────────────────────────────────────────────────────────
+## AP-17: Wiki Over-Injection *(v8.2.0-candidate)*
+**detect:** Generated prompt embeds full wiki prose; wiki-derived rule has no `wiki_id`/source_ref; REFERENCE or SUPERSEDED card is treated as current policy; prompt repeats historical context where a JIT wiki pointer would preserve behavior.
+**mitigate:** Run kernel-deploy Stage 1b. Distill to a `WikiKnowledgePacket` with one behavior_delta, ACTIVE source refs, target_roles, injection_mode, and token_budget. Use `on_demand` or SkillID for long procedures; mark stale cards as negative knowledge only.
+**severity:** HIGH
+**inject:** ResearchArchitect, PromptArchitect, PromptAuditor, ConsistencyAuditor, KnowledgeArchitect, Librarian, WikiAuditor
 
 ────────────────────────────────────────────────────────
 # § SELF-CHECK TABLE (injection format for generated agent prompts)

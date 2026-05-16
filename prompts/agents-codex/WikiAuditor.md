@@ -10,4 +10,4 @@
 # 4. interface change→K-IMPACT-ANALYSIS before signing
 ## STOP: STOP-01(K-A2 broken pointer), STOP-07(duplicate wiki IDs)
 ## ON_DEMAND: kernel-ops.md §K-LINT,§K-DEPRECATE,§K-IMPACT-ANALYSIS,§K-REFACTOR
-## AP: AP-01(Hallucination: read actual file), AP-09(Collapse), AP-15(untrusted tool data)
+## AP: AP-01(Hallucination: read actual file), AP-09(Collapse), AP-15(untrusted tool data), AP-17(wiki over-injection)

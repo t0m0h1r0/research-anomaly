@@ -1,6 +1,6 @@
 {
-  "managed_paths": [
-    "prompts/REDEPLOY_REQUIRED.md",
+  "distribution_mode": "git-submodule",
+  "managed_files": [
     "prompts/meta/kernel-antipatterns.md",
     "prompts/meta/kernel-constitution.md",
     "prompts/meta/kernel-deploy.md",
@@ -8,9 +8,12 @@
     "prompts/meta/kernel-ops.md",
     "prompts/meta/kernel-roles.md",
     "prompts/meta/kernel-workflow.md",
-    "prompts/upstream-managed.json",
-    "prompts/upstream.toml"
+    "prompts/upstream-managed.json"
   ],
   "name": "research-agent-metaprompt",
-  "revision": "c985b65"
+  "note": "Shared kernel files are materialized from the pinned submodule. prompts/meta/kernel-project.md remains project-local.",
+  "preserve_project_profile": true,
+  "remote": "git@github.com:t0m0h1r0/research-agent.git",
+  "revision": "f52ae6f",
+  "submodule_path": "prompts/upstream/research-agent"
 }
