@@ -6,13 +6,13 @@
 
 | Field | Value |
 |-------|-------|
-| phase | PROMPT_DEPLOYED |
-| branch | codex/researcharchitect-zero-base-prompt-deploy-20260517 |
-| current_objective | Adopt remote research-agent metaprompt snapshot `ed38873`, discontinue persistent `prompts/upstream/`, and zero-base redeploy local prompt artifacts |
+| phase | PRESENTATION_REFRESH |
+| branch | codex/researcharchitect-presentation-refresh-20260517 |
+| current_objective | Capture reusable presentation-review lessons in wiki memory |
 | active_brief | `docs/interface/ResearchBrief.md` |
 | source_artifact | `git@github.com:t0m0h1r0/research-agent.git` remote snapshot @ `ed38873`, materialized into `prompts/meta/` |
-| next_action | Continue `ASM-RAD-001` planning unless the user asks for merge or another prompt-system follow-up |
-| updated_at_utc | 2026-05-16T16:52:05Z |
+| next_action | Await user review or explicit main no-ff merge instruction; do not merge to `main` otherwise |
+| updated_at_utc | 2026-05-16T23:24:25Z |
 
 ## §CHECKLIST
 
@@ -55,6 +55,13 @@
 | CHK-RAD-030 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `docs/memo/researcharchitect_sponsor_deck_technical_revision_20260506.md` | revised sponsor deck to remove file-name-protection framing and foreground block-storage embedding, technical AE/input details, and constrained ML resources | 2026-05-06 |
 | CHK-UPPROMPT-004 | DONE | P | `.gitmodules`, `prompts/upstream/research-agent`, `prompts/upstream.toml`, `prompts/upstream-managed.json`, `prompts/meta/`, `prompts/agents-codex/`, `prompts/skills/SKILL-PROMPT-AUDIT.md`, `wiki_knowledge_injection_report.json`, `artifacts/P/research_agent_submodule_prompt_sync_f52ae6f.md` | added research-agent as a pinned submodule, synced shared metaprompts at `f52ae6f`, preserved `kernel-project.md`, redeployed Codex prompt artifacts for AP-17/wiki-packet audit discipline, and passed prompt audit | 2026-05-16 |
 | CHK-UPPROMPT-005 | DONE | P | `scripts/sync_research_agent.py`, `scripts/deploy_prompt_system.py`, `scripts/validate_prompt_deployment.py`, `prompts/upstream.toml`, `prompts/upstream-managed.json`, `prompts/meta/`, `prompts/agents-*`, `prompts/skills/`, `token_roi_report.json`, `artifacts/P/research_agent_remote_snapshot_prompt_sync_ed38873.md` | discontinued persistent `prompts/upstream/` submodule, synced latest remote metaprompt snapshot `ed38873`, preserved `kernel-project.md`, zero-base regenerated local agents/skills/docs/reports, and passed prompt audit with Q3-16 token-ROI reporting | 2026-05-17 |
+| CHK-RAD-031 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `paper/presentations/storage_embedded_ransomware_sponsor_brief/`, `docs/memo/researcharchitect_sponsor_deck_refresh_20260517.md` | refreshed sponsor-facing presentation into a six-slide technical decision narrative; added editable artifact-tool source and resolved render/claim review with 0 layout errors/warnings | 2026-05-17 |
+| CHK-RAD-032 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `paper/presentations/storage_embedded_ransomware_sponsor_brief/review_reports/round_2_flair.md` | revised the sponsor deck for stronger editorial contrast and more theatrical lead lines while preserving non-claim gates; rerendered with 0 layout errors/warnings | 2026-05-17 |
+| CHK-RAD-033 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `paper/presentations/storage_embedded_ransomware_sponsor_brief/review_reports/round_3_visual_consistency.md` | corrected abrupt background shifts by returning all slides to one light editorial system and adding explicit `主張` lines; rerendered with 0 layout errors/warnings | 2026-05-17 |
+| CHK-RAD-034 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `paper/presentations/storage_embedded_ransomware_sponsor_brief/review_reports/round_4_copy_consistency.md` | tightened Japanese copy, removed ambiguous `この資料は` framing, and corrected mismatched contrast pairs; rerendered with 0 layout errors/warnings | 2026-05-17 |
+| CHK-RAD-035 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `paper/presentations/storage_embedded_ransomware_sponsor_brief/review_reports/round_5_full_copy_review.md` | reviewed all slide titles, claim lines, figure labels, tables, callouts, and guard badges as one copy system; rerendered with 0 layout errors/warnings | 2026-05-17 |
+| CHK-RAD-036 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `paper/presentations/storage_embedded_ransomware_sponsor_brief/review_reports/round_6_diagram_clarity.md` | redesigned the architecture, AE candidate, and memory-accounting slides so each has one clear proof object; rerendered with 0 layout errors/warnings | 2026-05-17 |
+| CHK-RAD-037 | DONE | M | `docs/wiki/INDEX.md`, `docs/wiki/cross-domain/WIKI-X-001_presentation_deck_review_loop.md` | compiled reusable presentation-deck review lessons from the session into wiki memory with source-traced review rounds | 2026-05-17 |
 
 ## §ASSUMPTIONS
 
@@ -79,6 +86,7 @@
 | LES-RAD-005 | ACTIVE | Upstream revision `c985b65` changes implementation-domain notation from `R` to `L` and adds role-triggered scheme/code, paper-writing, deck, and illustration/readback skill loops; local prompt audit must check the 9-capsule manifest and Q3b `skill_trigger_tokens`. | `artifacts/P/research_agent_upstream_sync_audit_c985b65.md` |
 | LES-RAD-006 | SUPERSEDED | Shared metaprompt updates were temporarily pinned through `prompts/upstream/research-agent`; this was replaced by remote-snapshot sync in LES-RAD-007. | `artifacts/P/research_agent_submodule_prompt_sync_f52ae6f.md` |
 | LES-RAD-007 | ACTIVE | Persistent upstream checkouts are unnecessary for this receiving project; shared metaprompts should be pulled from an ephemeral remote snapshot, materialized into `prompts/meta/`, and followed by zero-base local deployment while preserving `kernel-project.md`. | `artifacts/P/research_agent_remote_snapshot_prompt_sync_ed38873.md` |
+| LES-RAD-008 | ACTIVE | Sponsor-facing research decks converge faster when each slide is reviewed as one assertion, one proof object, and one explicit claim boundary rather than as isolated visual or copy fixes. | `docs/wiki/cross-domain/WIKI-X-001_presentation_deck_review_loop.md` |
 
 ## §REPLAN_LOG
 
@@ -107,3 +115,4 @@
 | RAD-RA-SPONSORDECK-REVIEW-20260506 | codex/researcharchitect-sponsor-deck-review-20260506 | `/private/tmp/research-anomaly-sponsor-deck-review-20260506` | strict review and zero-base revision of sponsor deck until no MAJOR-or-higher findings remain | ACTIVE | 2026-05-06 |
 | RAD-UPPROMPT4 | codex/researcharchitect-prompt-submodule-20260516 | `/private/tmp/research-anomaly-prompt-submodule-20260516` | add research-agent as a submodule, sync latest shared metaprompts, and redeploy Codex prompt artifacts | ACTIVE | 2026-05-16 |
 | RAD-UPPROMPT5 | codex/researcharchitect-zero-base-prompt-deploy-20260517 | `/Users/tomohiro/Documents/research-anomaly` | sync latest shared metaprompts from remote snapshot, remove persistent upstream directory, and zero-base redeploy local prompt artifacts | ACTIVE | 2026-05-17 |
+| RAD-RA-PRESREFRESH-20260517 | codex/researcharchitect-presentation-refresh-20260517 | `/private/tmp/research-anomaly-presentation-refresh-20260517` | refresh sponsor-facing presentation, create editable deck source/PPTX, and review until no MAJOR-or-higher findings remain | ACTIVE | 2026-05-17 |

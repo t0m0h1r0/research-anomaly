@@ -1,0 +1,27 @@
+primary: non-specialist research sponsors
+secondary_roles:
+  - storage engineers
+  - security researchers
+  - research program reviewers
+decision_authority: decide whether the next work should prioritize evidence-building for storage-embedded anomaly detection
+knowledge_level: technically literate, but not expected to know AE internals or MNN memory accounting
+language_preference: Japanese visible slide copy with compact technical labels where useful
+current_belief: ransomware detection sounds like a host/security feature, and embedded ML may sound either magical or too heavy
+desired_belief: the project is a falsifiable storage-side research program with clear observation limits, cheap inputs, candidate models, and device-fit gates
+cares_about:
+  - why block storage is a meaningful observation boundary
+  - whether the input can be collected cheaply
+  - whether AE complexity is justified against simpler rules
+  - whether memory and CPU constraints are treated honestly
+likely_objections:
+  - "Is this already a deployment proposal?"
+  - "Why not just use host/file/process information?"
+  - "Why use AE if simple counters might work?"
+  - "Does 500 KB include MNN runtime memory?"
+evidence_needed:
+  - architecture or workflow map
+  - fixed 10-second input contract
+  - AE candidate comparison ladder
+  - memory and scheduling gate
+  - final evidence roadmap without unsupported performance claims
+

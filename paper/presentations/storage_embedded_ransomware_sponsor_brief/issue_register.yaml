@@ -1,0 +1,56 @@
+issues:
+  - id: R1-MAJOR-01
+    iteration_found: R1
+    severity: MAJOR
+    slide_id: 5
+    category: claim_gate
+    problem: Exact component budget values could be misread as measured results unless labeled as targets.
+    audience_impact: Sponsors may believe the 500 KB fit has already been demonstrated.
+    decision_impact: High
+    proposed_fix: Label budget values as upper-target planning allocations and keep measurement language visible.
+    fix_policy: Must
+    status: addressed_in_initial_refresh
+  - id: R1-MAJOR-02
+    iteration_found: R1
+    severity: MAJOR
+    slide_id: deck
+    category: decision_frame
+    problem: The previous deck compressed the decision readout into the evaluation slide.
+    audience_impact: Audience may understand components but not the next decision.
+    decision_impact: High
+    proposed_fix: Add a dedicated decision-frame slide and close with evidence gates.
+    fix_policy: Must
+    status: addressed_in_initial_refresh
+  - id: R1-MINOR-01
+    iteration_found: R1
+    severity: MINOR
+    slide_id: 1
+    category: layout
+    problem: Bottom claim-scope panels were cramped in the first render.
+    audience_impact: Reduced polish and readability.
+    decision_impact: Medium
+    proposed_fix: Increase panel dimensions and rerender.
+    fix_policy: Should
+    status: resolved
+  - id: R1-MINOR-02
+    iteration_found: R1
+    severity: MINOR
+    slide_id: 3
+    category: layout
+    problem: Fixed-shape explanation created an awkward isolated punctuation mark.
+    audience_impact: Made the slide feel unfinished.
+    decision_impact: Low
+    proposed_fix: Shorten the explanation.
+    fix_policy: Should
+    status: resolved
+  - id: R1-MINOR-03
+    iteration_found: R1
+    severity: MINOR
+    slide_id: [4, 6]
+    category: claim_gate
+    problem: Red non-claim badges could be mistaken for positive fit claims by naive text checks.
+    audience_impact: None when read in context, but weak for automated audit.
+    decision_impact: Low
+    proposed_fix: Reword as explicit non-claims without positive-claim tokens.
+    fix_policy: Should
+    status: resolved
