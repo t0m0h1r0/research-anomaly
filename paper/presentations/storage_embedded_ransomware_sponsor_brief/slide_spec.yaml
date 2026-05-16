@@ -1,0 +1,55 @@
+slides:
+  - id: 1
+    lead_message: 研究対象は、ブロックI/Oの流れに埋め込む軽量な異常検知
+    role_in_story: Define the architecture boundary and non-claims.
+    source_refs:
+      - docs/interface/ResearchBrief.md
+      - docs/04_embedded_constraints.md
+      - paper/sections/05_input_contract.tex
+    visual_strategy: editable architecture map
+    risk_if_removed: Audience may assume host/file/process features are in scope.
+  - id: 2
+    lead_message: ゴールは導入判断ではなく、次に捨てる候補と測る証拠を決めること
+    role_in_story: Make the decision frame explicit by slide 2.
+    source_refs:
+      - docs/03_PROJECT_RULES.md
+      - docs/evidence/manuscript_claim_gate_matrix.md
+      - docs/04_embedded_constraints.md
+    visual_strategy: four-step decision cards
+    risk_if_removed: Deck becomes an informational overview without a decision path.
+  - id: 3
+    lead_message: MLに渡すのは、固定shapeの10秒統計列
+    role_in_story: Prove that feature collection is cheap and bounded.
+    source_refs:
+      - paper/sections/05_input_contract.tex
+      - docs/04_embedded_constraints.md
+      - docs/06_memory_aware_ae_candidates.md
+    visual_strategy: compact feature table plus exclusions
+    risk_if_removed: The AE input may look like an unspecified data lake.
+  - id: 4
+    lead_message: 候補AEは、複雑な演算を足す価値を順番に試すための比較群
+    role_in_story: Explain AE-01..05 as hypotheses, not a model shopping list.
+    source_refs:
+      - docs/06_memory_aware_ae_candidates.md
+      - paper/sections/06_autoencoder_candidates.tex
+    visual_strategy: candidate ladder table
+    risk_if_removed: Sponsors may think CNN-GRU is already the chosen model.
+  - id: 5
+    lead_message: ブロックストレージ内MLでは、重みより周辺状態とスケジュールが効く
+    role_in_story: Show why memory accounting and scheduling are first-class gates.
+    source_refs:
+      - docs/04_embedded_constraints.md
+      - docs/memo/500kb_budget_reconciliation.md
+      - paper/sections/08_mnn_implementation_plan.tex
+    visual_strategy: budget target plus aggregate formula
+    risk_if_removed: 500 KB may sound arbitrary or already proven.
+  - id: 6
+    lead_message: 検出精度だけでなく、MNN parity・メモリ・10秒cadenceで採否を決める
+    role_in_story: Close with evidence gates and candidate-shrink path.
+    source_refs:
+      - paper/sections/07_evaluation_plan.tex
+      - paper/sections/08_mnn_implementation_plan.tex
+      - docs/evidence/manuscript_claim_gate_matrix.md
+    visual_strategy: four-gate roadmap
+    risk_if_removed: Audience lacks a concrete next-evidence readout.
+

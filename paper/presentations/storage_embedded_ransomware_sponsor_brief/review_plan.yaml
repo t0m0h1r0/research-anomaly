@@ -1,0 +1,18 @@
+round_limit: 10
+stop_criteria:
+  high_open: 0
+  no_new_high_last_reviews: 1
+  slide_count_max: 6
+  text_heavy_slides_max: 0
+  claim_gate_pass: true
+review_lenses:
+  - id: R1
+    role: ResearchArchitect
+    lens: story, decision frame, claim discipline, source traceability
+  - id: R2
+    role: PaperReviewer
+    lens: rendered readability, audience comprehension, visual consistency, unsupported claims
+  - id: final
+    role: delivery reviewer
+    lens: final lock; only factual/export/layout defects count
+
