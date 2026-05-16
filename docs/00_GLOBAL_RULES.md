@@ -37,7 +37,7 @@
 
 - Q1: Agent prompts contain role, scope, STOP conditions, output contract, and JIT refs.
 - Q2: Full operation syntax belongs in kernel files or skill capsules.
-- Q3-AUDIT: Prompt changes require leakage, upstream-boundary, skill-trigger, and token-budget checks.
+- Q3-AUDIT: Prompt changes require leakage, upstream-boundary, skill-trigger, wiki-packet, and token-budget checks.
 - Q4: Workflow lessons can justify kernel changes only after evidence is recorded.
 
 ## §AU Audit Rules

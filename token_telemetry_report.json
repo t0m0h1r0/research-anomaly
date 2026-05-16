@@ -1,17 +1,20 @@
 {
-  "generated_at_utc": "2026-05-06T03:52:42Z",
+  "generated_at_utc": "2026-05-16T09:29:59Z",
   "status": "PASS",
   "method": "wc-style word counts as a lightweight prompt-size proxy",
   "upstream": {
     "remote": "git@github.com:t0m0h1r0/research-agent.git",
-    "revision": "c985b65",
+    "revision": "f52ae6f",
+    "distribution_mode": "git-submodule",
+    "submodule_path": "prompts/upstream/research-agent",
     "project_profile_preserved": true
   },
   "q3b": {
-    "static_prompt_tokens": 11471,
-    "loaded_rule_tokens": 21657,
-    "skill_trigger_tokens": 1501,
-    "artifact_tokens": 4305,
+    "static_prompt_tokens": 11539,
+    "loaded_rule_tokens": 22137,
+    "skill_trigger_tokens": 1533,
+    "wiki_static_tokens": 0,
+    "artifact_tokens": 4638,
     "tool_result_tokens": 0,
     "handoff_tokens": 0,
     "proxy_unit": "words",
@@ -20,7 +23,7 @@
   "counts": {
     "codex_agent_files": {
       "files": 24,
-      "words": 3056
+      "words": 3124
     },
     "claude_agent_files": {
       "files": 24,
@@ -28,21 +31,22 @@
     },
     "kernel_meta_files": {
       "files": 8,
-      "words": 21657
+      "words": 22137
     },
     "skill_capsules": {
       "files": 9,
-      "words": 1501
+      "words": 1533
     },
     "runtime_docs": {
       "files": 6,
-      "words": 4305
+      "words": 4638
     }
   },
   "budget_notes": [
     "Generated agent prompts are compact role prompts with operation details kept in kernel files or role-triggered skill capsules.",
     "Codex prompts are intentionally smaller than Claude prompts for executable clarity.",
     "Skill trigger tokens are tracked separately for Q3b because skill bodies are JIT-loaded only when triggered.",
-    "Upstream revision c985b65 is metaprompt-only; generated agents, skill capsules, and helper scripts are project-local outputs."
+    "wiki_static_tokens is zero because this repository has no docs/wiki/ tree to distill for this deployment.",
+    "Upstream revision f52ae6f is pinned as a submodule and distributes metaprompts only; generated agents, skill capsules, and helper scripts are project-local outputs."
   ]
 }

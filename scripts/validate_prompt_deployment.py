@@ -37,6 +37,24 @@ EXPECTED_SKILLS = {
 }
 
 
+def expected_agent_count() -> int:
+    roles_path = ROOT / "prompts" / "meta" / "kernel-roles.md"
+    body = text(roles_path)
+    match = re.search(
+        r"# § AGENT PROFILE TABLE.*?\n\| Agent \|.*?\n\|[- |]+\|\n(?P<rows>.*?)(?:\n\n|─)",
+        body,
+        re.S,
+    )
+    if not match:
+        return 24
+    rows = [
+        line
+        for line in match.group("rows").splitlines()
+        if line.startswith("| ") and not line.startswith("| Agent ")
+    ]
+    return len(rows)
+
+
 def git_changed(path: str) -> bool:
     result = subprocess.run(
         ["git", "diff", "--quiet", "HEAD", "--", path],
@@ -82,6 +100,7 @@ def main() -> int:
     project_rules = re.findall(r"^## PR-", text(ROOT / "docs" / "03_PROJECT_RULES.md"), re.M)
     codex_agents = count_files(ROOT / "prompts" / "agents-codex", "*.md")
     claude_agents = count_files(ROOT / "prompts" / "agents-claude", "*.md")
+    agent_count = expected_agent_count()
     skill_paths = sorted((ROOT / "prompts" / "skills").glob("SKILL-*.md"))
     upstream = text(ROOT / "prompts" / "upstream.toml")
     revision_match = re.search(r'^revision = "([^"]+)"$', upstream, re.M)
@@ -90,8 +109,8 @@ def main() -> int:
     redeploy = ROOT / "prompts" / "REDEPLOY_REQUIRED.md"
 
     check(len(project_rules) == 6, "project_rules_count", f"found {len(project_rules)} PR rules", results)
-    check(codex_agents == 24, "codex_agent_count", f"found {codex_agents}", results)
-    check(claude_agents == 24, "claude_agent_count", f"found {claude_agents}", results)
+    check(codex_agents == agent_count, "codex_agent_count", f"found {codex_agents}; expected {agent_count}", results)
+    check(claude_agents == agent_count, "claude_agent_count", f"found {claude_agents}; expected {agent_count}", results)
     skill_names = {path.name for path in skill_paths}
     missing_skills = sorted(EXPECTED_SKILLS - skill_names)
     unexpected_skills = sorted(skill_names - EXPECTED_SKILLS)
@@ -111,9 +130,22 @@ def main() -> int:
     check(bool(revision), "upstream_revision_present", f"found {revision or 'missing'}", results)
     if args.expected_revision:
         check(revision == args.expected_revision, "upstream_revision_expected", f"found {revision}", results)
-    check("distribution_mode = \"git\"" in upstream, "distribution_mode", "expected git", results)
+    check(
+        "distribution_mode = \"git-submodule\"" in upstream,
+        "distribution_mode",
+        "expected git-submodule",
+        results,
+    )
+    check(
+        'submodule_path = "prompts/upstream/research-agent"' in upstream,
+        "submodule_path",
+        "prompts/upstream/research-agent",
+        results,
+    )
     check("generated_agent_prompts = \"project-local\"" in upstream, "agent_distribution_boundary", "project-local", results)
     check(managed.exists(), "managed_marker", str(managed.relative_to(ROOT)), results)
+    check((ROOT / ".gitmodules").exists(), "gitmodules_present", ".gitmodules", results)
+    check((ROOT / "prompts" / "upstream" / "research-agent").exists(), "research_agent_submodule_present", "prompts/upstream/research-agent", results)
     check(not git_changed("prompts/meta/kernel-project.md"), "project_profile_unchanged", "no diff vs HEAD", results)
     check(not Path(ROOT / "agents").exists(), "no_root_agents_export", "root agents/ absent", results)
     check(not Path(ROOT / "skills").exists(), "no_root_skills_export", "root skills/ absent", results)
@@ -125,6 +157,14 @@ def main() -> int:
     )
     check((ROOT / "schema_resolution_report.json").exists(), "schema_report_present", "schema_resolution_report.json", results)
     check((ROOT / "token_telemetry_report.json").exists(), "token_report_present", "token_telemetry_report.json", results)
+    wiki_dir = ROOT / "docs" / "wiki"
+    wiki_report = ROOT / "wiki_knowledge_injection_report.json"
+    check(
+        wiki_report.exists() or not wiki_dir.exists(),
+        "wiki_knowledge_report_or_waiver",
+        str(wiki_report.relative_to(ROOT)) if wiki_report.exists() else "docs/wiki absent",
+        results,
+    )
     if (ROOT / "token_telemetry_report.json").exists():
         telemetry = json.loads(text(ROOT / "token_telemetry_report.json"))
         q3b = telemetry.get("q3b", {})
@@ -132,6 +172,12 @@ def main() -> int:
             "skill_trigger_tokens" in q3b or "skill_trigger_tokens" in telemetry,
             "token_skill_trigger_tokens",
             "present" if ("skill_trigger_tokens" in q3b or "skill_trigger_tokens" in telemetry) else "missing",
+            results,
+        )
+        check(
+            "wiki_static_tokens" in q3b or "wiki_static_tokens" in telemetry,
+            "token_wiki_static_tokens",
+            "present" if ("wiki_static_tokens" in q3b or "wiki_static_tokens" in telemetry) else "missing",
             results,
         )
 

@@ -29,6 +29,7 @@
 | kernel-antipatterns.md | anti-pattern catalogue |
 | kernel-project.md | current project profile |
 | kernel-deploy.md | this deployment spec |
+| docs/wiki/INDEX.md | project-local compiled knowledge index, if present |
 
 Upstream git distribution supplies only shared `kernel/*.md` metaprompts. If
 local environment base files already exist, deployment MAY read
@@ -61,9 +62,44 @@ reads only changed kernel files plus direct dependencies named by their
 | workflow | task classification, P-E-V-A, replan, debate |
 | antipatterns | AP checks and injections |
 | project | PR-1..PR-6 |
+| wiki | active retrieval gates and role-relevant compiled knowledge, if present |
 
 Emit `schema_resolution_report.json` with tag balance, duplicate IDs, dangling refs,
 and source-integrity status.
+
+## Stage 1b - Distill Wiki Knowledge Packets
+
+When a receiving project has `docs/wiki/`, deployment MUST distill wiki knowledge
+before prompt generation. The bootstrapper reads `docs/wiki/INDEX.md`, then the
+project's active retrieval gate if one is identified by the index or ledger. It
+does not linearly preload all wiki cards.
+
+For each candidate item, emit a `WikiKnowledgePacket`:
+
+```yaml
+wiki_id: WIKI-...
+status: ACTIVE | REFERENCE | SUPERSEDED
+source_refs: [docs/wiki/...]
+target_roles: [PromptArchitect, ...]
+behavior_delta: "one enforceable behavior or STOP trigger"
+injection_mode: inline | rule_manifest | skill_ref | on_demand | reject
+token_budget: integer
+conflict_check: PASS | FAIL
+```
+
+Distillation rules:
+
+- MUST use ACTIVE retrieval cards first; REFERENCE cards may contribute only
+  negative knowledge, provenance, or explicitly curated historical context.
+- MUST reject SUPERSEDED cards for static prompt text unless the successor is
+  named and the packet is marked negative knowledge.
+- MUST reduce a wiki finding to a behavior delta, not copy wiki prose.
+- MUST prefer `on_demand` wiki IDs or SkillID references over static text.
+- MUST use `inline` only for short universal behavior that is needed every turn.
+- MUST reject packets that conflict with kernel axioms, domain write territory,
+  role authority, or `kernel-project.md`.
+- MUST emit `wiki_knowledge_injection_report.json` with used, deferred, and
+  rejected packets plus token cost and source refs.
 
 ## Stage 2 - Initialize Directories
 
@@ -108,7 +144,7 @@ Primary project-local output: `prompts/agents-{env}/{AgentName}.md`.
 Composition:
 
 ```
-Agent Prompt = Base[env] + Domain[domain] + RoleContract[agent] + RULE_MANIFEST slice + role-relevant AP checks + role-relevant SkillID triggers
+Agent Prompt = Base[env] + Domain[domain] + RoleContract[agent] + RULE_MANIFEST slice + role-relevant AP checks + role-relevant SkillID triggers + WikiKnowledgePacket refs
 ```
 
 Prompt compression rule: each generated agent prompt contains only role, STOP
@@ -116,6 +152,9 @@ conditions, output contract, and JIT references. Full operation bodies stay in
 `kernel-ops.md` or `prompts/skills/`.
 The RULE_MANIFEST slice is limited to `always`, the prompt's own domain row, and
 the on-demand operation IDs that appear in that role's contract or SkillID triggers.
+Wiki knowledge packets are limited to source-traced behavior deltas. Static wiki
+text budget is 150 tokens per prompt; packets over budget must become
+`on_demand` refs or SkillID triggers.
 
 JIT skill loading rule: generated prompts list only role-relevant skill IDs and
 triggers, and do not preload skill bodies. `SKILL-PAPER-WRITING` is loaded for manuscript
@@ -195,17 +234,18 @@ Required checks:
 | # | Check | Method |
 |---|-------|--------|
 | 1 | project rules count | `grep -c '^## PR-' docs/03_PROJECT_RULES.md` equals 6 |
-| 2 | local agent count | 24 agent files per environment, excluding `_base.yaml` |
+| 2 | local agent count | 25 agent files per environment, excluding `_base.yaml`, matching `kernel-roles.md §AGENT PROFILE TABLE` |
 | 3 | source preserved | source PDF and extracted text exist and are unmodified by deployment |
 | 4 | domain leakage | no project-specific legacy terms outside `kernel-project.md` unless intentional |
 | 5 | handoff schema present | `kernel-roles.md` contains HandoffEnvelope |
 | 6 | local support generated | all manifest-listed local skill capsules exist; project template/script policy recorded |
 | 7 | token report present | `token_telemetry_report.json` exists with values or waiver rationale |
 | 8 | upstream-only boundary | no copied upstream `skills/`, `templates/`, `agents/`, or project scripts in project diff |
+| 9 | wiki knowledge report | `wiki_knowledge_injection_report.json` exists when `docs/wiki/` exists, or waiver rationale is recorded |
 
 ### Q3-AUDIT Prompt Audit Checklist
 
-PromptAuditor applies these 13 items to generated agent prompts and Skill
+PromptAuditor applies these 15 items to generated agent prompts and Skill
 Capsule manifests:
 
 | # | Check |
@@ -223,15 +263,19 @@ Capsule manifests:
 | Q3-11 | Project-local generated artifacts preserve `kernel-project.md` |
 | Q3-12 | Prompt has clear success output and STOP/return shape |
 | Q3-13 | Token telemetry is produced or explicitly waived under Q3b |
+| Q3-14 | Wiki knowledge packets cite ACTIVE source refs or marked negative-knowledge refs; no superseded wiki card is treated as current policy |
+| Q3-15 | Wiki-derived text is behavior-delta sized; full wiki prose is represented by `on_demand`, RULE_MANIFEST, or SkillID pointer |
 
 ### Q3b Token Telemetry Gate
 
 Generated prompt audits compare expected benefit against token cost:
 
-- MUST record `static_prompt_tokens`, `loaded_rule_tokens`, and `skill_trigger_tokens`
-  in `token_telemetry_report.json`.
+- MUST record `static_prompt_tokens`, `loaded_rule_tokens`, `skill_trigger_tokens`,
+  and `wiki_static_tokens` in `token_telemetry_report.json`.
 - FAIL AP-13 when a generated prompt embeds full operation text, all SkillID
   triggers, or low-ROI reminders that can be represented by a pointer.
+- FAIL AP-17 when a generated prompt embeds full wiki prose, treats superseded
+  wiki knowledge as active policy, or lacks source refs for a wiki-derived rule.
 - WARN when static prompt + default loaded rules exceed 60% of the receiving
   runtime context budget.
 - PASS requires either lower token cost for equivalent behavior or a named
@@ -256,7 +300,7 @@ Emit HAND-02 to ResearchArchitect with `status: SUCCESS` and produced artifact p
 Allowed when meta edits do not modify universal axioms or handoff schema:
 
 1. PromptArchitect regenerates affected project-local docs/prompts/support artifacts.
-2. PromptAuditor runs leakage and token checks.
+2. PromptAuditor runs leakage, wiki-packet, and token checks.
 3. ConsistencyAuditor signs if cross-domain behavior is unchanged.
 
 If a workflow limitation is discovered during paper work, record it in

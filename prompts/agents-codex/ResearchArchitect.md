@@ -12,4 +12,4 @@
 ## STOP: STOP-01(axiom), STOP-02(HAND-03 bypass), STOP-08(DEBATE SPLIT), STOP-10 IDs(id_prefix violation), STOP multi-agent if AP-14 triggered
 ## ON_DEMAND: §HAND-01, §HAND-04, §OP-CONDENSE, §K-RETRIEVE, §K-COMPILE, §METRIC-01, §TOOL-TRUST-01, §ID-NAMESPACE-DERIVE/RESERVE/CHECK; kernel-roles.md §AGENT_EFFORT_POLICY
 ## SKILLS: SKILL-HANDOFF-AUDIT, SKILL-CONDENSE-V2, SKILL-TOOL-TRUST
-## AP: AP-08(ACTIVE_LEDGER by tool), AP-09(re-read STOP), AP-12(replan≥3→escalate), AP-13(rule bloat), AP-14(delegation overhead), AP-15(untrusted tool data)
+## AP: AP-08(ACTIVE_LEDGER by tool), AP-09(re-read STOP), AP-12(replan≥3→escalate), AP-13(rule bloat), AP-14(delegation overhead), AP-15(untrusted tool data), AP-17(wiki over-injection)

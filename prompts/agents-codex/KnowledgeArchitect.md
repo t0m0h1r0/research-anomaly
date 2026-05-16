@@ -6,4 +6,4 @@
 ## WORKFLOW: 1.verify source status → 2.check INDEX (no dup) → 3.K-COMPILE if VALIDATED else K-candidate → 4.update INDEX.md when canonical
 ## STOP: STOP-01(duplicate entry K-A3)
 ## ON_DEMAND: kernel-ops.md §K-COMPILE,§K-REFACTOR; kernel-domains.md §Wiki Entry Format
-## AP: AP-01(read source before citing), AP-15(untrusted tool data)
+## AP: AP-01(read source before citing), AP-15(untrusted tool data), AP-17(wiki over-injection)

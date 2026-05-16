@@ -1,8 +1,11 @@
 name = "research-agent-metaprompt"
 remote = "git@github.com:t0m0h1r0/research-agent.git"
-distribution_mode = "git"
-revision = "c985b65"
+distribution_mode = "git-submodule"
+revision = "f52ae6f"
+submodule_path = "prompts/upstream/research-agent"
 metaprompt_groups = ["kernel"]
+shared_metaprompt_source = "submodule:kernel-*.md"
+materialized_shared_kernel = "prompts/meta/kernel-*.md"
 generated_agent_prompts = "project-local"
 generated_skill_capsules = "project-local"
 generated_templates = "project-local"

@@ -1,0 +1,4 @@
+[submodule "prompts/upstream/research-agent"]
+	path = prompts/upstream/research-agent
+	url = git@github.com:t0m0h1r0/research-agent.git
+	branch = main
