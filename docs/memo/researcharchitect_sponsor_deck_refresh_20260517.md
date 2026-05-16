@@ -54,7 +54,7 @@ reproducible artifact-tool source project.
 
 ```text
 PPTX output: paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx
-PPTX size: 45047 bytes
+PPTX size: 46569 bytes
 slide count: 6
 layout quality: PASS, 0 errors, 0 warnings
 text extraction: PASS, 6 slides
@@ -71,6 +71,13 @@ MNN parity, 500 KB detector-data, and 10-second scheduling gates.
 No performance, novelty, SOTA, MNN readiness, 500 KB fit, or deployment-readiness claim is promoted.
 ```
 
+## Flair Revision
+
+After user feedback requesting more `外連味`, the deck was revised with a dark
+editorial opening/decision/closing rhythm, stronger lead lines, a circuit-like
+block-storage visual frame, and sharper gate language. Claim strength was not
+broadened.
+
 Final stop condition:
 
 ```text
@@ -78,4 +85,3 @@ No MAJOR-or-higher finding remained after focused render review and repair.
 All generated slides passed layout and claim-gate checks.
 No main merge was performed.
 ```
-

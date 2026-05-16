@@ -8,3 +8,9 @@
 - Reworded budget values as planning targets rather than measured fit.
 - Added reproducible artifact-tool slide source under `src/`.
 
+## 2026-05-16 Flair Revision
+
+- Responded to the request for more "外連味" by switching the opening, decision, and closing slides to a dark editorial system.
+- Strengthened slide lead lines while preserving non-claim discipline.
+- Added a circuit-like block-storage visual frame and stronger gate/candidate language.
+- Re-rendered the PPTX and confirmed layout quality with 0 errors and 0 warnings.

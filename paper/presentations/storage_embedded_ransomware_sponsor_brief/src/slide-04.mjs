@@ -2,7 +2,7 @@ import { C, footer, pill, row, slideBase, subtitle, title } from "./theme.mjs";
 
 export async function slide04(presentation, ctx) {
   const slide = slideBase(presentation, ctx, "MODEL CANDIDATES | AE-01..05 の技術的な意味", 4, C.purple);
-  title(ctx, slide, "候補AEは、複雑な演算を足す価値を順番に試すための比較群");
+  title(ctx, slide, "AE-01..05は、複雑さを裁く階段");
   subtitle(ctx, slide, "初期値はN=12, D=12。parameter/raw weightは計画見積もりで、MNN変換後サイズや一時scratchは別に測ります。");
 
   const x = 76;

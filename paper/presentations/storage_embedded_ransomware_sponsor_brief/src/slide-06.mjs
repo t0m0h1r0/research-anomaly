@@ -1,9 +1,10 @@
-import { C, arrow, footer, panel, pill, slideBase, subtitle, title } from "./theme.mjs";
+import { C, arrow, callout, darkFooter, darkSlideBase, darkSubtitle, darkTitle, panel, pill } from "./theme.mjs";
 
 export async function slide06(presentation, ctx) {
-  const slide = slideBase(presentation, ctx, "EVALUATION | 技術判断に必要な証拠", 6, C.green);
-  title(ctx, slide, "検出精度だけでなく、MNN parity・メモリ・10秒cadenceで採否を決める");
-  subtitle(ctx, slide, "スポンサー向けに見せるべき論点は、すぐ導入できるかではなく、どの制約で候補を採用・縮小・棄却するかです。");
+  const slide = darkSlideBase(presentation, ctx, "EVALUATION | 技術判断に必要な証拠", 6, C.acid);
+  darkTitle(ctx, slide, "四つの門をくぐった候補だけ、次へ進める", 92, 42);
+  darkSubtitle(ctx, slide, "スポンサー向けに見せるべき論点は、すぐ導入できるかではなく、どの制約で候補を採用・縮小・棄却するかです。", 182);
+  callout(ctx, slide, { text: "検出精度だけでは採用しない", x: 850, y: 216, w: 292, h: 44, stroke: C.red, color: C.white });
 
   const gates = [
     ["1. offline検証", "benign-only学習、単純規則、AE-01..05、低誤警報で比較", C.blue, C.blueSoft],
@@ -13,13 +14,13 @@ export async function slide06(presentation, ctx) {
   ];
   gates.forEach(([head, body, accent, fill], idx) => {
     const x = 104 + idx * 286;
-    panel(ctx, slide, { x, y: 264, w: 236, h: 134, fill, stroke: accent, title: head, body, accent });
-    if (idx < gates.length - 1) arrow(ctx, slide, x + 248, 330, 28);
+    panel(ctx, slide, { x, y: 272, w: 236, h: 134, fill, stroke: accent, title: head, body, accent });
+    if (idx < gates.length - 1) arrow(ctx, slide, x + 248, 338, 28, "#64748b");
   });
 
   panel(ctx, slide, {
     x: 128,
-    y: 470,
+    y: 472,
     w: 430,
     h: 92,
     fill: C.white,
@@ -30,7 +31,7 @@ export async function slide06(presentation, ctx) {
   });
   panel(ctx, slide, {
     x: 720,
-    y: 470,
+    y: 472,
     w: 430,
     h: 92,
     fill: C.white,
@@ -42,6 +43,6 @@ export async function slide06(presentation, ctx) {
 
   pill(ctx, slide, { text: "固定済み: block I/O観測境界、10秒統計、AE候補、device-fit gates", x: 184, y: 604, w: 540, h: 30, fill: C.greenSoft, stroke: C.green, color: C.green });
   pill(ctx, slide, { text: "未主張: 検出性能、MNN readiness、500KB内に収まった結論、実運用早期警告", x: 792, y: 604, w: 410, h: 30, fill: C.redSoft, stroke: C.red, color: C.red });
-  footer(ctx, slide, "paper/sections/07_evaluation_plan.tex, paper/sections/08_mnn_implementation_plan.tex, docs/evidence/manuscript_claim_gate_matrix.md");
+  darkFooter(ctx, slide, "paper/sections/07_evaluation_plan.tex, paper/sections/08_mnn_implementation_plan.tex, docs/evidence/manuscript_claim_gate_matrix.md");
   return slide;
 }

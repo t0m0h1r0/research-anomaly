@@ -1,6 +1,11 @@
 export const C = {
   ink: "#111827",
+  night: "#07111f",
+  night2: "#0f172a",
+  electric: "#38bdf8",
+  acid: "#a3e635",
   muted: "#64748b",
+  mutedLight: "#94a3b8",
   faint: "#eef2f7",
   bg: "#f8fafc",
   line: "#cbd5e1",
@@ -56,6 +61,39 @@ export function slideBase(presentation, ctx, section, pageNo, accent = C.blue) {
   return slide;
 }
 
+export function darkSlideBase(presentation, ctx, section, pageNo, accent = C.electric) {
+  const slide = presentation.slides.add();
+  ctx.addShape(slide, { x: 0, y: 0, w: ctx.W, h: ctx.H, fill: C.night });
+  ctx.addShape(slide, { x: 0, y: 0, w: ctx.W, h: 22, fill: "#020617" });
+  ctx.addShape(slide, { x: 0, y: 22, w: 10, h: 638, fill: accent });
+  ctx.addShape(slide, { x: 34, y: 70, w: 84, h: 2, fill: accent });
+  ctx.addShape(slide, { x: 118, y: 70, w: 260, h: 2, fill: "#1e293b" });
+  ctx.addText(slide, {
+    text: section,
+    x: 76,
+    y: 44,
+    w: 720,
+    h: 24,
+    fontSize: 12,
+    color: "#cbd5e1",
+    face: fonts.body,
+    bold: true,
+  });
+  ctx.addText(slide, {
+    text: String(pageNo).padStart(2, "0"),
+    x: 1178,
+    y: 674,
+    w: 48,
+    h: 26,
+    fontSize: 18,
+    color: "#cbd5e1",
+    face: fonts.mono,
+    bold: true,
+    align: "right",
+  });
+  return slide;
+}
+
 export function title(ctx, slide, text, y = 92, size = 29) {
   return ctx.addText(slide, {
     text,
@@ -83,6 +121,33 @@ export function subtitle(ctx, slide, text, y = 180) {
   });
 }
 
+export function darkTitle(ctx, slide, text, y = 92, size = 38) {
+  return ctx.addText(slide, {
+    text,
+    x: 76,
+    y,
+    w: 1128,
+    h: 76,
+    fontSize: size,
+    color: C.white,
+    face: fonts.title,
+    bold: true,
+  });
+}
+
+export function darkSubtitle(ctx, slide, text, y = 184) {
+  return ctx.addText(slide, {
+    text,
+    x: 80,
+    y,
+    w: 1010,
+    h: 42,
+    fontSize: 14,
+    color: "#cbd5e1",
+    face: fonts.body,
+  });
+}
+
 export function footer(ctx, slide, sourceText) {
   ctx.addShape(slide, { x: 58, y: 660, w: 1164, h: 1, fill: C.line });
   ctx.addText(slide, {
@@ -95,6 +160,47 @@ export function footer(ctx, slide, sourceText) {
     color: "#7890a8",
     face: fonts.body,
   });
+}
+
+export function darkFooter(ctx, slide, sourceText) {
+  ctx.addShape(slide, { x: 58, y: 660, w: 1164, h: 1, fill: "#334155" });
+  ctx.addText(slide, {
+    text: `Source: ${sourceText}`,
+    x: 76,
+    y: 678,
+    w: 980,
+    h: 16,
+    fontSize: 7.5,
+    color: "#94a3b8",
+    face: fonts.body,
+  });
+}
+
+export function callout(ctx, slide, { text, x, y, w, h = 42, fill = "#0f172a", stroke = C.electric, color = C.white }) {
+  ctx.addShape(slide, { x, y, w, h, fill, line: ctx.line(stroke, 1.6) });
+  ctx.addShape(slide, { x, y, w: 5, h, fill: stroke });
+  ctx.addText(slide, {
+    text,
+    x: x + 18,
+    y: y + 11,
+    w: w - 30,
+    h: h - 14,
+    fontSize: 12,
+    color,
+    face: fonts.body,
+    bold: true,
+  });
+}
+
+export function circuitTrace(ctx, slide, { x, y, w, h, color = "#38bdf8", opacityFill = "#0f172a" }) {
+  ctx.addShape(slide, { x, y, w, h, fill: opacityFill, line: ctx.line(color, 1.4) });
+  ctx.addShape(slide, { x: x + 24, y: y + 28, w: w - 48, h: 2, fill: color });
+  ctx.addShape(slide, { x: x + 24, y: y + h - 30, w: w - 48, h: 2, fill: color });
+  for (let i = 0; i < 5; i += 1) {
+    const px = x + 48 + i * ((w - 96) / 4);
+    ctx.addShape(slide, { x: px, y: y + 24, w: 2, h: h - 50, fill: "#1e293b" });
+    ctx.addShape(slide, { x: px - 5, y: y + 23 + (i % 2) * 54, w: 12, h: 12, fill: color });
+  }
 }
 
 export function panel(ctx, slide, { x, y, w, h, fill = C.white, stroke = C.line, title: heading, body, accent }) {
