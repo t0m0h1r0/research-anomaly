@@ -1,11 +1,11 @@
-import { C, arrow, callout, circuitTrace, darkFooter, darkSlideBase, darkSubtitle, darkTitle, panel, pill } from "./theme.mjs";
+import { C, arrow, callout, circuitTrace, claimLine, footer, panel, pill, slideBase, title } from "./theme.mjs";
 
 export async function slide01(presentation, ctx) {
-  const slide = darkSlideBase(presentation, ctx, "TECHNICAL SCOPE | ブロックストレージ組み込み", 1, C.electric);
-  darkTitle(ctx, slide, "ブロックI/Oに、最後の観測線を引く", 96, 42);
-  darkSubtitle(ctx, slide, "守れると言うためではなく、ホストのプロセス名やファイルパスに頼らず、安い要求メタデータだけでAE候補に渡す価値があるかを試します。", 184);
-  circuitTrace(ctx, slide, { x: 710, y: 246, w: 420, h: 218, color: C.electric, opacityFill: "#0b1626" });
-  callout(ctx, slide, { text: "検証するのは「装置内で回せるほど軽いか」", x: 752, y: 498, w: 334, h: 48, stroke: C.acid, color: C.acid });
+  const slide = slideBase(presentation, ctx, "TECHNICAL SCOPE | ブロックストレージ組み込み", 1, C.blue);
+  title(ctx, slide, "ブロックI/Oだけを観測し、軽いAE候補に絞る", 92, 31);
+  claimLine(ctx, slide, "ホストのプロセス名やファイルパスに頼らず、安い要求メタデータだけをAE候補の入力価値として検証する。", C.blue);
+  circuitTrace(ctx, slide, { x: 710, y: 246, w: 420, h: 218, color: C.blue, opacityFill: C.blueSoft });
+  callout(ctx, slide, { text: "見るのは装置境界で安く取れる情報だけ", x: 752, y: 498, w: 334, h: 48, fill: C.ink, stroke: C.blue, color: C.white });
 
   panel(ctx, slide, {
     x: 76,
@@ -56,10 +56,10 @@ export async function slide01(presentation, ctx) {
 
   panel(ctx, slide, {
     x: 96,
-    y: 552,
+    y: 570,
     w: 280,
-    h: 94,
-    fill: "#0f172a",
+    h: 76,
+    fill: C.white,
     stroke: C.blue,
     title: "観測境界",
     body: "",
@@ -67,10 +67,10 @@ export async function slide01(presentation, ctx) {
   });
   panel(ctx, slide, {
     x: 500,
-    y: 552,
+    y: 570,
     w: 280,
-    h: 94,
-    fill: "#0f172a",
+    h: 76,
+    fill: C.white,
     stroke: C.green,
     title: "検証対象",
     body: "",
@@ -78,18 +78,18 @@ export async function slide01(presentation, ctx) {
   });
   panel(ctx, slide, {
     x: 888,
-    y: 552,
+    y: 570,
     w: 280,
-    h: 94,
-    fill: "#0f172a",
+    h: 76,
+    fill: C.white,
     stroke: C.red,
     title: "未主張",
     body: "",
     accent: C.red,
   });
-  ctx.addText(slide, { text: "ブロック要求メタデータだけ", x: 122, y: 614, w: 230, h: 18, fontSize: 10, color: "#cbd5e1", face: "Hiragino Sans" });
-  ctx.addText(slide, { text: "軽いMLかを測る", x: 526, y: 614, w: 230, h: 18, fontSize: 10, color: "#cbd5e1", face: "Hiragino Sans" });
-  ctx.addText(slide, { text: "性能・早期警告は未主張", x: 914, y: 614, w: 230, h: 18, fontSize: 10, color: "#cbd5e1", face: "Hiragino Sans" });
-  darkFooter(ctx, slide, "docs/interface/ResearchBrief.md, docs/04_embedded_constraints.md, paper/sections/05_input_contract.tex");
+  ctx.addText(slide, { text: "ブロック要求メタデータだけ", x: 122, y: 616, w: 230, h: 18, fontSize: 10, color: C.ink, face: "Hiragino Sans" });
+  ctx.addText(slide, { text: "軽いMLかを測る", x: 526, y: 616, w: 230, h: 18, fontSize: 10, color: C.ink, face: "Hiragino Sans" });
+  ctx.addText(slide, { text: "性能・早期警告は未主張", x: 914, y: 616, w: 230, h: 18, fontSize: 10, color: C.ink, face: "Hiragino Sans" });
+  footer(ctx, slide, "docs/interface/ResearchBrief.md, docs/04_embedded_constraints.md, paper/sections/05_input_contract.tex");
   return slide;
 }

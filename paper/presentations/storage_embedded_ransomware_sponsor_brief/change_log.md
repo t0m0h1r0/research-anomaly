@@ -14,3 +14,11 @@
 - Strengthened slide lead lines while preserving non-claim discipline.
 - Added a circuit-like block-storage visual frame and stronger gate/candidate language.
 - Re-rendered the PPTX and confirmed layout quality with 0 errors and 0 warnings.
+
+## 2026-05-16 Visual Consistency Revision
+
+- Responded to feedback that abrupt background changes felt unpleasant.
+- Returned all six slides to a single light editorial background system.
+- Added a consistent `主張` line under each headline so the intended point is immediately visible.
+- Kept theatrical emphasis as local callouts and accent lines rather than full-slide background shifts.
+- Re-rendered the PPTX and confirmed layout quality with 0 errors and 0 warnings.

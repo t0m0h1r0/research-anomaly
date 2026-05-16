@@ -1,10 +1,10 @@
-import { C, arrow, callout, darkFooter, darkSlideBase, darkSubtitle, darkTitle, panel } from "./theme.mjs";
+import { C, arrow, callout, claimLine, footer, panel, slideBase, title } from "./theme.mjs";
 
 export async function slide02(presentation, ctx) {
-  const slide = darkSlideBase(presentation, ctx, "DECISION FRAME | このプレゼンで決めること", 2, C.acid);
-  darkTitle(ctx, slide, "最初に決めるのは、何を捨てるか", 96, 44);
-  darkSubtitle(ctx, slide, "AEを増やす資料ではなく、単純規則・入力契約・装置制約の順に候補を削り、残った仮説だけを実装検証へ進めます。", 184);
-  callout(ctx, slide, { text: "導入判断ではない。次に測る証拠を決める。", x: 776, y: 230, w: 382, h: 44, stroke: C.acid, color: C.white });
+  const slide = slideBase(presentation, ctx, "DECISION FRAME | このプレゼンで決めること", 2, C.green);
+  title(ctx, slide, "この資料は導入判断ではなく、棄却条件を決める", 92, 30);
+  claimLine(ctx, slide, "単純規則、AE候補、装置制約の順に削り、次に測る証拠を明確にするための資料である。", C.green);
+  callout(ctx, slide, { text: "残す候補より先に、止める条件を固定する", x: 776, y: 224, w: 382, h: 44, fill: C.ink, stroke: C.green, color: C.white });
 
   const cards = [
     ["1. 単純規則で足りるか", "write ratio、I/O強度、LBA移動だけで説明できるならAEは縮小または棄却する", C.blue, C.blueSoft],
@@ -41,6 +41,6 @@ export async function slide02(presentation, ctx) {
     accent: C.red,
   });
 
-  darkFooter(ctx, slide, "docs/03_PROJECT_RULES.md, docs/evidence/manuscript_claim_gate_matrix.md, docs/04_embedded_constraints.md");
+  footer(ctx, slide, "docs/03_PROJECT_RULES.md, docs/evidence/manuscript_claim_gate_matrix.md, docs/04_embedded_constraints.md");
   return slide;
 }

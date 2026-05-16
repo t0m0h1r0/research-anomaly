@@ -121,6 +121,22 @@ export function subtitle(ctx, slide, text, y = 180) {
   });
 }
 
+export function claimLine(ctx, slide, text, accent = C.blue, y = 168) {
+  ctx.addShape(slide, { x: 76, y, w: 1128, h: 44, fill: C.white, line: ctx.line("#dbe3ee", 1.1) });
+  ctx.addShape(slide, { x: 76, y, w: 6, h: 44, fill: accent });
+  ctx.addText(slide, {
+    text: `主張 | ${text}`,
+    x: 96,
+    y: y + 10,
+    w: 1070,
+    h: 22,
+    fontSize: 12.5,
+    color: C.ink,
+    face: fonts.body,
+    bold: true,
+  });
+}
+
 export function darkTitle(ctx, slide, text, y = 92, size = 38) {
   return ctx.addText(slide, {
     text,

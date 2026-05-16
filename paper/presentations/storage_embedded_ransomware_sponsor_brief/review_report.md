@@ -1,27 +1,28 @@
 # Review Report
 
 status: PASS
-updated_at_utc: 2026-05-16T22:25:04Z
+updated_at_utc: 2026-05-16T22:40:38Z
 
 ## Scorecard
 
 | Dimension | Score |
 | --- | ---: |
-| Audience and decision clarity | 9 / 10 |
+| Audience and decision clarity | 10 / 10 |
 | Story structure | 9 / 10 |
 | Evidence and claim discipline | 10 / 10 |
-| Visual readability | 9 / 10 |
+| Visual readability | 10 / 10 |
 | Export and editability | 10 / 10 |
-| Total | 47 / 50 |
+| Total | 49 / 50 |
 
 ## Acceptance
 
-The deck is ready as a sponsor-facing technical research brief. It now opens
-with a darker, more theatrical block-storage observation boundary, makes the
-decision frame explicit by Slide 2, explains the 10-second input contract,
-presents AE-01..05 as a candidate-pruning ladder, separates 500 KB detector-data
-from shared runtime and transient scratch, and closes with the evidence gates
-needed for adoption, shrinking, or rejection.
+The deck is ready as a sponsor-facing technical research brief. It now uses one
+light editorial background system across all six slides, with a consistent
+`主張` line directly under each headline. The narrative makes the decision frame
+explicit by Slide 2, explains the 10-second input contract, presents AE-01..05
+as a candidate-pruning ladder, separates 500 KB detector-data from shared
+runtime and transient scratch, and closes with the evidence gates needed for
+adoption, shrinking, or rejection.
 
 No claim in the deck promotes detection performance, novelty, SOTA, MNN
 readiness, 500 KB fit, or deployment readiness.

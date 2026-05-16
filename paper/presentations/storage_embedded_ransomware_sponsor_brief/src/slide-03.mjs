@@ -1,9 +1,9 @@
-import { C, footer, panel, pill, row, slideBase, subtitle, title } from "./theme.mjs";
+import { C, claimLine, footer, panel, pill, row, slideBase, title } from "./theme.mjs";
 
 export async function slide03(presentation, ctx) {
   const slide = slideBase(presentation, ctx, "INPUT CONTRACT | 10秒統計からML入力へ", 3, C.green);
-  title(ctx, slide, "rawを持たず、10秒で切り出す");
-  subtitle(ctx, slide, "ブロックストレージ装置では、特徴の取り方そのものがコストです。残すのはraw eventではなく、安い集計から作る固定shapeの統計列です。");
+  title(ctx, slide, "入力はrawログではなく、10秒統計列に固定する");
+  claimLine(ctx, slide, "特徴抽出そのものが装置コストなので、MLへ渡す入力は安い集計から作る固定shapeの列に限定する。", C.green);
 
   panel(ctx, slide, { x: 82, y: 246, w: 496, h: 304, fill: C.white, stroke: C.line, title: "frame_10s: 装置が安く集計できる候補", accent: C.green });
   const rows = [

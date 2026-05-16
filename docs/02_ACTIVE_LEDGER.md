@@ -8,11 +8,11 @@
 |-------|-------|
 | phase | PRESENTATION_REFRESH |
 | branch | codex/researcharchitect-presentation-refresh-20260517 |
-| current_objective | Add a more theatrical visual/narrative treatment to the sponsor-facing presentation while preserving claim discipline |
+| current_objective | Unify the sponsor deck visual system and make each slide's core claim explicit |
 | active_brief | `docs/interface/ResearchBrief.md` |
 | source_artifact | `git@github.com:t0m0h1r0/research-agent.git` remote snapshot @ `ed38873`, materialized into `prompts/meta/` |
 | next_action | Await user review or explicit main no-ff merge instruction; do not merge to `main` otherwise |
-| updated_at_utc | 2026-05-16T22:25:04Z |
+| updated_at_utc | 2026-05-16T22:40:38Z |
 
 ## §CHECKLIST
 
@@ -57,6 +57,7 @@
 | CHK-UPPROMPT-005 | DONE | P | `scripts/sync_research_agent.py`, `scripts/deploy_prompt_system.py`, `scripts/validate_prompt_deployment.py`, `prompts/upstream.toml`, `prompts/upstream-managed.json`, `prompts/meta/`, `prompts/agents-*`, `prompts/skills/`, `token_roi_report.json`, `artifacts/P/research_agent_remote_snapshot_prompt_sync_ed38873.md` | discontinued persistent `prompts/upstream/` submodule, synced latest remote metaprompt snapshot `ed38873`, preserved `kernel-project.md`, zero-base regenerated local agents/skills/docs/reports, and passed prompt audit with Q3-16 token-ROI reporting | 2026-05-17 |
 | CHK-RAD-031 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `paper/presentations/storage_embedded_ransomware_sponsor_brief/`, `docs/memo/researcharchitect_sponsor_deck_refresh_20260517.md` | refreshed sponsor-facing presentation into a six-slide technical decision narrative; added editable artifact-tool source and resolved render/claim review with 0 layout errors/warnings | 2026-05-17 |
 | CHK-RAD-032 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `paper/presentations/storage_embedded_ransomware_sponsor_brief/review_reports/round_2_flair.md` | revised the sponsor deck for stronger editorial contrast and more theatrical lead lines while preserving non-claim gates; rerendered with 0 layout errors/warnings | 2026-05-17 |
+| CHK-RAD-033 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `paper/presentations/storage_embedded_ransomware_sponsor_brief/review_reports/round_3_visual_consistency.md` | corrected abrupt background shifts by returning all slides to one light editorial system and adding explicit `主張` lines; rerendered with 0 layout errors/warnings | 2026-05-17 |
 
 ## §ASSUMPTIONS
 

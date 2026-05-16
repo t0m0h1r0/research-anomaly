@@ -1,9 +1,9 @@
-import { C, footer, panel, pill, row, slideBase, subtitle, title } from "./theme.mjs";
+import { C, claimLine, footer, panel, pill, row, slideBase, title } from "./theme.mjs";
 
 export async function slide05(presentation, ctx) {
   const slide = slideBase(presentation, ctx, "RESOURCE BUDGET | MLに使える資源は小さい", 5, C.amber);
-  title(ctx, slide, "500KBの檻の中で、何を残すか");
-  subtitle(ctx, slide, "500 KBはvolumeごとのpersistent detector-data目標です。MNN runtimeや共有libraryとは分け、入力列・正規化・しきい値・score履歴まで含めて測ります。");
+  title(ctx, slide, "500KBは、モデルだけでなくvolumeごとの状態まで測る");
+  claimLine(ctx, slide, "per-volume detector-dataには重み、入力列、正規化、threshold、score履歴を含め、共有runtimeとは分けて扱う。", C.amber);
 
   panel(ctx, slide, {
     x: 86,
