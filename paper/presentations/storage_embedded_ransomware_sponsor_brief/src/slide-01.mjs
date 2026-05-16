@@ -2,10 +2,10 @@ import { C, arrow, callout, circuitTrace, claimLine, footer, panel, pill, slideB
 
 export async function slide01(presentation, ctx) {
   const slide = slideBase(presentation, ctx, "TECHNICAL SCOPE | ブロックストレージ組み込み", 1, C.blue);
-  title(ctx, slide, "ブロックI/Oだけを観測し、軽いAE候補に絞る", 92, 31);
-  claimLine(ctx, slide, "ホストのプロセス名やファイルパスに頼らず、安い要求メタデータだけをAE候補の入力価値として検証する。", C.blue);
+  title(ctx, slide, "観測範囲をブロックI/Oに絞り、入力として足りるかを測る", 92, 29);
+  claimLine(ctx, slide, "プロセス名やファイルパスを使わず、要求メタデータだけでAE候補に渡す統計列を作れるかを検証する。", C.blue);
   circuitTrace(ctx, slide, { x: 710, y: 246, w: 420, h: 218, color: C.blue, opacityFill: C.blueSoft });
-  callout(ctx, slide, { text: "見るのは装置境界で安く取れる情報だけ", x: 752, y: 498, w: 334, h: 48, fill: C.ink, stroke: C.blue, color: C.white });
+  callout(ctx, slide, { text: "観測は装置境界で安く取れる情報だけ", x: 752, y: 498, w: 334, h: 48, fill: C.ink, stroke: C.blue, color: C.white });
 
   panel(ctx, slide, {
     x: 76,

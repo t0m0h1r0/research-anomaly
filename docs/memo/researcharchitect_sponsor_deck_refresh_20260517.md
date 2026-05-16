@@ -54,7 +54,7 @@ reproducible artifact-tool source project.
 
 ```text
 PPTX output: paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx
-PPTX size: 46741 bytes
+PPTX size: 46726 bytes
 slide count: 6
 layout quality: PASS, 0 errors, 0 warnings
 text extraction: PASS, 6 slides
@@ -85,6 +85,14 @@ claims were unclear, the deck was revised again to use one light editorial
 background system across all six slides. Each slide now has an explicit `主張`
 line directly under the headline; the darker theatrical treatment is retained
 only as local accent/callout styling. Claim strength was not broadened.
+
+## Copy Consistency Correction
+
+After follow-up feedback that Japanese wording and contrast logic felt awkward,
+the deck copy was revised to remove ambiguous references such as `この資料は`,
+avoid mismatched `AではなくB` pairings, and replace `rawログ` with the more
+precise contrast between raw event sequences and 10-second statistics. Claim
+strength was not broadened.
 
 Final stop condition:
 

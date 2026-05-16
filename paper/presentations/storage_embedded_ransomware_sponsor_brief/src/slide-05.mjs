@@ -2,8 +2,8 @@ import { C, claimLine, footer, panel, pill, row, slideBase, title } from "./them
 
 export async function slide05(presentation, ctx) {
   const slide = slideBase(presentation, ctx, "RESOURCE BUDGET | MLに使える資源は小さい", 5, C.amber);
-  title(ctx, slide, "500KBは、モデルだけでなくvolumeごとの状態まで測る");
-  claimLine(ctx, slide, "per-volume detector-dataには重み、入力列、正規化、threshold、score履歴を含め、共有runtimeとは分けて扱う。", C.amber);
+  title(ctx, slide, "500 KBの判定では、重みだけでなくvolumeごとの状態も数える", 92, 28);
+  claimLine(ctx, slide, "測る対象はモデル重みだけではなく、入力列、正規化、threshold、score履歴を含むper-volume detector-dataである。", C.amber);
 
   panel(ctx, slide, {
     x: 86,

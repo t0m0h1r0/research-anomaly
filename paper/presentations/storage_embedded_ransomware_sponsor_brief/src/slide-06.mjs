@@ -2,8 +2,8 @@ import { C, arrow, callout, claimLine, footer, panel, pill, slideBase, title } f
 
 export async function slide06(presentation, ctx) {
   const slide = slideBase(presentation, ctx, "EVALUATION | 技術判断に必要な証拠", 6, C.blue);
-  title(ctx, slide, "次は四つの証拠で、採用・縮小・棄却を判定する", 92, 30);
-  claimLine(ctx, slide, "検出精度だけで採用せず、offline比較、MNN parity、detector-data、10秒cadenceを同じゲートで見る。", C.blue);
+  title(ctx, slide, "採用・縮小・棄却は、四つの証拠を見て決める", 92, 30);
+  claimLine(ctx, slide, "精度だけで採用せず、offline比較、MNN parity、detector-data、10秒cadenceを同じゲートで判定する。", C.blue);
   callout(ctx, slide, { text: "すぐ導入できる、とは言わない", x: 850, y: 224, w: 292, h: 44, fill: C.ink, stroke: C.red, color: C.white });
 
   const gates = [

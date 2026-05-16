@@ -22,3 +22,11 @@
 - Added a consistent `主張` line under each headline so the intended point is immediately visible.
 - Kept theatrical emphasis as local callouts and accent lines rather than full-slide background shifts.
 - Re-rendered the PPTX and confirmed layout quality with 0 errors and 0 warnings.
+
+## 2026-05-16 Copy Consistency Revision
+
+- Responded to feedback that Japanese wording and contrast logic felt awkward.
+- Removed ambiguous `この資料は` framing from the decision slide.
+- Replaced mismatched `AではなくB` wording with clearer `Aの前にB` or matched contrast structures.
+- Replaced `rawログ` with the more precise raw event / 10-second statistics contrast.
+- Re-rendered the PPTX and confirmed layout quality with 0 errors and 0 warnings.

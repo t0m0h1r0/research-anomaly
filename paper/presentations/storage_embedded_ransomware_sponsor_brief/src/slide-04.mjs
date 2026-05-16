@@ -2,8 +2,8 @@ import { C, claimLine, footer, pill, row, slideBase, title } from "./theme.mjs";
 
 export async function slide04(presentation, ctx) {
   const slide = slideBase(presentation, ctx, "MODEL CANDIDATES | AE-01..05 の技術的な意味", 4, C.purple);
-  title(ctx, slide, "AE候補は、追加演算が必要かを測る階段である");
-  claimLine(ctx, slide, "複雑なモデルを採用するためではなく、単純候補で説明できない差分だけを上位候補に渡す。", C.purple);
+  title(ctx, slide, "AE候補は、追加演算の必要性を測る階段である");
+  claimLine(ctx, slide, "単純候補で説明できるなら止め、説明できない差分だけをDense、GRU、Conv1D、CNN-GRUへ渡す。", C.purple);
 
   const x = 76;
   const y0 = 234;

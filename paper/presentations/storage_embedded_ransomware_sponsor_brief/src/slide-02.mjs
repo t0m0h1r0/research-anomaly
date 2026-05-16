@@ -2,8 +2,8 @@ import { C, arrow, callout, claimLine, footer, panel, slideBase, title } from ".
 
 export async function slide02(presentation, ctx) {
   const slide = slideBase(presentation, ctx, "DECISION FRAME | このプレゼンで決めること", 2, C.green);
-  title(ctx, slide, "この資料は導入判断ではなく、棄却条件を決める", 92, 30);
-  claimLine(ctx, slide, "単純規則、AE候補、装置制約の順に削り、次に測る証拠を明確にするための資料である。", C.green);
+  title(ctx, slide, "導入判断の前に、候補を落とす条件を決める", 92, 30);
+  claimLine(ctx, slide, "いま必要なのは採用可否の結論ではなく、次の実験で候補を採用・縮小・棄却する判定条件である。", C.green);
   callout(ctx, slide, { text: "残す候補より先に、止める条件を固定する", x: 776, y: 224, w: 382, h: 44, fill: C.ink, stroke: C.green, color: C.white });
 
   const cards = [
