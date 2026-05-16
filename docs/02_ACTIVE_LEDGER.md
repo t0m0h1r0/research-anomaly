@@ -8,11 +8,11 @@
 |-------|-------|
 | phase | PRESENTATION_REFRESH |
 | branch | codex/researcharchitect-presentation-refresh-20260517 |
-| current_objective | Redesign architecture, AE comparison, and memory-accounting slides for clearer proof objects |
+| current_objective | Capture reusable presentation-review lessons in wiki memory |
 | active_brief | `docs/interface/ResearchBrief.md` |
 | source_artifact | `git@github.com:t0m0h1r0/research-agent.git` remote snapshot @ `ed38873`, materialized into `prompts/meta/` |
 | next_action | Await user review or explicit main no-ff merge instruction; do not merge to `main` otherwise |
-| updated_at_utc | 2026-05-16T23:12:53Z |
+| updated_at_utc | 2026-05-16T23:24:25Z |
 
 ## §CHECKLIST
 
@@ -61,6 +61,7 @@
 | CHK-RAD-034 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `paper/presentations/storage_embedded_ransomware_sponsor_brief/review_reports/round_4_copy_consistency.md` | tightened Japanese copy, removed ambiguous `この資料は` framing, and corrected mismatched contrast pairs; rerendered with 0 layout errors/warnings | 2026-05-17 |
 | CHK-RAD-035 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `paper/presentations/storage_embedded_ransomware_sponsor_brief/review_reports/round_5_full_copy_review.md` | reviewed all slide titles, claim lines, figure labels, tables, callouts, and guard badges as one copy system; rerendered with 0 layout errors/warnings | 2026-05-17 |
 | CHK-RAD-036 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `paper/presentations/storage_embedded_ransomware_sponsor_brief/review_reports/round_6_diagram_clarity.md` | redesigned the architecture, AE candidate, and memory-accounting slides so each has one clear proof object; rerendered with 0 layout errors/warnings | 2026-05-17 |
+| CHK-RAD-037 | DONE | M | `docs/wiki/INDEX.md`, `docs/wiki/cross-domain/WIKI-X-001_presentation_deck_review_loop.md` | compiled reusable presentation-deck review lessons from the session into wiki memory with source-traced review rounds | 2026-05-17 |
 
 ## §ASSUMPTIONS
 
@@ -85,6 +86,7 @@
 | LES-RAD-005 | ACTIVE | Upstream revision `c985b65` changes implementation-domain notation from `R` to `L` and adds role-triggered scheme/code, paper-writing, deck, and illustration/readback skill loops; local prompt audit must check the 9-capsule manifest and Q3b `skill_trigger_tokens`. | `artifacts/P/research_agent_upstream_sync_audit_c985b65.md` |
 | LES-RAD-006 | SUPERSEDED | Shared metaprompt updates were temporarily pinned through `prompts/upstream/research-agent`; this was replaced by remote-snapshot sync in LES-RAD-007. | `artifacts/P/research_agent_submodule_prompt_sync_f52ae6f.md` |
 | LES-RAD-007 | ACTIVE | Persistent upstream checkouts are unnecessary for this receiving project; shared metaprompts should be pulled from an ephemeral remote snapshot, materialized into `prompts/meta/`, and followed by zero-base local deployment while preserving `kernel-project.md`. | `artifacts/P/research_agent_remote_snapshot_prompt_sync_ed38873.md` |
+| LES-RAD-008 | ACTIVE | Sponsor-facing research decks converge faster when each slide is reviewed as one assertion, one proof object, and one explicit claim boundary rather than as isolated visual or copy fixes. | `docs/wiki/cross-domain/WIKI-X-001_presentation_deck_review_loop.md` |
 
 ## §REPLAN_LOG
 
