@@ -38,3 +38,11 @@
 - Standardized wording around `10秒間隔`, `ボリューム`, `軽量メタデータ`, `score一致`, and `detector-data`.
 - Reduced awkward mixed Japanese/English phrasing while keeping required technical terms.
 - Re-rendered the PPTX and confirmed layout quality with 0 errors and 0 warnings.
+
+## 2026-05-16 Diagram Clarity Revision
+
+- Rebuilt Slide 1 around one architecture path: host boundary -> block request metadata -> 10-second statistics -> AE score.
+- Rebuilt Slide 4 around what AE-01..05 reveal: whether compression, temporal context, local temporal features, or combined operators are necessary.
+- Rebuilt Slide 5 around the relationship between model weights, per-volume state, detector-data, aggregate memory, and transient scratch.
+- Removed the scattered architecture fragments and table-first AE readout that made the proof objects hard to follow.
+- Re-rendered the PPTX and confirmed layout quality with 0 errors and 0 warnings.

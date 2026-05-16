@@ -54,7 +54,7 @@ reproducible artifact-tool source project.
 
 ```text
 PPTX output: paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx
-PPTX size: 46799 bytes
+PPTX size: 45020 bytes
 slide count: 6
 layout quality: PASS, 0 errors, 0 warnings
 text extraction: PASS, 6 slides
@@ -102,6 +102,16 @@ badges were re-edited as one copy system. The revision aligns slide-level
 claims with proof objects, reduces awkward mixed Japanese/English phrasing, and
 standardizes terms such as `10秒間隔`, `ボリューム`, `軽量メタデータ`, and
 `score一致`. Claim strength was not broadened.
+
+## Diagram Clarity Review
+
+After follow-up feedback that the architecture, AE candidate readout, and
+weight/state relationship were unclear, Slides 1, 4, and 5 were redesigned as
+proof-object slides rather than label-heavy summaries. Slide 1 now shows one
+processing path from host boundary to block metadata, 10-second statistics, and
+AE score. Slide 4 now states what AE-01..05 reveal about added operators. Slide
+5 now separates model weights, per-volume state, detector-data, and transient
+scratch. Claim strength was not broadened.
 
 Final stop condition:
 

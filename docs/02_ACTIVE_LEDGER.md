@@ -8,11 +8,11 @@
 |-------|-------|
 | phase | PRESENTATION_REFRESH |
 | branch | codex/researcharchitect-presentation-refresh-20260517 |
-| current_objective | Holistically revise sponsor deck copy, labels, and claim-to-proof alignment |
+| current_objective | Redesign architecture, AE comparison, and memory-accounting slides for clearer proof objects |
 | active_brief | `docs/interface/ResearchBrief.md` |
 | source_artifact | `git@github.com:t0m0h1r0/research-agent.git` remote snapshot @ `ed38873`, materialized into `prompts/meta/` |
 | next_action | Await user review or explicit main no-ff merge instruction; do not merge to `main` otherwise |
-| updated_at_utc | 2026-05-16T23:00:55Z |
+| updated_at_utc | 2026-05-16T23:12:53Z |
 
 ## §CHECKLIST
 
@@ -60,6 +60,7 @@
 | CHK-RAD-033 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `paper/presentations/storage_embedded_ransomware_sponsor_brief/review_reports/round_3_visual_consistency.md` | corrected abrupt background shifts by returning all slides to one light editorial system and adding explicit `主張` lines; rerendered with 0 layout errors/warnings | 2026-05-17 |
 | CHK-RAD-034 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `paper/presentations/storage_embedded_ransomware_sponsor_brief/review_reports/round_4_copy_consistency.md` | tightened Japanese copy, removed ambiguous `この資料は` framing, and corrected mismatched contrast pairs; rerendered with 0 layout errors/warnings | 2026-05-17 |
 | CHK-RAD-035 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `paper/presentations/storage_embedded_ransomware_sponsor_brief/review_reports/round_5_full_copy_review.md` | reviewed all slide titles, claim lines, figure labels, tables, callouts, and guard badges as one copy system; rerendered with 0 layout errors/warnings | 2026-05-17 |
+| CHK-RAD-036 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `paper/presentations/storage_embedded_ransomware_sponsor_brief/review_reports/round_6_diagram_clarity.md` | redesigned the architecture, AE candidate, and memory-accounting slides so each has one clear proof object; rerendered with 0 layout errors/warnings | 2026-05-17 |
 
 ## §ASSUMPTIONS
 
