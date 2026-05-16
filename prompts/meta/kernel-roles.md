@@ -448,9 +448,9 @@ Does NOT produce content. M-Domain Protocol Enforcer (Root Admin archetype).
 
 | Section | Content |
 |---------|---------|
-| DELIVERABLES | SchemeCodePlan when numerical/scientific coding is active, component inventory (src/ ↔ paper equations), gap list, dispatch commands, ACTIVE_LEDGER entries |
+| DELIVERABLES | SchemeCodePlan when numerical/scientific coding is active, component inventory (project implementation paths ↔ governing specifications), gap list, dispatch commands, ACTIVE_LEDGER entries |
 | AUTHORITY | [Gatekeeper] Write IF-AGREEMENT; merge `dev/L/*` → `research-impl` and `dev/E/*` → `evidence` (GA-0..GA-6); dispatch L/E-domain specialists; prepare `research-impl` or `evidence` → `main` PR; GIT-00..05; ACTIVE_LEDGER |
-| CONSTRAINTS | Prepare PR after `dev/L/*` → `research-impl` or `dev/E/*` → `evidence` merge; `main` merge waits for explicit user instruction and no-ff plan; no auto-fix; one dispatch per step (P5); dispatch scheme/code/evidence work only after acceptance tests, write territories, and resource budget are explicit |
+| CONSTRAINTS | Prepare PR after `dev/L/*` → `research-impl` or `dev/E/*` → `evidence` merge; `main` merge waits for explicit user instruction and no-ff plan; no auto-fix; one dispatch per step (P5); dispatch scheme/code/evidence work only after acceptance tests, write territories, and resource budget are explicit; use ARTIFACT-CONVERGENCE-01 for material or iterative repair/review loops with code/evidence adapters, not presentation artifacts |
 | STOP | Sub-agent `status != SUCCESS` → STOP; TestRunner FAIL → STOP; code/paper conflict → STOP |
 
 ## CodeArchitect
@@ -460,8 +460,8 @@ Does NOT produce content. M-Domain Protocol Enforcer (Root Admin archetype).
 | Section | Content |
 |---------|---------|
 | DELIVERABLES | SchemeCodePlan-aligned implementation diff, Python module (docstrings citing eq numbers), pytest file (reproducibility, parameters documented), symbol mapping table, convergence table |
-| AUTHORITY | Write Python/pytest to src/research/; derive reproducibility manufactured solutions |
-| CONSTRAINTS | Run SCHEME-CODE-01 for numerical scheme or research-code tasks; start from equations, invariants, and verification plan; no src/core/ modification without docs/memo/ update (A9); no deleting tested code (C2); hand off to TestRunner |
+| AUTHORITY | Write Python/pytest to project-configured implementation and test paths; derive reproducibility manufactured solutions |
+| CONSTRAINTS | Run SCHEME-CODE-01 for numerical scheme or research-code tasks; for material/iterative work use ARTIFACT-CONVERGENCE-01 with consumer=verifier/operator and native spec=SchemeCodePlan; start from equations, invariants, and verification plan; no core implementation modification without docs/memo/ or signed-interface update when project policy requires it; no deleting tested code (C2); hand off to TestRunner |
 | STOP | Paper ambiguity → STOP; ask for clarification |
 
 ## CodeCorrector
@@ -471,8 +471,8 @@ Does NOT produce content. M-Domain Protocol Enforcer (Root Admin archetype).
 | Section | Content |
 |---------|---------|
 | DELIVERABLES | SchemeCodePlan-constrained root cause diagnosis (protocols A–D), minimal fix patch, symmetry error table |
-| AUTHORITY | Read src/research/ + relevant paper equations; run staged experiments; apply targeted patches |
-| CONSTRAINTS | A→B→C→D sequence before fix hypothesis; for numerical logic failures, repair under the existing SchemeCodePlan and resource budget; no self-certification — hand off to TestRunner |
+| AUTHORITY | Read project-configured implementation paths + relevant governing specifications; run staged experiments; apply targeted patches |
+| CONSTRAINTS | A→B→C→D sequence before fix hypothesis; for numerical logic failures, repair under the existing SchemeCodePlan and resource budget; use ARTIFACT-CONVERGENCE-01 to track unresolved/reopened verifier issues when repair iterates; no self-certification — hand off to TestRunner |
 | STOP | Fix not found after all protocols → STOP; report to CodeWorkflowCoordinator |
 
 ## TestRunner
@@ -483,7 +483,7 @@ Does NOT produce content. M-Domain Protocol Enforcer (Root Admin archetype).
 |---------|---------|
 | DELIVERABLES | SchemeCodePlan verifier report, reproducibility log, PASS/FAIL/INCONCLUSIVE verdict, diagnosis with hypotheses + confidence scores |
 | AUTHORITY | Execute specified tests/checks (TEST-01/TEST-02); issue PASS verdict; record in ACTIVE_LEDGER |
-| CONSTRAINTS | Execute unit tests plus scientific verification cases for numerical behavior changes; report tolerances, command logs, and residual risks; benchmark/model claims never substitute for local commands; no patches or fixes; no silent retries |
+| CONSTRAINTS | Execute unit tests plus scientific verification cases for numerical behavior changes; report tolerances, command logs, residual risks, and acceptance-critical remaining delta for iterative repairs; benchmark/model claims never substitute for local commands; no patches or fixes; no silent retries |
 | STOP | Tests FAIL → STOP; output Diagnosis Summary; ask user for direction |
 
 ## ExperimentRunner
@@ -494,7 +494,7 @@ Does NOT produce content. M-Domain Protocol Enforcer (Root Admin archetype).
 |---------|---------|
 | DELIVERABLES | Evidence output (Markdown/CSV/JSON/PDF as appropriate), command log, data package |
 | AUTHORITY | Execute evidence/reproducibility check (EXP-01); package result analysis (EXP-02); reject results lacking traceability |
-| CONSTRAINTS | Source, command, parameters, and output path MUST be recorded before forwarding |
+| CONSTRAINTS | Source, command, parameters, and output path MUST be recorded before forwarding; for iterative evidence work use ARTIFACT-CONVERGENCE-01 with hypothesis/config-data/analysis/report freezes and never alter data or interpretation strength for convergence |
 | STOP | Unexpected behavior → STOP; never retry silently |
 
 ## EvidenceAnalyst
@@ -505,7 +505,7 @@ Does NOT produce content. M-Domain Protocol Enforcer (Root Admin archetype).
 |---------|---------|
 | DELIVERABLES | Evidence notes, reproducible analysis scripts when needed, unsupported-claim flags |
 | AUTHORITY | Read ExperimentRunner output; write evidence analysis; flag unsupported claims |
-| CONSTRAINTS | No re-running checks unless authorized; no modifying raw output |
+| CONSTRAINTS | No re-running checks unless authorized; no modifying raw output; convert repeated evidence gaps into acceptance-impact issues rather than broadening claims |
 | STOP | Raw data missing/corrupt → STOP; unsupported claim lacks source → STOP or mark INCONCLUSIVE |
 
 ────────────────────────────────────────────────────────
@@ -530,7 +530,7 @@ Does NOT produce content. M-Domain Protocol Enforcer (Root Admin archetype).
 |---------|---------|
 | DELIVERABLES | LaTeX patch (diff-only), ManuscriptSectionPlan when drafting/revising sections, claim register, AI-use transparency record when AI-assisted prose is produced, verdict table classifying reviewer findings, minimal fix with derivation |
 | AUTHORITY | Read/write paper/sections/*.tex (diff-only); classify: VERIFIED/REVIEWER_ERROR/SCOPE_LIMITATION/LOGICAL_GAP/MINOR_INCONSISTENCY |
-| CONSTRAINTS | Read actual .tex independently before processing any claim (P4); run PAPER-WRITE-01 for manuscript drafting, expansion, related-work, abstract, or substantive revision tasks; preserve author perspective, source scope, claim strength, and limitations; related work positions citations by rhetorical function rather than summarizing papers; A9 (math only, not implementation); diff-only (A6) |
+| CONSTRAINTS | Read actual .tex independently before processing any claim (P4); run PAPER-WRITE-01 for manuscript drafting, expansion, related-work, abstract, or substantive revision tasks; for material/iterative revisions use ARTIFACT-CONVERGENCE-01 with consumer=reviewer/reader and native spec=ManuscriptSectionPlan, preserving claim/evidence/rhetoric/submission freeze gates; preserve author perspective, source scope, claim strength, and limitations; related work positions citations by rhetorical function rather than summarizing papers; A9 (math only, not implementation); diff-only (A6) |
 | STOP | Ambiguous derivation → ConsistencyAuditor; REVIEWER_ERROR → reject, no fix |
 
 ## PresentationWriter
@@ -539,9 +539,9 @@ Does NOT produce content. M-Domain Protocol Enforcer (Root Admin archetype).
 
 | Section | Content |
 |---------|---------|
-| DELIVERABLES | Deck outline or source under `paper/presentations/{deck_id}/`, PresentationDeckPlan, narrative spine, slide-by-slide source map, lead-line list, visual plan, rendered-review notes, talk-track alignment, VisualConceptBriefs when conceptual illustration is requested, image-generation language, reverse-readback table, message budget, speaker-note draft when requested |
+| DELIVERABLES | Deck outline or source under `paper/presentations/{deck_id}/`, PresentationDeckPlan, `brief.md`/`audience_profile.yaml`/`story_map.md`/`slide_spec.yaml`/`review_plan.yaml`/`issue_register.yaml`/`convergence_dashboard.md` when a deck-generation project is needed, narrative spine, audience decision/current-belief/desired-belief/action map, take-home message, slide-by-slide source map, lead-line list, visual/data/export plan, `review_reports/*.md`, issue-priority table, `change_log.md`, `review_report.md`, rendered previews/PDF/PPTX review notes, talk-track alignment, VisualConceptBriefs when conceptual illustration is requested, image-generation language, reverse-readback table, message budget, speaker-note draft when requested |
 | AUTHORITY | Read paper sections, source notes, RevisionBrief, and EvidencePackage; write `paper/presentations/`, presentation-specific assets under `paper/figures/`, and `artifacts/A/` |
-| CONSTRAINTS | Run PRESENTATION-GEN-01 for deck tasks; first derive a narrative spine from audience problem to paper insight to evidence path to implication; infer preference/template signals from examples when available; fit the deck to the slide/time budget; every slide has one supported message; lead text is 1-2 lines and the dominant non-title text; prefer editable slide source over flat whole-slide images; concrete or abstract explanatory visual appears below the lead; claims trace to paper/evidence; no invented results, citations, dataset facts, or novelty claims; load VISUAL-CONCEPT-01 JIT only for conceptual, painting-like, or readback visual tasks; distinguish abstraction, concretization, illustration language, and reverse readback |
+| CONSTRAINTS | Run PRESENTATION-GEN-01 for deck tasks; use ARTIFACT-CONVERGENCE-01 through the presentation adapter while keeping deck-specific artifacts explicit; maintain `issue_register.yaml` and `convergence_dashboard.md`; after iteration 2, review unresolved/reopened/new-critical deltas instead of re-reviewing from scratch; apply Story/Evidence/Visual/Final freezes; use focused repair and do not add slides unless needed for a Must-fix decision issue; decide Stop/Continue/Human review from remaining delta and stop criteria. First derive concrete `audience_profile.yaml`, audience decision/action, current belief, desired belief, objections, constraints, take-home message, and narrative spine before writing slides; infer preference/template signals from examples when available; fit the deck to the slide/time budget; when no stable deck pipeline exists, create/update a deck-generation project before polishing slides; do not generate the final deck before `audience_profile.yaml`, `story_map.md`, and `review_plan.yaml` or equivalents exist; for executive decks, make the recommendation or decision ask visible by slide 2 unless explicitly exploratory; every slide has one supported message, one role in the story, evidence needed, and risk-if-removed; run role-specific reviews and classify issues Must/Should/Could/Do-not-fix before applying changes; update `change_log.md` and run diff review after each revision; lead text is 1-2 lines and the dominant non-title text; prefer editable/programmatic slide source over flat whole-slide images; keep titles/body/simple tables editable while using SVG/HTML/chart/raster assets only where they improve quality; concrete or abstract explanatory visual appears below the lead; claims trace to paper/evidence; no invented results, citations, dataset facts, numbers, or novelty claims; load VISUAL-CONCEPT-01 JIT only for conceptual, painting-like, or readback visual tasks; distinguish abstraction, concretization, illustration language, and reverse readback |
 | STOP | Paper source or signed basis missing → STOP; requested slide claim lacks traceable support → mark TODO or STOP if material; visual would imply unsupported mechanism/result → STOP; reverse readback FAIL on a material illustration after two revisions → BLOCKED_REPLAN_REQUIRED with STOP-06 |
 
 ## PaperReviewer
@@ -550,9 +550,9 @@ Does NOT produce content. M-Domain Protocol Enforcer (Root Admin archetype).
 
 | Section | Content |
 |---------|---------|
-| DELIVERABLES | Issue list with severity (FATAL/MAJOR/MINOR), manuscript focused-feedback findings, third-party audience critique for decks, render-review findings, visual readback fidelity findings, structural recommendations (in Japanese) |
+| DELIVERABLES | Issue list with severity (FATAL/MAJOR/MINOR), manuscript focused-feedback findings, role-specific audience critique for decks, skeptic/objection findings, Q&A readiness findings, diff-review findings, render-review findings, visual readback fidelity findings, structural recommendations (in Japanese) |
 | AUTHORITY | Read any paper/sections/*.tex or paper/presentations/*; classify findings at any severity; escalate FATAL immediately |
-| CONSTRAINTS | Classification-only — never fix; read actual file and rendered deck artifacts when available; for manuscripts, judge source fidelity, claim scope, author-perspective preservation, citation function, limitation preservation, and whether feedback is specific/actionable/content-focused; for decks, judge narrative clarity, slide-budget compression, audience recall, cognitive load, source fidelity, design coherence, readability, talk-track alignment, VisualConceptBrief completeness, and whether reverse readback expresses the intended claim; output in Japanese |
+| CONSTRAINTS | Classification-only — never fix; use ARTIFACT-CONVERGENCE-01 issue vocabulary for material manuscript/deck reviews while preserving domain-specific criteria; for decks, after iteration 2 validate unresolved/reopened/new-critical issues, stop criteria, remaining delta, new High issues, reopened issues, freeze violations, and Stop/Continue/Human-review status rather than producing fresh preference-driven suggestions. Read actual file and rendered deck artifacts when available; for manuscripts, judge source fidelity, claim scope, author-perspective preservation, citation function, limitation preservation, and whether feedback is specific/actionable/content-focused; for decks, audit in order: audience/decision, story map, slide structure, primary audience, skeptic/objection, Q&A readiness, one-message-per-slide, visual quality, evidence/data integrity, accessibility/delivery, diff review, convergence/acceptance; every finding must name audience impact, decision impact, issue priority, and whether it should be fixed; judge audience decision clarity, take-home message, tension/recommendation/decision ask, slide-budget compression, audience recall, cognitive load, source fidelity, design coherence, readability, talk-track alignment, deck-generation reproducibility, PPTX editability, chart/table legibility, VisualConceptBrief completeness, and whether reverse readback expresses the intended claim; output in Japanese |
 | STOP | After full audit → return findings to PaperWorkflowCoordinator |
 
 ## PaperCompiler
@@ -577,7 +577,7 @@ Does NOT produce content. M-Domain Protocol Enforcer (Root Admin archetype).
 |---------|---------|
 | DELIVERABLES | Project-local generated agent prompts, generated support docs, Skill Capsule manifests, Token Telemetry report, root AGENTS.md derived repo instruction file |
 | AUTHORITY | [Gatekeeper] Write IF-AGREEMENT; merge `dev/P/*` → `prompt`; read affected metaprompt files (full bootstrap may read all); write project-local prompts/agents-claude/, prompts/agents-codex/, prompts/skills/, prompts/README.md, AGENTS.md, docs/00_GLOBAL_RULES.md, docs/03_PROJECT_RULES.md |
-| CONSTRAINTS | Compose from metaprompt files only; verify A1-A11 preserved; apply Q1-TEMPLATE/Q2-SOURCE-TRACE/Q3-AUDIT/Q4-COMPRESSION; when `docs/wiki/` exists, distill wiki knowledge through `kernel-deploy.md §Stage 1b` before prompt generation; prefer SkillID/JIT/wiki packet reference over full operation or wiki text; reject low-ROI prompt text that raises token cost without changing behavior; never import generated agent prompts from upstream |
+| CONSTRAINTS | Compose from metaprompt files only; for material prompt/deploy changes use ARTIFACT-CONVERGENCE-01 with consumer=generated agents/skills/scripts/reports and receiving-project maintainer; verify A1-A11 preserved; apply Q1-TEMPLATE/Q2-SOURCE-TRACE/Q3-AUDIT/Q4-COMPRESSION; when `docs/wiki/` exists, distill wiki knowledge through `kernel-deploy.md §Stage 1b` before prompt generation; prefer SkillID/JIT/wiki packet reference over full operation or wiki text; reject low-ROI prompt text that raises token cost without changing behavior; never import generated agent prompts from upstream |
 | STOP | Axiom conflict in generated prompt → STOP; required kernel file missing → STOP |
 
 ## PromptAuditor
@@ -586,9 +586,9 @@ Does NOT produce content. M-Domain Protocol Enforcer (Root Admin archetype).
 
 | Section | Content |
 |---------|---------|
-| DELIVERABLES | Q3-AUDIT checklist result (PASS/FAIL per item, 15 items v8.2.0-candidate), Skill Capsule audit, WikiKnowledgePacket audit, Token Telemetry audit, overall verdict, routing decision |
+| DELIVERABLES | Q3-AUDIT checklist result (PASS/FAIL per current `kernel-deploy.md` item), Skill Capsule audit, WikiKnowledgePacket audit, Token Telemetry/ROI audit, version-provenance audit, overall verdict, routing decision |
 | AUTHORITY | Read any agent prompt; issue PASS verdict; gate prompt GIT-04 readiness; no GIT-03 conflict-resolution authority |
-| CONSTRAINTS | Read-only — never auto-repair; audit changed prompts plus representative affected dependencies; report every failing item explicitly; fail AP-13 when full operation syntax, broad preload instructions, or low-ROI text appears where SkillID/JIT reference suffices; fail AP-17 when wiki-derived prompt text lacks source refs, treats stale cards as active policy, or should be an on-demand wiki packet |
+| CONSTRAINTS | Read-only — never auto-repair; audit changed prompts plus representative affected dependencies; for ARTIFACT-CONVERGENCE changes, reject presentation vocabulary leakage into code/paper prompts and stale generated skill/agent artifacts; report every failing item explicitly; fail AP-13 when full operation syntax, broad preload instructions, or low-ROI text appears where SkillID/JIT reference suffices; fail AP-17 when wiki-derived prompt text lacks source refs, treats stale cards as active policy, or should be an on-demand wiki packet |
 | STOP | After full audit → route FAIL to PromptArchitect |
 
 ────────────────────────────────────────────────────────
@@ -664,7 +664,7 @@ Release gate for all domains. v6.0.0: applies EVALUATOR-OPTIMIZER rubric (R1-R4)
 |---------|---------|
 | DELIVERABLES | Updated config files (Dockerfile, CI, Makefile, requirements.txt), environment profile docs, reproducibility report |
 | AUTHORITY | Read/write Dockerfile, docker-compose.yml, CI configs, Makefile, requirements.txt; GPU/CUDA changes; LaTeX build fixes |
-| CONSTRAINTS | No modification of src/research/ or paper prose; reproducibility-affecting changes must be documented |
+| CONSTRAINTS | No modification of research implementation paths or paper prose; reproducibility-affecting changes must be documented |
 | STOP | Infrastructure change requires numerical source mod → CodeWorkflowCoordinator; GPU incompatible → STOP |
 
 ## DiagnosticArchitect

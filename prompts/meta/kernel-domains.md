@@ -74,7 +74,7 @@ write: [docs/memo/, artifacts/T/, docs/interface/SourceClaimMap.md, docs/interfa
 read: [paper/source/, paper/sections/, docs/01_PROJECT_MAP.md]
 forbidden: [src/, analysis/, notebooks/, data/, prompts/meta/, docs/interface/ without IF-COMMIT]
 produces: [docs/interface/CheckSpec.md, docs/interface/RevisionBrief.md]
-rules: [A3, AU1-AU3, PR-3]
+rules: [A3, AU1-AU3, project-profile verification rules]
 lifecycle: DRAFT -> REVIEWED(Independent derivation) -> VALIDATED(AU2 PASS)
 
 domain: L
@@ -85,7 +85,7 @@ write: [src/, analysis/, notebooks/, tests/, docs/interface/AnalysisPackage/, do
 read: [docs/interface/CheckSpec.md, paper/source/, docs/memo/]
 forbidden: [paper/sections/, paper/presentations/, prompts/meta/, docs/interface/ without IF-COMMIT]
 produces: docs/interface/AnalysisPackage/
-rules: [C1-C6, PR-5]
+rules: [C1-C6, project-profile implementation/fidelity rules]
 lifecycle: DRAFT -> REVIEWED(TestRunner PASS) -> VALIDATED(AU2 PASS)
 
 domain: E
@@ -96,7 +96,7 @@ write: [docs/evidence/, data/, artifacts/E/, docs/interface/EvidencePackage/, do
 read: [paper/source/, docs/interface/AnalysisPackage/, docs/memo/]
 forbidden: [src/ except invocation, paper/sections/, paper/presentations/, prompts/meta/, docs/interface/ without IF-COMMIT]
 produces: [docs/interface/EvidencePackage/, docs/interface/RevisionBrief.md]
-rules: [PR-4, PR-5]
+rules: [project-profile evidence/execution/fidelity rules]
 lifecycle: DRAFT -> REVIEWED(Evidence trace) -> VALIDATED(AU2 PASS)
 
 domain: A
@@ -107,7 +107,7 @@ write: [paper/sections/, paper/figures/, paper/presentations/, paper/main.tex, p
 read: [paper/source/, docs/interface/RevisionBrief.md, docs/interface/EvidencePackage/, docs/memo/]
 forbidden: [src/, analysis/, notebooks/, data/, prompts/meta/, docs/interface/ without IF-COMMIT]
 produces: [paper/sections/, paper/presentations/, artifacts/A/revision_notes.md]
-rules: [P1-P4, PR-6]
+rules: [P1-P4, project-profile writing/output rules]
 lifecycle: DRAFT -> REVIEWED(PaperReviewer + build/format PASS) -> VALIDATED(AU2 PASS)
 
 domain: M
@@ -117,7 +117,7 @@ specialists: [TaskPlanner, DiagnosticArchitect, DevOpsArchitect]
 write: [artifacts/M/, docs/01_PROJECT_MAP.md, docs/02_ACTIVE_LEDGER.md, Dockerfile, docker-compose.yml, .github/workflows/, Makefile, requirements*.txt, pyproject.toml]
 read: ALL
 forbidden: [paper/source/ overwrite, prompts/meta/ without explicit prompt task]
-rules: [A1-A11, PR-1]
+rules: [A1-A11, project-profile meta/workflow rules]
 
 domain: P
 branch: prompt
@@ -126,7 +126,7 @@ specialists: [PromptAuditor]
 write: [prompts/agents-claude/, prompts/agents-codex/, prompts/skills/, prompts/README.md, AGENTS.md, docs/00_GLOBAL_RULES.md, docs/03_PROJECT_RULES.md, artifacts/P/, docs/interface/]
 read: [prompts/meta/kernel-*.md, prompts/meta/kernel-project.md, docs/02_ACTIVE_LEDGER.md]
 forbidden: [paper/source/, src/, analysis/, paper/sections/, paper/presentations/, docs/interface/ without IF-COMMIT]
-rules: [Q1-TEMPLATE, Q2-SOURCE-TRACE, Q3-AUDIT, Q4-COMPRESSION, PR-1]
+rules: [Q1-TEMPLATE, Q2-SOURCE-TRACE, Q3-AUDIT, Q4-COMPRESSION, project-profile prompt/deploy rules]
 lifecycle: DRAFT -> REVIEWED(PromptAuditor Q3-AUDIT PASS) -> VALIDATED
 
 domain: Q

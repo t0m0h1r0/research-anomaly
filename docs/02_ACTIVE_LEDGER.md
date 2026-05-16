@@ -7,12 +7,12 @@
 | Field | Value |
 |-------|-------|
 | phase | PROMPT_DEPLOYED |
-| branch | codex/researcharchitect-prompt-submodule-20260516 |
-| current_objective | Adopt upstream research-agent submodule revision `f52ae6f` and redeploy Codex prompt artifacts with wiki-packet audit gates |
+| branch | codex/researcharchitect-zero-base-prompt-deploy-20260517 |
+| current_objective | Adopt remote research-agent metaprompt snapshot `ed38873`, discontinue persistent `prompts/upstream/`, and zero-base redeploy local prompt artifacts |
 | active_brief | `docs/interface/ResearchBrief.md` |
-| source_artifact | `prompts/upstream/research-agent` @ `f52ae6f` |
+| source_artifact | `git@github.com:t0m0h1r0/research-agent.git` remote snapshot @ `ed38873`, materialized into `prompts/meta/` |
 | next_action | Continue `ASM-RAD-001` planning unless the user asks for merge or another prompt-system follow-up |
-| updated_at_utc | 2026-05-16T09:29:59Z |
+| updated_at_utc | 2026-05-16T16:52:05Z |
 
 ## §CHECKLIST
 
@@ -54,6 +54,7 @@
 | CHK-RAD-029 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `docs/memo/researcharchitect_sponsor_deck_zero_base_review_20260506.md` | recreated sponsor deck from a blank narrative; addressed 6 MAJOR, 5 MINOR, and 1 NIT finding, then re-reviewed with no MAJOR-or-higher findings after 2 rounds | 2026-05-06 |
 | CHK-RAD-030 | DONE | A | `paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx`, `docs/memo/researcharchitect_sponsor_deck_technical_revision_20260506.md` | revised sponsor deck to remove file-name-protection framing and foreground block-storage embedding, technical AE/input details, and constrained ML resources | 2026-05-06 |
 | CHK-UPPROMPT-004 | DONE | P | `.gitmodules`, `prompts/upstream/research-agent`, `prompts/upstream.toml`, `prompts/upstream-managed.json`, `prompts/meta/`, `prompts/agents-codex/`, `prompts/skills/SKILL-PROMPT-AUDIT.md`, `wiki_knowledge_injection_report.json`, `artifacts/P/research_agent_submodule_prompt_sync_f52ae6f.md` | added research-agent as a pinned submodule, synced shared metaprompts at `f52ae6f`, preserved `kernel-project.md`, redeployed Codex prompt artifacts for AP-17/wiki-packet audit discipline, and passed prompt audit | 2026-05-16 |
+| CHK-UPPROMPT-005 | DONE | P | `scripts/sync_research_agent.py`, `scripts/deploy_prompt_system.py`, `scripts/validate_prompt_deployment.py`, `prompts/upstream.toml`, `prompts/upstream-managed.json`, `prompts/meta/`, `prompts/agents-*`, `prompts/skills/`, `token_roi_report.json`, `artifacts/P/research_agent_remote_snapshot_prompt_sync_ed38873.md` | discontinued persistent `prompts/upstream/` submodule, synced latest remote metaprompt snapshot `ed38873`, preserved `kernel-project.md`, zero-base regenerated local agents/skills/docs/reports, and passed prompt audit with Q3-16 token-ROI reporting | 2026-05-17 |
 
 ## §ASSUMPTIONS
 
@@ -76,7 +77,8 @@
 | LES-RAD-003 | ACTIVE | Shared prompt refreshes should come from upstream `research-agent`, with `kernel-project.md` treated as project-local and verified unchanged before accepting sync output. | `scripts/sync_research_agent.py` |
 | LES-RAD-004 | ACTIVE | Upstream now distributes metaprompts only; skills, helper scripts, templates, and agent prompts must be regenerated and audited inside each receiving project. | `prompts/upstream.toml` |
 | LES-RAD-005 | ACTIVE | Upstream revision `c985b65` changes implementation-domain notation from `R` to `L` and adds role-triggered scheme/code, paper-writing, deck, and illustration/readback skill loops; local prompt audit must check the 9-capsule manifest and Q3b `skill_trigger_tokens`. | `artifacts/P/research_agent_upstream_sync_audit_c985b65.md` |
-| LES-RAD-006 | ACTIVE | Shared metaprompt updates are now pinned through `prompts/upstream/research-agent`; `prompts/meta/kernel-project.md` remains project-local while shared `kernel-*.md` files are materialized from the submodule and audited before `REDEPLOY_REQUIRED` is removed. | `artifacts/P/research_agent_submodule_prompt_sync_f52ae6f.md` |
+| LES-RAD-006 | SUPERSEDED | Shared metaprompt updates were temporarily pinned through `prompts/upstream/research-agent`; this was replaced by remote-snapshot sync in LES-RAD-007. | `artifacts/P/research_agent_submodule_prompt_sync_f52ae6f.md` |
+| LES-RAD-007 | ACTIVE | Persistent upstream checkouts are unnecessary for this receiving project; shared metaprompts should be pulled from an ephemeral remote snapshot, materialized into `prompts/meta/`, and followed by zero-base local deployment while preserving `kernel-project.md`. | `artifacts/P/research_agent_remote_snapshot_prompt_sync_ed38873.md` |
 
 ## §REPLAN_LOG
 
@@ -87,6 +89,7 @@
 | RPL-RAD-003 | 2026-05-05 | Upstream revision `8abd3a7` changed the distribution contract | Import only shared metaprompts from upstream, preserve the local project profile, and regenerate project-local agents, skills, docs, and helper scripts |
 | RPL-RAD-004 | 2026-05-06 | Upstream revision `c985b65` added scheme/code, paper-writing, presentation-generation, and visual-concept prompt operations | Import shared metaprompts only, preserve the local project profile, redeploy project-local prompts/skills/docs, and require 9-skill + Q3b telemetry audit before removing the redeploy marker |
 | RPL-RAD-005 | 2026-05-16 | User requested research-agent metaprompts be taken in as a submodule and latest Codex agents redeployed | Add `research-agent` as a pinned submodule, sync shared kernel files from the submodule, preserve the local project profile, and redeploy/audit Codex prompt artifacts with AP-17 wiki-packet checks |
+| RPL-RAD-006 | 2026-05-17 | User requested preserving `kernel-project.md`, taking in latest metaprompts, discontinuing the `upstream` directory, and deploying from zero base | Remove the persistent submodule checkout, sync shared kernel files from the remote snapshot only, preserve the local project profile by hash, regenerate all local derived prompt artifacts, and audit Q3-16 token ROI |
 
 ## §4 BRANCH_LOCK_REGISTRY
 
@@ -103,3 +106,4 @@
 | RAD-UPPROMPT3 | codex/researcharchitect-prompt-refresh-20260506 | `/private/tmp/research-anomaly-prompt-refresh-20260506` | sync upstream metaprompt-only revision `c985b65` and redeploy local prompt artifacts | ACTIVE | 2026-05-06 |
 | RAD-RA-SPONSORDECK-REVIEW-20260506 | codex/researcharchitect-sponsor-deck-review-20260506 | `/private/tmp/research-anomaly-sponsor-deck-review-20260506` | strict review and zero-base revision of sponsor deck until no MAJOR-or-higher findings remain | ACTIVE | 2026-05-06 |
 | RAD-UPPROMPT4 | codex/researcharchitect-prompt-submodule-20260516 | `/private/tmp/research-anomaly-prompt-submodule-20260516` | add research-agent as a submodule, sync latest shared metaprompts, and redeploy Codex prompt artifacts | ACTIVE | 2026-05-16 |
+| RAD-UPPROMPT5 | codex/researcharchitect-zero-base-prompt-deploy-20260517 | `/Users/tomohiro/Documents/research-anomaly` | sync latest shared metaprompts from remote snapshot, remove persistent upstream directory, and zero-base redeploy local prompt artifacts | ACTIVE | 2026-05-17 |

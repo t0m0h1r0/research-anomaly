@@ -1,14 +1,10 @@
 {
-  "generated_at_utc": "2026-05-16T09:29:59Z",
-  "status": "WAIVED",
-  "reason": "docs/wiki/ is absent in this repository at deployment time, so there are no local wiki cards to distill into prompt behavior deltas.",
-  "source_index": null,
-  "used_packets": [],
   "deferred_packets": [],
+  "deployment_version": "v8.7.0-candidate",
+  "generated_at_utc": "2026-05-16T16:51:42Z",
+  "reason": "docs/wiki/ has no markdown cards to distill for this deployment",
   "rejected_packets": [],
-  "token_cost": {
-    "wiki_static_tokens": 0,
-    "proxy_unit": "words"
-  },
-  "verdict": "PASS"
+  "status": "WAIVED",
+  "used_packets": [],
+  "wiki_static_tokens": 0
 }

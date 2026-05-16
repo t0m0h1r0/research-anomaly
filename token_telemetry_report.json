@@ -1,52 +1,44 @@
 {
-  "generated_at_utc": "2026-05-16T09:29:59Z",
-  "status": "PASS",
-  "method": "wc-style word counts as a lightweight prompt-size proxy",
-  "upstream": {
-    "remote": "git@github.com:t0m0h1r0/research-agent.git",
-    "revision": "f52ae6f",
-    "distribution_mode": "git-submodule",
-    "submodule_path": "prompts/upstream/research-agent",
-    "project_profile_preserved": true
-  },
-  "q3b": {
-    "static_prompt_tokens": 11539,
-    "loaded_rule_tokens": 22137,
-    "skill_trigger_tokens": 1533,
-    "wiki_static_tokens": 0,
-    "artifact_tokens": 4638,
-    "tool_result_tokens": 0,
-    "handoff_tokens": 0,
-    "proxy_unit": "words",
-    "verdict": "PASS"
-  },
   "counts": {
-    "codex_agent_files": {
-      "files": 24,
-      "words": 3124
-    },
     "claude_agent_files": {
       "files": 24,
-      "words": 8415
+      "words": 5310
+    },
+    "codex_agent_files": {
+      "files": 24,
+      "words": 4177
     },
     "kernel_meta_files": {
       "files": 8,
-      "words": 22137
+      "words": 25638
+    },
+    "runtime_docs": {
+      "files": 5,
+      "words": 3311
     },
     "skill_capsules": {
       "files": 9,
-      "words": 1533
-    },
-    "runtime_docs": {
-      "files": 6,
-      "words": 4638
+      "words": 1502
     }
   },
-  "budget_notes": [
-    "Generated agent prompts are compact role prompts with operation details kept in kernel files or role-triggered skill capsules.",
-    "Codex prompts are intentionally smaller than Claude prompts for executable clarity.",
-    "Skill trigger tokens are tracked separately for Q3b because skill bodies are JIT-loaded only when triggered.",
-    "wiki_static_tokens is zero because this repository has no docs/wiki/ tree to distill for this deployment.",
-    "Upstream revision f52ae6f is pinned as a submodule and distributes metaprompts only; generated agents, skill capsules, and helper scripts are project-local outputs."
-  ]
+  "deployment_version": "v8.7.0-candidate",
+  "generated_at_utc": "2026-05-16T16:51:42Z",
+  "method": "wc-style word counts as a lightweight prompt-size proxy",
+  "q3b": {
+    "artifact_tokens": 3311,
+    "loaded_rule_tokens": 25638,
+    "proxy_unit": "words",
+    "skill_trigger_tokens": 1502,
+    "static_prompt_tokens": 9487,
+    "verdict": "PASS",
+    "wiki_static_tokens": 0
+  },
+  "status": "PASS",
+  "upstream": {
+    "distribution_mode": "git-remote-snapshot",
+    "persistent_upstream_checkout": false,
+    "project_profile_preserved": true,
+    "remote": "git@github.com:t0m0h1r0/research-agent.git",
+    "revision": "ed388737ed01c479df4905925f1ec6791ff0f47d"
+  }
 }

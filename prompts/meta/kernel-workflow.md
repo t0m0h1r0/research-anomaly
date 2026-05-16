@@ -150,7 +150,7 @@ At each HAND-02 emission, agent records:
 | source_refs | source paths and section/equation/page references |
 | verification | commands, logs, or independent derivation artifact |
 | unresolved | blockers and exact next action |
-| workflow_lesson | when PR-1 applies |
+| workflow_lesson | when the project profile or reusable prompt lesson policy applies |
 
 Condense when context exceeds 60% or task exceeds 30 turns. The condensed state
 must let a resumed agent continue from external artifacts alone.

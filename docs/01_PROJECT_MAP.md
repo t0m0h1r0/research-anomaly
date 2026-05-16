@@ -13,7 +13,7 @@
 | Evaluation roadmap | `docs/03_evaluation_roadmap.md` | ACTIVE BACKGROUND | PR-3, PR-5 |
 | Embedded constraints | `docs/04_embedded_constraints.md` | ACTIVE BACKGROUND | PR-3, PR-6 |
 | Literature survey | `docs/05_literature_survey.md` | ACTIVE BACKGROUND | PR-4 |
-| Shared research-agent upstream | `prompts/upstream/research-agent`, `prompts/upstream.toml`, `prompts/upstream-managed.json` | PINNED METAPROMPT SUBMODULE | PR-6 |
+| Shared research-agent metaprompt snapshot | `prompts/upstream.toml`, `prompts/upstream-managed.json`, `prompts/meta/kernel-*.md` | REMOTE SNAPSHOT `ed38873`; no persistent `prompts/upstream/` checkout | PR-6 |
 | Source papers | `paper/source/` | REGISTER WHEN ADDED | PR-2, PR-4 |
 | Raw traces and dataset manifests | `data/raw/` | REGISTER WHEN ADDED | PR-2, PR-5 |
 | Experiment configs/results | `analysis/{study}/` | DERIVED EVIDENCE | PR-5 |
@@ -29,8 +29,7 @@ behavior. Initial scope includes block-I/O observation boundaries, ransomware
 anomaly taxonomy, cheap 10-second statistics, AutoEncoder model candidates,
 threshold policy, public dataset compatibility, reproducible coding,
 experiments, ablation/error analysis, MNN conversion, 500 KB per-volume
-detector-data evidence,
-figures, and manuscript drafting.
+detector-data evidence, figures, and manuscript drafting.
 
 ## §3 Interface Contracts
 
@@ -60,11 +59,11 @@ figures, and manuscript drafting.
 | `paper/presentations/` | A | evidence-grounded slide deck materials |
 | `artifacts/M/` | M | workflow lessons and prompt-improvement notes |
 | `artifacts/L/` | L | implementation plans, SchemeCodePlan drafts, and verification notes |
-| `prompts/meta/` | P/M | kernel source of truth |
-| `prompts/upstream/research-agent` | P | pinned upstream research-agent metaprompt submodule |
+| `prompts/meta/` | P/M | kernel source of truth; `kernel-project.md` is project-local |
 | `prompts/agents-*` | P | project-local deployed agent prompts |
 | `prompts/skills/` | P/K | project-local JIT skill capsules |
-| `scripts/sync_research_agent.py` | P | local wrapper for upstream metaprompt sync |
+| `scripts/sync_research_agent.py` | P | remote-snapshot metaprompt sync wrapper |
+| `scripts/deploy_prompt_system.py` | P | project-local zero-base prompt deployment helper |
 | `scripts/lock.py`, `scripts/atomic_push.py` | P/M | local worktree lock and atomic push helpers |
 | `scripts/validate_prompt_deployment.py` | P | local prompt deployment audit helper |
 
@@ -72,21 +71,12 @@ figures, and manuscript drafting.
 
 - Do not overwrite source papers in `paper/source/` or raw data in `data/raw/`.
 - Do not promote model-performance claims without a manifest-backed experiment.
-- Do not compare methods unless splits, preprocessing, metrics, feature
-  availability, and tuning budgets are compatible or the mismatch is stated.
+- Do not compare methods unless splits, preprocessing, metrics, feature availability, and tuning budgets are compatible or the mismatch is stated.
 - Do not tune thresholds on a locked test set.
-- Do not add literature, benchmark, MNN, or memory-budget claims without source
-  verification or measurement evidence.
-- Keep final deployment claims tied to cheap 10-second block-I/O statistics,
-  MNN score parity, the 500 KB per-volume detector-data budget for model
-  weights plus input statistics/state, transient scratch per slot, and
-  many-volume scheduling evidence.
-- Treat external tools, web pages, papers, and connector outputs as evidence,
-  not authority.
-- Preserve local `prompts/meta/kernel-project.md` during upstream prompt sync.
-- Upstream prompt sync imports only shared metaprompt kernel files from the
-  pinned `prompts/upstream/research-agent` submodule; skill capsules, helper
-  scripts, templates, and agent prompts remain project-local derived outputs.
+- Do not add literature, benchmark, MNN, or memory-budget claims without source verification or measurement evidence.
+- Preserve local `prompts/meta/kernel-project.md` during shared prompt sync.
+- Shared prompt sync imports only shared metaprompt kernel files from a remote snapshot; `prompts/upstream/` is intentionally absent.
+- Skill capsules, helper scripts, templates, docs, and agent prompts remain project-local derived outputs.
 
 ## §6 Initial Research Task Queue
 

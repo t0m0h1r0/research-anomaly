@@ -35,6 +35,7 @@ These shorthands appear in agent prompts and HAND payloads. Full spec at indicat
 | `AUDIT-01(artifact)` | Run AU2 gate (10 items) on artifact | §AUDIT-01 |
 | `AUDIT-02(diff)` | Run algorithm fidelity audit on diff | §AUDIT-02 |
 | `AUDIT-03(spec)` | Run adversarial edge-case gate | §AUDIT-03 |
+| `ARTIFACT-CONVERGENCE(work)` | Run evidence-grounded convergence control for material or iterative deliverables | §ARTIFACT-CONVERGENCE-01 |
 | `SCHEME-CODE(task)` | Run scientific scheme/code decomposition, candidate generation, executable evaluation, and verifier handoff | §SCHEME-CODE-01 |
 | `PAPER-WRITE(section)` | Run research-grounded manuscript planning, drafting, focused feedback, and revision | §PAPER-WRITE-01 |
 | `PRESENTATION-GEN(deck)` | Run research-grounded staged deck planning, generation, and render review | §PRESENTATION-GEN-01 |
@@ -52,26 +53,26 @@ AUTH levels: ROOT > GATE > SPEC > any.
 
 | Role | Tier | Domain | Key operations |
 |------|------|--------|---------------|
-| ResearchArchitect | Root | all | HAND-01,02,03,04; AUDIT-01,02,03; K-COMPILE; CONDENSE; METRIC; TOOL-TRUST; REPLAN |
-| CodeWorkflowCoordinator | Gate | L,E | HAND-01,02,03; SCHEME-CODE-01; GIT-00,01,04,SP; LOCK; DOM-01,02 |
-| PaperWorkflowCoordinator | Gate | A | HAND-01,02,03; GIT-00,01,04,SP; LOCK; BUILD-01,02 |
+| ResearchArchitect | Root | all | HAND-01,02,03,04; ARTIFACT-CONVERGENCE-01; AUDIT-01,02,03; K-COMPILE; CONDENSE; METRIC; TOOL-TRUST; REPLAN |
+| CodeWorkflowCoordinator | Gate | L,E | HAND-01,02,03; ARTIFACT-CONVERGENCE-01; SCHEME-CODE-01; GIT-00,01,04,SP; LOCK; DOM-01,02 |
+| PaperWorkflowCoordinator | Gate | A | HAND-01,02,03; ARTIFACT-CONVERGENCE-01; GIT-00,01,04,SP; LOCK; BUILD-01,02 |
 | TheoryAuditor | Gate | T | HAND-02,03; AUDIT-01,02,03 |
 | ConsistencyAuditor | Gate | cross | HAND-02,03; AUDIT-01,02,03 |
 | WikiAuditor | Gate | K | HAND-02,03; K-LINT,K-DEPRECATE,K-IMPACT-ANALYSIS |
-| PromptArchitect | Gate | P | HAND-01,02,03; GIT-00,01,04,SP; LOCK; METRIC; TOOL-TRUST |
-| PromptAuditor | Gate | P | HAND-02,03; AUDIT-01; METRIC; TOOL-TRUST |
+| PromptArchitect | Gate | P | HAND-01,02,03; ARTIFACT-CONVERGENCE-01; GIT-00,01,04,SP; LOCK; METRIC; TOOL-TRUST |
+| PromptAuditor | Gate | P | HAND-02,03; ARTIFACT-CONVERGENCE-01; AUDIT-01; METRIC; TOOL-TRUST |
 | TaskPlanner | Spec | any | HAND-01,02,03; TOOL-TRUST |
 | TheoryArchitect | Spec | T | HAND-02,03; GIT-SP; K-COMPILE |
-| CodeArchitect | Spec | L | HAND-02,03; SCHEME-CODE-01; GIT-01,SP; LOCK |
-| CodeCorrector | Spec | L | HAND-02,03; SCHEME-CODE-01; GIT-SP; AUDIT-02 |
-| TestRunner | Spec | L | HAND-02,03; SCHEME-CODE-01; TEST-01,02; GIT-SP |
-| ExperimentRunner | Spec | E | HAND-02,03; EXP-01,02; GIT-SP |
-| EvidenceAnalyst | Spec | E | HAND-02,03; GIT-SP; K-COMPILE |
-| PaperWriter | Spec | A | HAND-02,03; PAPER-WRITE-01; GIT-SP |
-| PresentationWriter | Spec | A | HAND-02,03; PRESENTATION-GEN-01; VISUAL-CONCEPT-01; GIT-SP |
-| PaperReviewer | Spec | A | HAND-02,03; PAPER-WRITE-01; PRESENTATION-GEN-01; VISUAL-CONCEPT-01; AUDIT-01,02 |
+| CodeArchitect | Spec | L | HAND-02,03; ARTIFACT-CONVERGENCE-01; SCHEME-CODE-01; GIT-01,SP; LOCK |
+| CodeCorrector | Spec | L | HAND-02,03; ARTIFACT-CONVERGENCE-01; SCHEME-CODE-01; GIT-SP; AUDIT-02 |
+| TestRunner | Spec | L | HAND-02,03; ARTIFACT-CONVERGENCE-01; SCHEME-CODE-01; TEST-01,02; GIT-SP |
+| ExperimentRunner | Spec | E | HAND-02,03; ARTIFACT-CONVERGENCE-01; EXP-01,02; GIT-SP |
+| EvidenceAnalyst | Spec | E | HAND-02,03; ARTIFACT-CONVERGENCE-01; GIT-SP; K-COMPILE |
+| PaperWriter | Spec | A | HAND-02,03; ARTIFACT-CONVERGENCE-01; PAPER-WRITE-01; GIT-SP |
+| PresentationWriter | Spec | A | HAND-02,03; ARTIFACT-CONVERGENCE-01; PRESENTATION-GEN-01; VISUAL-CONCEPT-01; GIT-SP |
+| PaperReviewer | Spec | A | HAND-02,03; ARTIFACT-CONVERGENCE-01; PAPER-WRITE-01; PRESENTATION-GEN-01; VISUAL-CONCEPT-01; AUDIT-01,02 |
 | PaperCompiler | Spec | A | HAND-02,03; BUILD-01,02; GIT-SP |
-| KnowledgeArchitect | Spec | K | HAND-02,03; K-COMPILE,K-REFACTOR; GIT-SP |
+| KnowledgeArchitect | Spec | K | HAND-02,03; ARTIFACT-CONVERGENCE-01; K-COMPILE,K-REFACTOR; GIT-SP |
 | Librarian | Spec | K | HAND-02,03; K-RETRIEVE,K-LINT |
 | TraceabilityManager | Spec | K | HAND-02,03; K-IMPACT-ANALYSIS,K-REFACTOR; GIT-SP |
 | DevOpsArchitect | Spec | M | HAND-02,03; GIT-WORKTREE-ADD; GIT-SP; LOCK |
@@ -350,7 +351,77 @@ CONDENSE-CHECKPOINT-V2:
 </meta_section>
 
 ────────────────────────────────────────────────────────
-<meta_section id="SCHEME-CODE-01" version="8.2.0-candidate" axiom_refs="A1,A3,A6,A8,A9,phi5">
+<meta_section id="ARTIFACT-CONVERGENCE-01" version="8.7.0-candidate" axiom_refs="A1,A2,A3,A6,A8,phi1,phi2,phi4,phi5">
+## ARTIFACT-CONVERGENCE-01: Evidence-Grounded Deliverable Convergence Loop
+
+<purpose>Converge material or iterative deliverables from native intent/spec to accepted artifact through consumer-aware acceptance criteria, issue-shaped review, focused repair, validation, shrinking remaining delta, freeze gates, and final acceptance.</purpose>
+<authority>Owning coordinator applies the domain adapter; owning verifier or auditor validates. This operation never overrides domain sovereignty, paths, STOP conditions, or signed interfaces.</authority>
+
+**Use when:** user requests repeated review, strict review, repair loops, convergence, final acceptance, role/lens review, or when a material deliverable changes claims, behavior, evidence, generated agents, deployment, or presentation output.
+
+**Waive when:** task is trivial or narrowly non-material, no claim/behavior/contract changes, and no iterative review is requested. Record: `ARTIFACT-CONVERGENCE waived: {reason}`.
+
+**Generic contract**
+```yaml
+consumer_or_verifier: {primary role, downstream user, runtime, reviewer, audience, or generated artifact}
+acceptance_target: {decision, action, correctness contract, credibility target, or operational pass condition}
+native_intent_or_spec: {domain artifact path or explicit waiver}
+evidence_needed: [{source, test, proof, data, citation, rendered artifact, or TODO}]
+issue_register:
+  - issue_id:
+    iteration_found:
+    severity: High | Medium | Low
+    category:
+    consumer_or_verifier:
+    target_artifact:
+    problem:
+    acceptance_impact:
+    evidence_or_test_needed:
+    proposed_minimal_fix:
+    fix_policy: Must fix | Should fix | Could fix | Do not fix
+    status: Open | Resolved | Deferred | Rejected | Reopened
+convergence_dashboard:
+  phase: Diverge | Structure | Stabilize | Polish | Lock
+  high_open:
+  medium_open:
+  new_high:
+  reopened:
+  remaining_delta:
+  change_size:
+  validation_status:
+  stop_continue_human_review:
+```
+
+<rules>
+- Start from the domain's native intent/spec artifact; do not invent a new universal template and do not force presentation files outside deck work.
+- Define who consumes or verifies the artifact, what acceptance means, and what evidence is needed before broad generation or repair.
+- Convert review findings into issue-shaped records; essays or preference lists are insufficient for iterative repair.
+- Classify each finding as Must fix, Should fix, Could fix, or Do not fix. Do not accept every comment.
+- Repair the smallest artifact surface that closes Must and selected Should issues; prefer merge/delete/notes/appendix/defer over artifact growth.
+- Validate repairs against the acceptance target and record remaining delta, resolved/reopened/new-critical issues, and residual risk.
+- After stabilization, re-review unresolved, reopened, or newly critical issues plus stop criteria; do not restart from zero-base review without a High/Must-fix reason.
+- Apply domain-specific freeze gates. Reopening a frozen layer requires a High/Must-fix acceptance impact.
+- Stop when no High/Must-fix issue remains, validation passes or residual risk is explicitly accepted, and remaining delta is small.
+- Escalate to Human review when remaining delta does not shrink for two iterations, needed data/context is absent, stakeholders conflict, the conclusion itself needs judgment, or comments become taste-only.
+- Prompt/meta adapter: generated agents, skills, JSON reports, deploy helpers, and user-owned `kernel-project.md` overlay safety are acceptance-critical outputs; do not weaken project-overlay preservation.
+</rules>
+
+**Domain adapters**
+| Domain | Consumer/verifier | Native spec | Freeze gates |
+|---|---|---|---|
+| Presentation | audience, decision maker, presenter | `PresentationDeckPlan`, `audience_profile.yaml`, `story_map.md`, `slide_spec.yaml` | Story, Evidence, Visual, Final |
+| Code | TestRunner, downstream caller, operator, paper-equation verifier | `SchemeCodePlan`, CheckSpec, tests | Equation, Interface, Verification, Release |
+| Paper | reviewer, venue reader, future author, PaperReviewer | `ManuscriptSectionPlan`, claim register | Claim, Evidence, Rhetoric, Submission |
+| Evidence | claim owner, paper section, reviewer, downstream analysis | EvidencePackage, run/analysis plan | Hypothesis, Config/Data, Analysis, Report |
+| Wiki | future agent, human maintainer, traceability auditor | wiki entry, source/ref map, K-LINT | Source, Summary, Index, Knowledge |
+| Prompt/meta | generated agents/skills/scripts/reports, receiving-project maintainer | kernel/deploy plan, Skill specs, Q3 audit | Kernel Contract, Generation Manifest, Deploy/Audit, Release |
+
+<stop_conditions>STOP-06, STOP-09</stop_conditions>
+<see_also>kernel-workflow.md §P-E-V-A LOOP; kernel-domains.md §DOMAIN REGISTRY; kernel-deploy.md §Stage 4</see_also>
+</meta_section>
+
+────────────────────────────────────────────────────────
+<meta_section id="SCHEME-CODE-01" version="8.3.0-candidate" axiom_refs="A1,A3,A6,A8,A9,phi5">
 ## SCHEME-CODE-01: Scientific Scheme and Code Development Loop
 
 <purpose>Design, implement, and verify computational schemes through decomposed scientific tasks, explicit scheme contracts, executable tests, and verifier-gated iteration.</purpose>
@@ -385,9 +456,15 @@ handoff:
   implementation_paths: [{path}]
   forbidden_paths: [{path}]
   unresolved_risks: [{risk}]
+convergence_control:
+  adapter: ARTIFACT-CONVERGENCE-01
+  consumer_or_verifier: [TestRunner, downstream API caller, production operator, paper-equation verifier]
+  acceptance_target: [executable correctness, contract fidelity, scientific verification, regression safety]
+  freeze_gates: [Equation Freeze, Interface Freeze, Verification Freeze, Release Lock]
 ```
 
 <rules>
+- Use ARTIFACT-CONVERGENCE-01 for material or iterative scheme/code tasks. The native spec remains `SchemeCodePlan`; do not require presentation artifacts.
 - Decompose scientific coding tasks into subproblems before implementation; each subproblem needs an input/output contract and verification target.
 - Scheme design starts from equations, assumptions, invariants, boundary/interface conditions, and expected consistency/stability behavior.
 - Candidate search or evolutionary coding is allowed only when evaluator metrics are executable, cheap enough for the stated budget, and tied to scientific correctness rather than benchmark score alone.
@@ -395,6 +472,8 @@ handoff:
 - Every code change is a bounded diff against declared implementation paths; do not optimize unrelated infrastructure while changing numerical logic.
 - Generated code is not accepted by inspection. It must pass unit tests plus at least one scientific verification case when the task changes numerical behavior.
 - TestRunner verdicts must report pass/fail, tolerances, command logs, and residual risks; benchmark or model claims never substitute for local execution.
+- In repeated repair loops, convert verification failures and contract risks into issues with acceptance impact, then validate focused repairs against tests and scientific cases before closing them.
+- Treat objections as failure modes or adversarial cases; treat decision impact as acceptance, safety, reproducibility, or scientific-validity impact.
 - Realistic developer intent matters: if the user request is underspecified, derive concrete acceptance tests instead of assuming a formal benchmark statement.
 </rules>
 <stop_conditions>STOP-06, STOP-07</stop_conditions>
@@ -402,7 +481,7 @@ handoff:
 </meta_section>
 
 ────────────────────────────────────────────────────────
-<meta_section id="PAPER-WRITE-01" version="8.2.0-candidate" axiom_refs="A1,A3,A6,A8,A9,phi5">
+<meta_section id="PAPER-WRITE-01" version="8.3.0-candidate" axiom_refs="A1,A3,A6,A8,A9,phi5">
 ## PAPER-WRITE-01: Research-Grounded Manuscript Writing Loop
 
 <purpose>Write or revise manuscript sections through author-perspective planning, claim grounding, focused feedback, bounded revision, and AI-use transparency.</purpose>
@@ -444,15 +523,23 @@ transparency_record:
   author_key_points_recorded: true
   source_materials: [{path}]
   verification_actions: [{read, compare, cite_check, claim_scope_check}]
+convergence_control:
+  adapter: ARTIFACT-CONVERGENCE-01
+  consumer_or_verifier: [reviewer, venue reader, future author, PaperReviewer]
+  acceptance_target: [scoped claim credibility, source fidelity, rhetorical fit, limitation preservation]
+  freeze_gates: [Claim Freeze, Evidence Freeze, Rhetoric Freeze, Submission Lock]
 ```
 
 <rules>
+- Use ARTIFACT-CONVERGENCE-01 for material or iterative manuscript work. The native spec remains `ManuscriptSectionPlan`; do not require deck artifacts.
 - Capture `author_perspective.key_points` before drafting; do not infer the paper's intended contribution from references alone.
 - Treat related work as argument positioning, not single-pass multi-document summarization. Each citation needs a rhetorical function.
 - Draft from `section_outline` and `claim_register`; every material claim must carry source refs, scope limits, and allowed strength.
 - Preserve qualifiers and limitations. If prose broadens a source claim, add delta feedback and revise before handoff.
 - Feedback must be specific, actionable, and content-focused; style-only feedback is insufficient unless the task is explicitly style editing.
 - Revisions are bounded to the dispatched section and recorded as `revision_actions`; do not silently rewrite neighboring sections.
+- In repeated revision loops, convert reviewer findings into issues only when they affect claim credibility, evidence, argument flow, venue fit, or acceptance; style-only findings are Could-fix unless style editing is the task.
+- Apply claim/evidence/rhetoric/submission freezes as the manuscript stabilizes; reopening a frozen layer needs High/Must-fix acceptance impact.
 - AI-use transparency records author key points, source materials, and verification actions; do not require dumping full prompts unless project policy requires it.
 </rules>
 <stop_conditions>STOP-06</stop_conditions>
@@ -460,10 +547,10 @@ transparency_record:
 </meta_section>
 
 ────────────────────────────────────────────────────────
-<meta_section id="PRESENTATION-GEN-01" version="8.2.0-candidate" axiom_refs="A1,A3,A6,A8,A9,phi5">
+<meta_section id="PRESENTATION-GEN-01" version="8.7.0-candidate" axiom_refs="A1,A3,A6,A8,A9,phi5">
 ## PRESENTATION-GEN-01: Research-Grounded Deck Generation Loop
 
-<purpose>Create presentation decks through staged planning, editable generation, render review, and talk-track alignment instead of direct long-document summarization.</purpose>
+<purpose>Create presentation decks through staged deck-project planning, editable/programmatic generation, render review, and talk-track alignment instead of direct long-document summarization or one-shot PPTX editing.</purpose>
 <authority>PresentationWriter executes for decks; PaperReviewer audits actual rendered output; PaperWorkflowCoordinator may mandate.</authority>
 
 **Research-derived pattern:** multi-stage LLM/VLM workflows, reference schema extraction, editable/programmatic slide sources, visual-in-the-loop review, audience/style personalization, retrieval/source grounding, and cognitive-load control.
@@ -472,38 +559,89 @@ transparency_record:
 ```yaml
 deck_id:
 audience_context:
+  audience_profile: {primary, secondary_roles, decision_authority, knowledge_level, cares_about, likely_objections, evidence_needed, language_preference}
   purpose: {talk, lecture, review, defense, pitch}
+  decision_or_action:
+  current_belief:
+  desired_belief:
+  constraints: [{time, prior_knowledge, objections, politics, or null}]
   time_budget:
   preference_sources: [{example_deck, paper_slide_pair, visual_template, or null}]
 source_scope: [{path, section_or_line, claim_scope}]
-narrative_spine: {audience problem -> insight -> evidence path -> implication}
+narrative_spine:
+  take_home_message: {one supported decision-oriented sentence}
+  story_pattern: {answer_first | current_problem_action_decision | question_finding_implication_action | future_gap_phased_execution | technical_value_adoption}
+  audience_transformation: {before -> after}
+  arc: [{situation, tension, recommendation, evidence, decision_ask}]
 reference_schema:
   slide_functions: [{role, content_schema, layout_schema}]
   style_constraints: [{template, typography, density, visual_language}]
 slide_plan:
   - slide_id:
     lead_message: {one supported sentence}
+    role_in_story:
+    supporting_points: [{short}]
     source_refs: [{path, section_or_line}]
+    evidence_needed: [{path_or_TODO}]
     visual_strategy: reused_figure | structured_object | data_plot | VISUAL-CONCEPT-01 | none
+    risk_if_removed:
     speaker_note_intent: {spoken complement, not a text duplicate}
     cognitive_load_risk: low | medium | high
 production_plan:
-  editable_source: {pptx, Slidev/Markdown, LaTeX, or project-local format}
-  asset_policy: {reuse supported figures first; raster artwork only for conceptual assets}
+  deck_project: {brief.md, audience_profile.yaml, story_map.md, slide_spec.yaml, review_plan.yaml, issue_register.yaml, convergence_dashboard.md, review_reports/, change_log.md, data/, assets/, src/, outputs/, review_report.md}
+  editable_source: {pptx objects, Slidev/Markdown, HTML/SVG, LaTeX, or project-local format}
+  asset_policy: {charts from data; diagrams as editable objects or SVG/HTML assets; raster artwork only for conceptual assets}
+  export_targets: [{pptx, pdf, preview_images}]
 render_review:
+  review_plan: [{iteration_id, role, lens, input_artifacts, output_report, pass_criteria}]
   rendered_artifacts: [{path}]
-  checks: [content_fidelity, design_coherence, readability, cognitive_load, talk_track_alignment, source_trace]
+  checks: [story_fit, slide_structure, visual_fit, evidence_integrity, accessibility_delivery, content_fidelity, design_coherence, readability, cognitive_load, talk_track_alignment, source_trace, editability, chart_axis_legibility, text_density]
+  scorecard: {total_50, threshold: {45: presentable, 35: light_revision, 25: structural_or_visual_revision, below_25: redesign_story_before_slides}}
+  issue_register: [{issue_id, iteration_found, severity, target_audience, slide_id, category, problem, audience_impact, decision_impact, proposed_fix, fix_policy, status}]
+  convergence: {phase, high_open, medium_open, new_high, reopened, remaining_delta, change_size, stop_continue_human_review}
+  stop_criteria: {high_open: 0, no_new_high_last_reviews: 2, primary_audience_score_min: 45, text_heavy_slides_max: 0, slide_count_max, time_budget}
   revision_actions: [{slide_id, action}]
+convergence_control:
+  adapter: ARTIFACT-CONVERGENCE-01
+  consumer_or_verifier: [audience, decision maker, presenter, PaperReviewer]
+  acceptance_target: [audience understands, believes, decides, and can act]
+  freeze_gates: [Story Freeze, Evidence Freeze, Visual Freeze, Final Lock]
 ```
 
 <rules>
-- First extract audience, preference/template signals, source scope, and narrative spine; then generate slides.
+- Use ARTIFACT-CONVERGENCE-01 through the presentation adapter: consumer=audience/decision maker/presenter, native specs=`PresentationDeckPlan` plus `story_map.md`/`slide_spec.yaml`, and acceptance=the audience can understand, believe, decide, and act. Keep all deck-specific artifacts and rules in this section.
+- First extract a concrete `audience_profile.yaml`: primary audience, secondary roles, decision authority, knowledge level, current belief, desired belief, cares/objections, evidence needed, and language preference.
+- Then extract audience decision/action, current belief, desired belief, constraints, preference/template signals, source scope, and narrative spine; then generate slides.
+- When the user asks for a finished deck and no stable pipeline exists, create or update the deck-generation project first: `brief.md` for intent, `audience_profile.yaml`, `story_map.md` for audience transformation and take-home message, `slide_spec.yaml` for slide claims/roles/visual choices, `review_plan.yaml`, `issue_register.yaml`, `convergence_dashboard.md`, reproducible data/assets, generation code, exports, previews, `review_reports/`, `review_report.md`, and `change_log.md`.
+- Do not generate or polish the final deck until `story_map.md` or an equivalent explicit story map exists. If it is missing, produce it before slide generation.
+- Review asks "can this audience understand, believe, and decide?" not "is this deck good?" Use role-specific review lenses: primary audience, skeptic, decision owner, finance, field owner, security/legal/IT, first-time audience, presenter/delivery.
 - Use reference decks/templates to infer functional slide types and visual style when available; absence is allowed but MUST be recorded.
 - Prefer editable/programmatic slide sources for structure. Do not render an entire editable deck as a flat image unless explicitly requested.
-- Each slide has one supported lead message, a source map, and a speaker-note intent that complements rather than duplicates visible text.
-- Run render review on the actual output, not just the source text. Review dimensions: content fidelity, design coherence, readability, cognitive load, talk-track alignment, and source trace.
+- Balance PPTX editability and visual quality: keep titles, body text, simple tables, and source notes editable; use SVG/HTML/raster assets for complex diagrams or concept art when this materially improves quality.
+- Each slide has one supported lead message, a role in the story, source refs, evidence needed, risk-if-removed, and a speaker-note intent that complements rather than duplicates visible text.
+- For executive or decision decks, use answer-first structure by default: decision/recommendation appears by slide 2 unless the brief explicitly requests exploratory sequencing.
+- Charts MUST be reproducible from source data; unknown numeric values become explicit TODO/placeholders rather than invented numbers. Tables are for comparison or decisions, not dense information dumps.
+- Review in staged iterations: audience/decision, story structure, primary-audience, skeptic/objection, Q&A readiness, visual clarity, diff review, and final delivery rehearsal. Fix story gaps before visual polish.
+- Run iterative repair as convergence, not endless improvement: review, convert findings to issues, triage, apply focused repair, validate, update remaining delta, then decide Stop / Continue / Human review.
+- After iteration 2, do not run zero-base review unless a High issue reopens the story. Re-reviews focus on unresolved High/Medium issues, reopened issues, newly introduced critical risks, and stop criteria.
+- Maintain `issue_register.yaml` as the SSoT for review findings. Every issue records iteration_found, severity, target_audience, category, audience_impact, decision_impact, fix_policy (Must/Should/Could/Do-not-fix), status, and proposed minimal repair.
+- Maintain `convergence_dashboard.md` after each iteration: current phase (Diverge, Structure, Stabilize, Polish, Lock), High/Medium open counts, new High issues, reopened issues, remaining delta, change size, audience readiness, and Stop/Continue/Human-review judgment.
+- Reduce review freedom over time: Diverge may discover broadly; Structure fixes story; Stabilize repairs Must issues; Polish handles visual/text clarity; Lock permits only fatal defects, factual corrections, source-note fixes, layout breakage, typos, or speaker-note corrections.
+- Apply freeze gates in order: Story Freeze before visual polish, Evidence Freeze before final polish, Visual Freeze before delivery rehearsal, and Final Lock before acceptance. After a freeze, only High/Must-fix evidence may reopen the frozen layer.
+- Use focused repair: touch the smallest necessary slide/spec/code surface, prefer merge/delete/speaker-notes/backup over new slides, and never add a slide unless it resolves a Must-fix issue needed for audience decision.
+- Stop criteria are pass/fail criteria, not taste criteria: zero High issues, no new High issues across the required stable iterations, decision ask clear by slide 2, major objections covered, deck within time/slide/text-density budgets, important numbers sourced/TODO, and latest change set small.
+- Escalate to Human review when remaining delta does not shrink for two iterations, missing data or internal politics determine the answer, audience interests conflict, the conclusion itself needs a human decision, or AI comments become preference-only.
+- Final acceptance review asks Pass / Conditional Pass / Fail. New improvement suggestions are forbidden unless they identify a High severity issue or factual/export defect.
+- Run render review on the actual output, not just the source text. Review dimensions: story fit, content fidelity, design coherence, readability, cognitive load, talk-track alignment, source trace, editability, accessibility, and delivery readiness.
+- Review exported previews/PDF/PPTX structure before completion: claim-style titles, text density, chart labels, table size, visual consistency, whitespace, and PowerPoint editability.
+- `review_report.md` records a 50-point scorecard, top issues, slide-level findings, data/evidence findings, delivery risks, and concrete action items. Scores below 25 require story redesign before more slide generation.
+- Review reports MUST be issue-shaped, not essays: issue_id, severity, target_audience, slide_id, problem, audience_impact, proposed_fix, and status.
+- Do not accept every review comment. Classify fixes as Must/Should/Could/Do-not-fix using audience impact * decision impact * confidence; add slides only when the audience needs them to decide, otherwise merge/delete or move detail to speaker notes/backup.
+- After every revision, update `change_log.md`, compare against the previous iteration, and run a diff review for resolved issues, unresolved issues, newly introduced problems, slide count, text growth, and audience clarity.
+- Q&A/objection reviews produce likely hard questions, answer drafts, evidence slide refs, missing evidence, and whether the answer belongs in the main deck, speaker notes, or backup.
 - Manage visual load: relevant visuals may aid learning, but dense or irrelevant visuals are a cognitive-load risk, especially for language-heavy audiences.
 - For painting-like or conceptual images inside slides, call VISUAL-CONCEPT-01 and keep the image as a claim-mapped asset.
+- If parallelizing, split by role or artifact boundary (story/spec, charts, diagrams, deck export, review), not by multiple agents editing the same deck file.
 </rules>
 <stop_conditions>STOP-06, STOP-09</stop_conditions>
 <see_also>kernel-roles.md §PresentationWriter; kernel-roles.md §PaperReviewer; kernel-ops.md §VISUAL-CONCEPT-01</see_also>
@@ -599,7 +737,7 @@ git checkout -b dev/{domain}/{agent_id}/{task_id}
 ## GIT-02: Merge Criteria Gate
 Before merge PR, ALL must pass:
 - [ ] All tests green (TEST-01)
-- [ ] Convergence table present if research check changed (PR-3)
+- [ ] Project-required verification/convergence evidence present when research checks changed
 - [ ] Interface contract SIGNED
 - [ ] No STOP codes open
 
@@ -689,11 +827,11 @@ Procedure:
 Examples:
 | branch_slug | id_prefix |
 |---|---|
-| `worktree-ra-ch9-review` | `RA-CH9` |
-| `worktree-ra-ch11-review` | `RA-CH11` |
-| `worktree-ch14-benchmark-bootstrap` | `CH14-BEN` |
-| `worktree-ra-paper-ch4-rewrite` | `RA-PAPER` |
-| `dev-L-CodeArchitect-ch14-pressure` | `L-CODEARC` |
+| `worktree-ra-theory-review` | `RA-THEO` |
+| `worktree-ra-code-review` | `RA-CODE` |
+| `worktree-benchmark-bootstrap` | `BENCH` |
+| `worktree-ra-paper-rewrite` | `RA-PAPER` |
+| `dev-L-CodeArchitect-pressure` | `L-CODEARC` |
 | `researcharchitect-src-refactor-plan` | `RESEARCH` |
 | `worktree-ra-meta-id-namespace` | `RA-META` |
 
@@ -779,7 +917,8 @@ Required output: pass count, fail count, coverage % (if configured). Any failing
 required test emits HAND-02 `status: FAIL` with `stop_code: STOP-13`.
 
 ## TEST-02: Convergence Analysis
-Run reproducibility verification per PR-3:
+Run reproducibility verification per the receiving project's verification rule
+defined in `kernel-project.md` / generated project rules:
 
 | N | L_inf error | slope |
 |---|-------------|-------|
@@ -797,7 +936,8 @@ Acceptance: declared PASS criteria are met, all parameters are recorded, and the
 ```bash
 make run CHECK=analysis/{study}/{script}.py
 ```
-Uses project-local analysis scripts or documented shell commands (PR-5).
+Uses project-local analysis scripts or documented shell commands governed by
+the receiving project's fidelity/reproducibility rules.
 
 Mandatory trace checks before HAND-02:
 - EC-1: Source input paths recorded
@@ -809,7 +949,8 @@ Mandatory trace checks before HAND-02:
 ```bash
 make run CHECK=analysis/{study}/{script}.py
 ```
-All figures saved as PDF (CLAUDE.md §Coding Rules). Results in `analysis/{ch}/results/{name}/`.
+Package results according to the receiving project's output, figure-format, and
+path conventions from `kernel-project.md` / generated project rules.
 
 ────────────────────────────────────────────────────────
 # § AUDIT OPERATIONS
@@ -819,26 +960,27 @@ Performed by Auditor/Gatekeeper before HAND-02 SUCCESS on any deliverable.
 
 | # | Check |
 |---|-------|
-| 1 | Algorithm matches paper equation (PR-5) |
-| 2 | evidence traceability maintained (PR-1) |
-| 3 | No unapproved model substitution in research implementation src/research/ |
+| 1 | Deliverable matches governing specification or signed interface |
+| 2 | Evidence/source traceability maintained |
+| 3 | No unapproved model, method, or implementation substitution under project policy |
 | 4 | reproducibility evidence attached when check changes |
 | 5 | Interface contract SIGNED |
 | 6 | No STOP codes open |
-| 7 | Experiment toolkit used for all infrastructure (PR-4) |
-| 8 | Figures saved as PDF |
+| 7 | Project-specific execution/tooling rules satisfied |
+| 8 | Project-specific output and figure-format rules satisfied |
 | 9 | A3 traceability chain intact (equation → memo → code) |
-| 10 | No deprecated path usage (results/ top-level) |
+| 10 | No deprecated path usage under project path policy |
 
 All 10 must PASS; any FAIL → AUDIT-01 FAIL with item number cited.
 
 ## AUDIT-02: Algorithm Fidelity Audit
-Adversarial check that code matches paper equation exactly (PR-5).
+Adversarial check that implementation behavior matches the governing
+specification, source claim, or signed interface exactly.
 
 Procedure:
-A. Read paper equation from `paper/sections/*.tex`
-B. Read discretisation memo from `docs/memo/*.md`
-C. Independently derive expected code from A+B
+A. Read governing source from the project-configured source artifact path
+B. Read discretisation/design memo or signed interface
+C. Independently derive expected implementation behavior from A+B
 D. Compare derived expectation to actual code diff
 E. Any deviation → FAIL with specific line reference
 
@@ -955,9 +1097,9 @@ Limits: max 2 replan cycles per task before mandatory user escalation (kernel-an
 | STOP-02 | HARD | HAND-03 Immutable Zone bypassed | Halt; report to ResearchArchitect |
 | STOP-03 | HARD | Branch lock not acquired before write | Halt; acquire lock first |
 | STOP-04 | HARD | Cross-domain write without DOM-01 gate | Halt; run DOM-01 |
-| STOP-05 | HARD | unapproved model substitution in research implementation (PR-1) | Halt; escalate to TheoryAuditor |
+| STOP-05 | HARD | unapproved model, method, or implementation substitution under project policy | Halt; escalate to owning gatekeeper |
 | STOP-06 | HARD | Task not achievable in single session | Decompose; re-dispatch |
-| STOP-07 | SOFT | Convergence check failed (PR-3) | Report; escalate to TheoryAuditor |
+| STOP-07 | SOFT | Verification or convergence check failed under project acceptance criteria | Report; escalate to owning gatekeeper |
 | STOP-08 | SOFT | DEBATE SPLIT — no consensus | Escalate to ResearchArchitect |
 | STOP-09 | SOFT | BUILD-01/02 compile failure | Fix; retry |
 | STOP-10 | HARD | Schema-invalid envelope + worktree profile | REJECT; fix envelope |
