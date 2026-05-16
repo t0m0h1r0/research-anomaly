@@ -1,7 +1,7 @@
 # Review Report
 
 status: PASS
-updated_at_utc: 2026-05-16T22:51:06Z
+updated_at_utc: 2026-05-16T23:00:55Z
 
 ## Scorecard
 
@@ -19,11 +19,11 @@ updated_at_utc: 2026-05-16T22:51:06Z
 
 The deck is ready as a sponsor-facing technical research brief. It now uses one
 light editorial background system across all six slides, with a consistent
-`主張` line directly under each headline. The Japanese copy avoids ambiguous
-`この資料は` framing and uses matched contrast logic: observation boundary,
-decision condition, raw event versus 10-second statistics, model complexity,
-resource accounting, and evidence gates each have a clear assertion before the
-proof object.
+`主張` line directly under each headline. Titles, claim lines, figure labels,
+table headers, callouts, and guard badges were reviewed as one copy system. The
+deck now uses clearer Japanese around observation boundary, decision criteria,
+input contract, AE comparison order, resource accounting, and evidence gates,
+while keeping only necessary technical terms in English.
 
 No claim in the deck promotes detection performance, novelty, SOTA, MNN
 readiness, 500 KB fit, or deployment readiness.

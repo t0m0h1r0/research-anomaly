@@ -34,9 +34,9 @@ reproducible artifact-tool source project.
 | Slide | Role | Core message |
 | --- | --- | --- |
 | 1 | Technical scope | The research target is lightweight anomaly detection embedded in the block-I/O path. |
-| 2 | Decision frame | The goal is not deployment approval; it is deciding which candidates to reject and which evidence to measure next. |
-| 3 | Input contract | The ML input is a fixed-shape sequence of cheap 10-second statistics. |
-| 4 | Candidate ladder | AE-01..05 test whether additional operators earn their cost. |
+| 2 | Decision frame | The deck sets criteria for the next experiment before any adoption decision. |
+| 3 | Input contract | The ML input is a fixed-shape sequence of low-cost 10-second statistics. |
+| 4 | Candidate ladder | AE-01..05 test whether additional operators are worth evaluating. |
 | 5 | Resource budget | Per-volume detector-data, shared runtime, transient scratch, and scheduling must be separated. |
 | 6 | Evidence gates | Adoption, shrinking, or rejection depends on offline comparison, MNN parity, memory, and 10-second cadence. |
 
@@ -54,7 +54,7 @@ reproducible artifact-tool source project.
 
 ```text
 PPTX output: paper/presentations/storage_embedded_ransomware_sponsor_brief.pptx
-PPTX size: 46726 bytes
+PPTX size: 46799 bytes
 slide count: 6
 layout quality: PASS, 0 errors, 0 warnings
 text extraction: PASS, 6 slides
@@ -93,6 +93,15 @@ the deck copy was revised to remove ambiguous references such as `この資料�
 avoid mismatched `AではなくB` pairings, and replace `rawログ` with the more
 precise contrast between raw event sequences and 10-second statistics. Claim
 strength was not broadened.
+
+## Full Copy Review
+
+After follow-up feedback asking for a full review rather than point fixes, all
+slide titles, claim lines, figure labels, table headers, callouts, and guard
+badges were re-edited as one copy system. The revision aligns slide-level
+claims with proof objects, reduces awkward mixed Japanese/English phrasing, and
+standardizes terms such as `10秒間隔`, `ボリューム`, `軽量メタデータ`, and
+`score一致`. Claim strength was not broadened.
 
 Final stop condition:
 

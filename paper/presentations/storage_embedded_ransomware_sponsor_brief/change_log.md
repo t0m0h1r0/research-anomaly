@@ -30,3 +30,11 @@
 - Replaced mismatched `AではなくB` wording with clearer `Aの前にB` or matched contrast structures.
 - Replaced `rawログ` with the more precise raw event / 10-second statistics contrast.
 - Re-rendered the PPTX and confirmed layout quality with 0 errors and 0 warnings.
+
+## 2026-05-16 Full Copy Review
+
+- Re-reviewed every slide title, `主張` line, figure label, table header, callout, and non-claim badge as one copy system.
+- Aligned each slide's assertion with its proof object: observation boundary, decision criteria, input contract, AE comparison order, memory accounting, and evidence gates.
+- Standardized wording around `10秒間隔`, `ボリューム`, `軽量メタデータ`, `score一致`, and `detector-data`.
+- Reduced awkward mixed Japanese/English phrasing while keeping required technical terms.
+- Re-rendered the PPTX and confirmed layout quality with 0 errors and 0 warnings.

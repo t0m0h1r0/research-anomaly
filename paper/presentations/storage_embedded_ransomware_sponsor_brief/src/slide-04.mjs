@@ -2,8 +2,8 @@ import { C, claimLine, footer, pill, row, slideBase, title } from "./theme.mjs";
 
 export async function slide04(presentation, ctx) {
   const slide = slideBase(presentation, ctx, "MODEL CANDIDATES | AE-01..05 の技術的な意味", 4, C.purple);
-  title(ctx, slide, "AE候補は、追加演算の必要性を測る階段である");
-  claimLine(ctx, slide, "単純候補で説明できるなら止め、説明できない差分だけをDense、GRU、Conv1D、CNN-GRUへ渡す。", C.purple);
+  title(ctx, slide, "AE-01..05は、追加演算の価値を測る比較順序である");
+  claimLine(ctx, slide, "単純なMLPで説明できるなら上位候補へ進まず、残る差分だけをDense、GRU、Conv1D、CNN-GRUで検証する。", C.purple);
 
   const x = 76;
   const y0 = 234;
@@ -16,16 +16,16 @@ export async function slide04(presentation, ctx) {
     fill: C.ink,
     stroke: C.ink,
     columns: cols,
-    texts: ["ID", "candidate", "operator role", "planning size", "評価する目的"],
+    texts: ["ID", "候補", "演算の役割", "計画サイズ", "評価する目的"],
     colors: [C.white, C.white, C.white, C.white, C.white],
     bold: [true, true, true, true, true],
   });
   const rows = [
-    ["AE-01", "Flat MLP", "flattenした2分窓を圧縮", "9,944-20,768 params", "粗い統計だけでズレが見えるか"],
-    ["AE-02", "Two-level Dense", "10秒ごとの圧縮 + 系列圧縮", "5,836 params", "時間演算なしで足りるか"],
-    ["AE-03", "GRU context", "順序と過去文脈を付与", "7,052 params", "履歴を見ないと説明できないか"],
+    ["AE-01", "Flat MLP", "2分窓をまとめて圧縮", "9,944-20,768 params", "粗い統計だけで差分が見えるか"],
+    ["AE-02", "Two-level Dense", "10秒単位で圧縮し、系列を圧縮", "5,836 params", "時間演算なしで足りるか"],
+    ["AE-03", "GRU context", "順序と過去文脈を使う", "7,052 params", "履歴を見ないと説明できないか"],
     ["AE-04", "Temporal Conv1D", "近傍時間の局所変化を抽出", "5,684 params", "GRUなしの時間特徴で足りるか"],
-    ["AE-05", "Tiny CNN-GRU", "特徴混合 + 文脈 + bottleneck", "8,052 params", "複合モデルの追加演算に価値があるか"],
+    ["AE-05", "Tiny CNN-GRU", "特徴混合・文脈・ボトルネック", "8,052 params", "複合モデルの追加演算に価値があるか"],
   ];
   const fills = [C.purpleSoft, C.blueSoft, C.greenSoft, C.cyanSoft, C.amberSoft];
   const strokes = [C.purple, C.blue, C.green, C.cyan, "#f97316"];
@@ -44,8 +44,8 @@ export async function slide04(presentation, ctx) {
     });
   });
 
-  pill(ctx, slide, { text: "選定方針: 簡単な候補で説明できるなら、そこで止める", x: 180, y: 604, w: 420, h: 30, fill: C.greenSoft, stroke: C.green, color: C.green });
-  pill(ctx, slide, { text: "未主張: 実測前に性能順位・MNN適合・500KB内に収まった結論を言わない", x: 682, y: 604, w: 440, h: 30, fill: C.redSoft, stroke: C.red, color: C.red });
+  pill(ctx, slide, { text: "選定方針: 単純な候補で説明できるなら、上位候補へ進めない", x: 180, y: 604, w: 420, h: 30, fill: C.greenSoft, stroke: C.green, color: C.green });
+  pill(ctx, slide, { text: "未主張: 実測前に性能順位・MNN適合・500 KB内に収まった結論を言わない", x: 682, y: 604, w: 440, h: 30, fill: C.redSoft, stroke: C.red, color: C.red });
   footer(ctx, slide, "docs/06_memory_aware_ae_candidates.md, paper/sections/06_autoencoder_candidates.tex");
   return slide;
 }

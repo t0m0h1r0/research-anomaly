@@ -312,7 +312,7 @@ export function row(ctx, slide, { x, y, w, h, fill, stroke, columns, texts, colo
       h: textHeight,
       fontSize: idx === 0 ? 12 : 10,
       color: colors[idx] || C.ink,
-      face: idx === 2 ? fonts.mono : fonts.body,
+      face: fonts.body,
       bold: Boolean(bold[idx]),
     });
     left += cw;
