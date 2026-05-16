@@ -1,17 +1,31 @@
 {
-  "generated_at_utc": "2026-05-16T09:29:59Z",
-  "status": "PASS",
+  "checks": {
+    "claude_agent_file_count": 24,
+    "codex_agent_file_count": 24,
+    "duplicate_ids": [],
+    "meta_section_close_count": 18,
+    "meta_section_open_count": 18,
+    "project_rules_count": 6,
+    "skill_capsule_count": 9,
+    "source_integrity": {
+      "note": "No source PDF or raw dataset file is registered yet; deployment created no changes under paper/source/ or data/raw/.",
+      "registered_source_files": [],
+      "status": "PASS"
+    },
+    "tag_balance": "PASS"
+  },
   "deployment": {
-    "mode": "submodule_sync_from_research_agent",
+    "deployment_version": "v8.7.0-candidate",
+    "distribution_mode": "git-remote-snapshot",
+    "mode": "remote_snapshot_zero_base_deploy",
+    "persistent_upstream_checkout": false,
+    "preserved_project_profile": true,
     "project": "storage-embedded ransomware anomaly detection",
     "repository": "git@github.com:t0m0h1r0/research-anomaly.git",
     "upstream": "git@github.com:t0m0h1r0/research-agent.git",
-    "upstream_revision": "f52ae6f",
-    "distribution_mode": "git-submodule",
-    "submodule_path": "prompts/upstream/research-agent",
-    "preserved_project_profile": true,
-    "local_redeploy": "project-local Codex prompts, skills, runtime docs, and audit reports refreshed after submodule-backed metaprompt sync"
+    "upstream_revision": "ed388737ed01c479df4905925f1ec6791ff0f47d"
   },
+  "generated_at_utc": "2026-05-16T16:51:42Z",
   "kernel_files": [
     "prompts/meta/kernel-antipatterns.md",
     "prompts/meta/kernel-constitution.md",
@@ -22,58 +36,30 @@
     "prompts/meta/kernel-roles.md",
     "prompts/meta/kernel-workflow.md"
   ],
-  "checks": {
-    "meta_section_open_count": 17,
-    "meta_section_close_count": 17,
-    "tag_balance": "PASS",
-    "duplicate_ids": [],
-    "dangling_refs": [],
-    "project_rules_count": 6,
-    "codex_agent_file_count": 24,
-    "claude_agent_file_count": 24,
-    "skill_capsule_count": 9,
-    "skill_capsules": [
-      "prompts/skills/SKILL-CONDENSE-V2.md",
-      "prompts/skills/SKILL-GIT-WORKTREE.md",
-      "prompts/skills/SKILL-HANDOFF-AUDIT.md",
-      "prompts/skills/SKILL-PAPER-WRITING.md",
-      "prompts/skills/SKILL-PRESENTATION-DECK.md",
-      "prompts/skills/SKILL-PRESENTATION-ILLUSTRATION.md",
-      "prompts/skills/SKILL-PROMPT-AUDIT.md",
-      "prompts/skills/SKILL-SCHEME-CODE.md",
-      "prompts/skills/SKILL-TOOL-TRUST.md"
-    ],
-    "local_helper_scripts": [
-      "scripts/lock.py",
-      "scripts/atomic_push.py",
-      "scripts/validate_prompt_deployment.py",
-      "scripts/sync_research_agent.py"
-    ],
-    "upstream_distribution_boundary": {
-      "status": "PASS",
-      "mode": "metaprompt-only",
-      "submodule_path": "prompts/upstream/research-agent",
-      "generated_agent_prompts": "project-local",
-      "generated_skill_capsules": "project-local",
-      "generated_project_scripts": "project-local"
-    },
-    "wiki_knowledge_injection": {
-      "status": "WAIVED",
-      "reason": "docs/wiki/ is absent in this repository at deployment time",
-      "report": "wiki_knowledge_injection_report.json"
-    },
-    "handoff_schema_present": true,
-    "source_integrity": {
-      "status": "PASS",
-      "registered_source_files": [],
-      "note": "No source PDF or raw dataset file is registered yet; deployment created no changes under paper/source/ or data/raw/."
-    }
+  "meta_section_versions": {
+    "ARTIFACT-CONVERGENCE-01": "8.7.0-candidate",
+    "HAND-01": "7.0.0",
+    "HAND-02": "7.0.0",
+    "HAND-03": "7.0.0",
+    "HAND-04": "7.0.0",
+    "META-ANTIPATTERNS": "8.1.0-candidate",
+    "META-DEPLOY": "1.2.0",
+    "META-DOMAINS": "1.0.0",
+    "META-OPS": "7.0.0",
+    "META-PROJECT": "1.1.0",
+    "META-WORKFLOW": "1.0.0",
+    "METRIC-01": "8.0.0-candidate",
+    "OP-CONDENSE": "8.0.0-candidate",
+    "PAPER-WRITE-01": "8.3.0-candidate",
+    "PRESENTATION-GEN-01": "8.7.0-candidate",
+    "SCHEME-CODE-01": "8.3.0-candidate",
+    "TOOL-TRUST-01": "8.0.0-candidate",
+    "VISUAL-CONCEPT-01": "8.1.0-candidate"
   },
   "notes": [
-    "Project-specific content is isolated in prompts/meta/kernel-project.md and generated runtime docs.",
-    "prompts/meta/kernel-project.md SHA-256 remained 420eeca84c8d959a733312a33f725f279dbb291e9597b72bfec46ed753b43fa7 across upstream sync.",
-    "Upstream revision f52ae6f is pinned in the receiving project as prompts/upstream/research-agent.",
-    "Q3-AUDIT now contains 15 items, adding AP-17/wiki-packet checks for generated prompts.",
-    "prompts/REDEPLOY_REQUIRED.md was removed only after local prompt audit passed."
-  ]
+    "prompts/meta/kernel-project.md remained project-local during sync and deploy.",
+    "No persistent prompts/upstream checkout is used.",
+    "Generated agents, skills, docs, and reports were regenerated from prompts/meta/."
+  ],
+  "status": "PASS"
 }

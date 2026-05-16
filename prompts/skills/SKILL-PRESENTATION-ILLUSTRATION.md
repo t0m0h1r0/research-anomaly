@@ -1,29 +1,30 @@
 # SKILL-PRESENTATION-ILLUSTRATION
+# GENERATED v8.7.0-candidate | source: research-agent@ed388737ed01
 
 id: SKILL-PRESENTATION-ILLUSTRATION
-purpose: Convert supported presentation messages into source-faithful conceptual illustration briefs with reverse-readback fidelity checks.
+
+purpose: Turn a supported slide claim into a conceptual illustration brief, then audit the image by reverse readback against the source claim.
+
 trigger:
-- PresentationWriter needs a conceptual, painting-like, or abstract explanatory visual
-- PaperReviewer audits whether a presentation image communicates the intended claim
-- A visual draft needs reverse readback before acceptance
-minimal_instruction: Start from lead_message and source_refs, then separate abstraction, concretization, illustration language, excluded meanings, and reverse_readback. Revise or downgrade to a diagram if the apparent message does not match the supported slide claim.
+- PresentationWriter needs conceptual, painting-like, mechanism, or readback visual planning
+- PaperReviewer audits a generated or proposed presentation visual
+
+minimal_instruction: Separate abstraction, concretization, image language, and reverse readback; the visual must make the supported claim clearer without inventing mechanism, result, scale, or novelty.
+
 full_ref: prompts/meta/kernel-ops.md §VISUAL-CONCEPT-01
+
 input_contract:
-- slide id, lead message, and source references
-- intended audience takeaway and excluded meanings
-- visual role for each subject or scene element
-- draft image or prompt when reverse readback is requested
-output_contract:
-- VisualConceptBrief with abstraction, concretization, positive/negative image language, and reverse_readback
-- matches_lead verdict: PASS, PARTIAL, or FAIL
-- revision_action: accept, revise_prompt, revise_concept, downgrade_to_diagram, or stop
+- one slide claim with source refs and allowed scope
+- intended audience, visual role, and forbidden implications
+- output medium constraints and review artifact path
+
 forbidden_context:
-- decorative visuals without claim map
-- unsupported quantitative values, mechanisms, citations, dataset facts, or novelty claims
-- relying on embedded text labels to carry the core idea
-- accepting material FAIL after two revisions
+- decorative images without claim function
+- unverified physical mechanism or quantitative result implied by the visual
+- style prompt accepted without reverse-readback audit
+
 success_metric:
-- visual roles map to source elements
-- reverse readback matches the slide lead or names residual gaps
-- material illustration failures trigger revision or BLOCKED_REPLAN_REQUIRED with STOP-06
-token_target: 220
+- illustration brief names claim, abstraction, concrete scene, and forbidden implications
+- reverse readback matches the source claim and flags unsupported implications
+
+token_target: 180

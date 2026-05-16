@@ -9,8 +9,7 @@
 - Fix at source: contradictions are resolved in the owning domain.
 - Stateless agents: no result may depend on hidden conversation memory.
 - Bounded autonomy: autonomy is earned through evidence and gates.
-- Single source of truth: shared rules originate upstream and materialize in
-  `prompts/meta/`; project rules live in `prompts/meta/kernel-project.md`.
+- Single source of truth: shared rules materialize in `prompts/meta/`; project rules live in `prompts/meta/kernel-project.md`.
 - Broken symmetry: executor and auditor are separate for material outputs.
 - Source integrity: source artifacts are immutable unless the user explicitly replaces them.
 - Domain sovereignty: each artifact has one owning domain.
@@ -37,7 +36,7 @@
 
 - Q1: Agent prompts contain role, scope, STOP conditions, output contract, and JIT refs.
 - Q2: Full operation syntax belongs in kernel files or skill capsules.
-- Q3-AUDIT: Prompt changes require leakage, upstream-boundary, skill-trigger, wiki-packet, and token-budget checks.
+- Q3-AUDIT: Prompt changes require leakage, upstream-boundary, skill-trigger, wiki-packet, version-provenance, token-telemetry, and token-ROI checks.
 - Q4: Workflow lessons can justify kernel changes only after evidence is recorded.
 
 ## §AU Audit Rules

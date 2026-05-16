@@ -1,0 +1,467 @@
+{
+  "agents": [
+    {
+      "agent": "CodeArchitect",
+      "delta": -362,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 158
+    },
+    {
+      "agent": "CodeCorrector",
+      "delta": -367,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 153
+    },
+    {
+      "agent": "CodeWorkflowCoordinator",
+      "delta": -327,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 193
+    },
+    {
+      "agent": "ConsistencyAuditor",
+      "delta": -369,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 151
+    },
+    {
+      "agent": "DevOpsArchitect",
+      "delta": -380,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 140
+    },
+    {
+      "agent": "DiagnosticArchitect",
+      "delta": -383,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 137
+    },
+    {
+      "agent": "EvidenceAnalyst",
+      "delta": -378,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 142
+    },
+    {
+      "agent": "ExperimentRunner",
+      "delta": -384,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 136
+    },
+    {
+      "agent": "KnowledgeArchitect",
+      "delta": -367,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 153
+    },
+    {
+      "agent": "Librarian",
+      "delta": -384,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 136
+    },
+    {
+      "agent": "PaperCompiler",
+      "delta": -392,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 128
+    },
+    {
+      "agent": "PaperReviewer",
+      "delta": -231,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 289
+    },
+    {
+      "agent": "PaperWorkflowCoordinator",
+      "delta": -369,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 151
+    },
+    {
+      "agent": "PaperWriter",
+      "delta": -345,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 175
+    },
+    {
+      "agent": "PresentationWriter",
+      "delta": -76,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 444
+    },
+    {
+      "agent": "PromptArchitect",
+      "delta": -323,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 197
+    },
+    {
+      "agent": "PromptAuditor",
+      "delta": -319,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 201
+    },
+    {
+      "agent": "ResearchArchitect",
+      "delta": -291,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 229
+    },
+    {
+      "agent": "TaskPlanner",
+      "delta": -322,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 198
+    },
+    {
+      "agent": "TestRunner",
+      "delta": -361,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 159
+    },
+    {
+      "agent": "TheoryArchitect",
+      "delta": -394,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 126
+    },
+    {
+      "agent": "TheoryAuditor",
+      "delta": -381,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 139
+    },
+    {
+      "agent": "TraceabilityManager",
+      "delta": -401,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 119
+    },
+    {
+      "agent": "WikiAuditor",
+      "delta": -397,
+      "env": "codex",
+      "static_prompt_limit": 520,
+      "verdict": "PASS",
+      "words": 123
+    },
+    {
+      "agent": "CodeArchitect",
+      "delta": -509,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 211
+    },
+    {
+      "agent": "CodeCorrector",
+      "delta": -525,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 195
+    },
+    {
+      "agent": "CodeWorkflowCoordinator",
+      "delta": -472,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 248
+    },
+    {
+      "agent": "ConsistencyAuditor",
+      "delta": -515,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 205
+    },
+    {
+      "agent": "DevOpsArchitect",
+      "delta": -541,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 179
+    },
+    {
+      "agent": "DiagnosticArchitect",
+      "delta": -541,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 179
+    },
+    {
+      "agent": "EvidenceAnalyst",
+      "delta": -539,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 181
+    },
+    {
+      "agent": "ExperimentRunner",
+      "delta": -542,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 178
+    },
+    {
+      "agent": "KnowledgeArchitect",
+      "delta": -528,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 192
+    },
+    {
+      "agent": "Librarian",
+      "delta": -545,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 175
+    },
+    {
+      "agent": "PaperCompiler",
+      "delta": -553,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 167
+    },
+    {
+      "agent": "PaperReviewer",
+      "delta": -389,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 331
+    },
+    {
+      "agent": "PaperWorkflowCoordinator",
+      "delta": -517,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 203
+    },
+    {
+      "agent": "PaperWriter",
+      "delta": -492,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 228
+    },
+    {
+      "agent": "PresentationWriter",
+      "delta": -221,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 499
+    },
+    {
+      "agent": "PromptArchitect",
+      "delta": -466,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 254
+    },
+    {
+      "agent": "PromptAuditor",
+      "delta": -466,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 254
+    },
+    {
+      "agent": "ResearchArchitect",
+      "delta": -423,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 297
+    },
+    {
+      "agent": "TaskPlanner",
+      "delta": -467,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 253
+    },
+    {
+      "agent": "TestRunner",
+      "delta": -522,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 198
+    },
+    {
+      "agent": "TheoryArchitect",
+      "delta": -555,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 165
+    },
+    {
+      "agent": "TheoryAuditor",
+      "delta": -540,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 180
+    },
+    {
+      "agent": "TraceabilityManager",
+      "delta": -559,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 161
+    },
+    {
+      "agent": "WikiAuditor",
+      "delta": -543,
+      "env": "claude",
+      "static_prompt_limit": 720,
+      "verdict": "PASS",
+      "words": 177
+    }
+  ],
+  "deployment_version": "v8.7.0-candidate",
+  "generated_at_utc": "2026-05-16T16:51:42Z",
+  "proxy_unit": "words",
+  "skills": [
+    {
+      "delta": -59,
+      "roi_basis": "generated from machine-readable skill_capsule_specs; full operation bodies remain in prompts/meta",
+      "skill": "SKILL-CONDENSE-V2",
+      "token_target": 170,
+      "verdict": "PASS",
+      "words": 111
+    },
+    {
+      "delta": -31,
+      "roi_basis": "generated from machine-readable skill_capsule_specs; full operation bodies remain in prompts/meta",
+      "skill": "SKILL-GIT-WORKTREE",
+      "token_target": 150,
+      "verdict": "PASS",
+      "words": 119
+    },
+    {
+      "delta": -50,
+      "roi_basis": "generated from machine-readable skill_capsule_specs; full operation bodies remain in prompts/meta",
+      "skill": "SKILL-HANDOFF-AUDIT",
+      "token_target": 140,
+      "verdict": "PASS",
+      "words": 90
+    },
+    {
+      "delta": -21,
+      "roi_basis": "generated from machine-readable skill_capsule_specs; full operation bodies remain in prompts/meta",
+      "skill": "SKILL-PAPER-WRITING",
+      "token_target": 220,
+      "verdict": "PASS",
+      "words": 199
+    },
+    {
+      "delta": -77,
+      "roi_basis": "generated from machine-readable skill_capsule_specs; full operation bodies remain in prompts/meta",
+      "skill": "SKILL-PRESENTATION-DECK",
+      "token_target": 460,
+      "verdict": "PASS",
+      "words": 383
+    },
+    {
+      "delta": -24,
+      "roi_basis": "generated from machine-readable skill_capsule_specs; full operation bodies remain in prompts/meta",
+      "skill": "SKILL-PRESENTATION-ILLUSTRATION",
+      "token_target": 180,
+      "verdict": "PASS",
+      "words": 156
+    },
+    {
+      "delta": -28,
+      "roi_basis": "generated from machine-readable skill_capsule_specs; full operation bodies remain in prompts/meta",
+      "skill": "SKILL-PROMPT-AUDIT",
+      "token_target": 180,
+      "verdict": "PASS",
+      "words": 152
+    },
+    {
+      "delta": -43,
+      "roi_basis": "generated from machine-readable skill_capsule_specs; full operation bodies remain in prompts/meta",
+      "skill": "SKILL-SCHEME-CODE",
+      "token_target": 220,
+      "verdict": "PASS",
+      "words": 177
+    },
+    {
+      "delta": -45,
+      "roi_basis": "generated from machine-readable skill_capsule_specs; full operation bodies remain in prompts/meta",
+      "skill": "SKILL-TOOL-TRUST",
+      "token_target": 160,
+      "verdict": "PASS",
+      "words": 115
+    }
+  ],
+  "status": "PASS",
+  "waiver": null
+}

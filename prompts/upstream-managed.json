@@ -1,5 +1,11 @@
 {
-  "distribution_mode": "git-submodule",
+  "branch": "main",
+  "distribution_mode": "git-remote-snapshot",
+  "generated_agent_prompts": "project-local",
+  "generated_project_scripts": "project-local",
+  "generated_skill_capsules": "project-local",
+  "generated_templates": "project-local",
+  "local_project_profile": "prompts/meta/kernel-project.md",
   "managed_files": [
     "prompts/meta/kernel-antipatterns.md",
     "prompts/meta/kernel-constitution.md",
@@ -11,9 +17,8 @@
     "prompts/upstream-managed.json"
   ],
   "name": "research-agent-metaprompt",
-  "note": "Shared kernel files are materialized from the pinned submodule. prompts/meta/kernel-project.md remains project-local.",
+  "note": "Shared kernel files are materialized from an ephemeral remote snapshot. prompts/meta/kernel-project.md remains project-local. No persistent prompts/upstream checkout is kept.",
   "preserve_project_profile": true,
   "remote": "git@github.com:t0m0h1r0/research-agent.git",
-  "revision": "f52ae6f",
-  "submodule_path": "prompts/upstream/research-agent"
+  "revision": "ed388737ed01c479df4905925f1ec6791ff0f47d"
 }

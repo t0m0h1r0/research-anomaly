@@ -125,8 +125,8 @@ agent judgment, not the most recent edit.
 ```
 First principles (independent derivation)
     > Canonical specification (paper / docs/memo/)
-        > Implementation (src/core/)
-            > Infrastructure (src/system/)
+        > Project-configured research implementation
+            > Project-configured infrastructure
 ```
 
 Authority flows downward. Dependencies must not flow upward. Fixing a symptom
@@ -295,7 +295,7 @@ A8.1 is gated; A8 is unconditional.
 
 ## A9: Core/System Sovereignty  ← φ3 (Layered Authority)
 "The research implementation is the master; the infrastructure is the servant."
-- Solver core (`src/core/`) has zero dependency on infrastructure (`src/system/`).
+- The project-configured research implementation path has zero dependency on the project-configured infrastructure path.
 - Infrastructure may import research implementation; research implementation must never import infrastructure.
 - Direct access to research implementation internals from infrastructure = CRITICAL_VIOLATION — escalate immediately.
 

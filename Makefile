@@ -1,4 +1,4 @@
-.PHONY: all paper prompt-sync prompt-sync-dry-run prompt-audit clean
+.PHONY: all paper prompt-sync prompt-sync-dry-run prompt-deploy prompt-audit clean
 
 all: paper
 
@@ -10,6 +10,9 @@ prompt-sync-dry-run:
 
 prompt-sync:
 	python3 scripts/sync_research_agent.py
+
+prompt-deploy:
+	python3 scripts/deploy_prompt_system.py
 
 prompt-audit:
 	python3 scripts/validate_prompt_deployment.py
